@@ -3,6 +3,7 @@ const { sequelize } = require("../config/database");
 const User = require("./User");
 const Organization = require("./Organization");
 const Department = require("./Department");
+const RefreshToken = require("./RefreshToken");
 
 /*
  * Organization relationships
@@ -42,11 +43,26 @@ User.belongsTo(Department, {
   as: "department",
 });
 
+/*
+ * Authentication relationships
+ */
+
+User.hasMany(RefreshToken, {
+  foreignKey: "userId",
+  as: "refreshTokens",
+});
+
+RefreshToken.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
 const db = {
   sequelize,
   User,
   Organization,
   Department,
+  RefreshToken,
 };
 
 module.exports = db;

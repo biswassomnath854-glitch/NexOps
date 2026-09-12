@@ -4,6 +4,9 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 
+const authRoutes = require("./routes/authRoutes");
+const { errorHandler } = require("./middleware/errorMiddleware");
+
 const app = express();
 
 app.use(helmet());
@@ -24,6 +27,16 @@ if (process.env.NODE_ENV !== "test") {
   app.use(morgan("dev"));
 }
 
+/*
+ * API Routes
+ */
+
+app.use("/api/auth", authRoutes);
+
+/*
+ * Health Check
+ */
+
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -31,5 +44,13 @@ app.get("/api/health", (req, res) => {
     environment: process.env.NODE_ENV,
   });
 });
+
+/*
+ * Global Error Handler
+ *
+ * This must be registered after all routes.
+ */
+
+app.use(errorHandler);
 
 module.exports = app;
