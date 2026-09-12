@@ -2,6 +2,7 @@ const express = require("express");
 
 const authController = require("../controllers/authController");
 const { authenticate } = require("../middleware/authMiddleware");
+const { authorize } = require("../middleware/authorizationMiddleware");
 const {
   validateRegister,
   validateLogin,
@@ -32,7 +33,7 @@ const validateRequest = (validator) => {
 };
 
 /*
- * Public authentication routes
+ * Authentication Routes
  */
 
 router.post(
@@ -51,10 +52,26 @@ router.post("/refresh", authController.refresh);
 
 router.post("/logout", authController.logout);
 
+router.get("/me", authenticate, authController.me);
+
 /*
- * Protected authentication route
+ * Temporary RBAC Test Route
  */
 
-router.get("/me", authenticate, authController.me);
+router.get(
+  "/rbac-test",
+  authenticate,
+  authorize("SUPER_ADMIN", "ADMIN"),
+  (req, res) => {
+    return res.status(200).json({
+      success: true,
+      message: "RBAC authorization successful.",
+      data: {
+        userId: req.user.id,
+        role: req.user.role,
+      },
+    });
+  }
+);
 
 module.exports = router;
