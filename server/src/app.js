@@ -5,6 +5,8 @@ const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 
 const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
+
 const { errorHandler } = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -32,6 +34,7 @@ if (process.env.NODE_ENV !== "test") {
  */
 
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 /*
  * Health Check
