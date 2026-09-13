@@ -7,6 +7,7 @@ const morgan = require("morgan");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const organizationRoutes = require("./routes/organizationRoutes");
+const departmentRoutes = require("./routes/departmentRoutes");
 
 const { errorHandler } = require("./middleware/errorMiddleware");
 
@@ -37,6 +38,7 @@ if (process.env.NODE_ENV !== "test") {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/organizations", organizationRoutes);
+app.use("/api/departments", departmentRoutes);
 
 /*
  * Health Check
