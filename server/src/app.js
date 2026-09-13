@@ -8,6 +8,7 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const organizationRoutes = require("./routes/organizationRoutes");
 const departmentRoutes = require("./routes/departmentRoutes");
+const projectRoutes = require("./routes/projectRoutes");
 
 const { errorHandler } = require("./middleware/errorMiddleware");
 
@@ -39,6 +40,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/departments", departmentRoutes);
+app.use("/api/projects", projectRoutes);
 
 /*
  * Health Check

@@ -4,9 +4,10 @@ const User = require("./User");
 const Organization = require("./Organization");
 const Department = require("./Department");
 const RefreshToken = require("./RefreshToken");
+const Project = require("./Project");
 
 /*
- * Organization relationships
+ * Organization ↔ User
  */
 
 Organization.hasMany(User, {
@@ -19,6 +20,10 @@ User.belongsTo(Organization, {
   as: "organization",
 });
 
+/*
+ * Organization ↔ Department
+ */
+
 Organization.hasMany(Department, {
   foreignKey: "organizationId",
   as: "departments",
@@ -30,7 +35,7 @@ Department.belongsTo(Organization, {
 });
 
 /*
- * Department relationships
+ * Department ↔ User
  */
 
 Department.hasMany(User, {
@@ -44,7 +49,21 @@ User.belongsTo(Department, {
 });
 
 /*
- * Authentication relationships
+ * Organization ↔ Project
+ */
+
+Organization.hasMany(Project, {
+  foreignKey: "organizationId",
+  as: "projects",
+});
+
+Project.belongsTo(Organization, {
+  foreignKey: "organizationId",
+  as: "organization",
+});
+
+/*
+ * User ↔ RefreshToken
  */
 
 User.hasMany(RefreshToken, {
@@ -57,12 +76,17 @@ RefreshToken.belongsTo(User, {
   as: "user",
 });
 
+/*
+ * Database Models
+ */
+
 const db = {
   sequelize,
   User,
   Organization,
   Department,
   RefreshToken,
+  Project,
 };
 
 module.exports = db;
