@@ -5,6 +5,7 @@ const Organization = require("./Organization");
 const Department = require("./Department");
 const RefreshToken = require("./RefreshToken");
 const Project = require("./Project");
+const ProjectMember = require("./ProjectMember");
 
 /*
  * Organization ↔ User
@@ -63,6 +64,54 @@ Project.belongsTo(Organization, {
 });
 
 /*
+ * Project ↔ User
+ *
+ * Many-to-many relationship through ProjectMember.
+ */
+
+Project.belongsToMany(User, {
+  through: ProjectMember,
+  foreignKey: "projectId",
+  otherKey: "userId",
+  as: "members",
+});
+
+User.belongsToMany(Project, {
+  through: ProjectMember,
+  foreignKey: "userId",
+  otherKey: "projectId",
+  as: "projects",
+});
+
+/*
+ * Project ↔ ProjectMember
+ */
+
+Project.hasMany(ProjectMember, {
+  foreignKey: "projectId",
+  as: "projectMembers",
+});
+
+ProjectMember.belongsTo(Project, {
+  foreignKey: "projectId",
+  as: "project",
+});
+
+/*
+ * User ↔ ProjectMember
+ */
+
+User.hasMany(ProjectMember, {
+  foreignKey: "userId",
+  as: "projectMemberships",
+});
+
+ProjectMember.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+/*
  * User ↔ RefreshToken
  */
 
@@ -87,6 +136,7 @@ const db = {
   Department,
   RefreshToken,
   Project,
+  ProjectMember,
 };
 
 module.exports = db;
