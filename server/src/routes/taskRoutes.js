@@ -7,6 +7,7 @@ const {
   createTaskSchema,
   updateTaskSchema,
   updateTaskStatusSchema,
+  getProjectTasksQuerySchema,
 } = require("../validators/taskValidator");
 
 const router = express.Router();
@@ -25,6 +26,24 @@ const validateBody = (schema) => {
     }
 
     req.body = value;
+    next();
+  };
+};
+
+const validateQuery = (schema) => {
+  return (req, res, next) => {
+    const { error, value } = schema.validate(req.query);
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed.",
+        code: "VALIDATION_ERROR",
+        errors: error.details.map((detail) => detail.message),
+      });
+    }
+
+    req.query = value;
     next();
   };
 };
@@ -62,6 +81,7 @@ router.post(
 router.get(
   "/projects/:projectId/tasks",
   authenticate,
+  validateQuery(getProjectTasksQuerySchema),
   taskController.getProjectTasks
 );
 

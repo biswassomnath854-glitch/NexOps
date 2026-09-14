@@ -2,15 +2,17 @@ const taskService = require("../services/taskService");
 
 const getProjectTasks = async (req, res, next) => {
   try {
-    const tasks = await taskService.getProjectTasks(
-      req.params.projectId
+    const result = await taskService.getProjectTasks(
+      req.params.projectId,
+      req.query
     );
 
     return res.status(200).json({
       success: true,
       message: "Project tasks retrieved successfully.",
       data: {
-        tasks,
+        tasks: result.tasks,
+        pagination: result.pagination,
       },
     });
   } catch (error) {
