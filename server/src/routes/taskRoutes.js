@@ -47,7 +47,24 @@ const validateQuery = (schema) => {
       });
     }
 
-    req.query = value;
+    /*
+     * Express manages req.query internally.
+     *
+     * Instead of replacing req.query completely,
+     * copy the validated values into the existing
+     * query object. This also preserves Joi-converted
+     * values such as:
+     *
+     * status=TODO,IN_PROGRESS
+     * ->
+     * ["TODO", "IN_PROGRESS"]
+     */
+    Object.keys(req.query).forEach((key) => {
+      delete req.query[key];
+    });
+
+    Object.assign(req.query, value);
+
     next();
   };
 };

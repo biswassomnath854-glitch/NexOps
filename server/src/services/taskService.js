@@ -190,29 +190,42 @@ const validateAssignee = async (
   return user;
 };
 
-const validateTaskAccess = async (task, user, action) => {
+const validateTaskAccess = async (
+  task,
+  user,
+  action
+) => {
   if (!user) {
-    const error = new Error("Authentication required.");
+    const error = new Error(
+      "Authentication required."
+    );
     error.statusCode = 401;
     error.code = "AUTHENTICATION_REQUIRED";
     throw error;
   }
 
   if (!task.organizationId) {
-    const error = new Error("Task organization is required.");
+    const error = new Error(
+      "Task organization is required."
+    );
     error.statusCode = 400;
     error.code = "TASK_ORGANIZATION_REQUIRED";
     throw error;
   }
 
   if (!user.organizationId) {
-    const error = new Error("User organization is required.");
+    const error = new Error(
+      "User organization is required."
+    );
     error.statusCode = 403;
     error.code = "USER_ORGANIZATION_REQUIRED";
     throw error;
   }
 
-  if (user.organizationId !== task.organizationId) {
+  if (
+    user.organizationId !==
+    task.organizationId
+  ) {
     const error = new Error(
       "You do not have access to tasks outside your organization."
     );
@@ -225,7 +238,9 @@ const validateTaskAccess = async (task, user, action) => {
    * Management users can access and manage
    * tasks within their organization.
    */
-  if (MANAGEMENT_ROLES.includes(user.role)) {
+  if (
+    MANAGEMENT_ROLES.includes(user.role)
+  ) {
     return {
       membership: null,
     };
@@ -234,19 +249,21 @@ const validateTaskAccess = async (task, user, action) => {
   /*
    * Non-management users must be project members.
    */
-  const membership = await ProjectMember.findOne({
-    where: {
-      projectId: task.projectId,
-      userId: user.id,
-    },
-  });
+  const membership =
+    await ProjectMember.findOne({
+      where: {
+        projectId: task.projectId,
+        userId: user.id,
+      },
+    });
 
   if (!membership) {
     const error = new Error(
       "You must be a member of the project to access this task."
     );
     error.statusCode = 403;
-    error.code = "PROJECT_MEMBERSHIP_REQUIRED";
+    error.code =
+      "PROJECT_MEMBERSHIP_REQUIRED";
     throw error;
   }
 
@@ -267,7 +284,8 @@ const validateTaskAccess = async (task, user, action) => {
       "Viewers do not have permission to modify tasks."
     );
     error.statusCode = 403;
-    error.code = "TASK_MODIFICATION_FORBIDDEN";
+    error.code =
+      "TASK_MODIFICATION_FORBIDDEN";
     throw error;
   }
 
@@ -287,8 +305,11 @@ const validateTaskAccess = async (task, user, action) => {
    * Employees and other project members can modify
    * only tasks they created or are assigned to.
    */
-  const isCreator = task.createdBy === user.id;
-  const isAssignee = task.assignedTo === user.id;
+  const isCreator =
+    task.createdBy === user.id;
+
+  const isAssignee =
+    task.assignedTo === user.id;
 
   if (!isCreator && !isAssignee) {
     const error = new Error(
@@ -320,62 +341,163 @@ const validateTaskStatusTransition = (
       `Task is already in ${currentStatus} status.`
     );
     error.statusCode = 400;
-    error.code = "INVALID_TASK_STATUS_TRANSITION";
+    error.code =
+      "INVALID_TASK_STATUS_TRANSITION";
     throw error;
   }
 
   const allowedStatuses =
-    TASK_STATUS_TRANSITIONS[currentStatus] || [];
+    TASK_STATUS_TRANSITIONS[
+      currentStatus
+    ] || [];
 
-  if (!allowedStatuses.includes(nextStatus)) {
+  if (
+    !allowedStatuses.includes(nextStatus)
+  ) {
     const error = new Error(
       `Task status cannot transition from ${currentStatus} to ${nextStatus}.`
     );
     error.statusCode = 400;
-    error.code = "INVALID_TASK_STATUS_TRANSITION";
+    error.code =
+      "INVALID_TASK_STATUS_TRANSITION";
     throw error;
   }
 };
 
-const getProjectTasks = async (projectId, query = {}) => {
-  await findProjectById(projectId);
+/*
+ * Normalize a single-value or comma-separated
+ * filter into an array.
+ *
+ * Examples:
+ *
+ * "TODO"
+ * ->
+ * ["TODO"]
+ *
+ * "TODO,IN_PROGRESS"
+ * ->
+ * ["TODO", "IN_PROGRESS"]
+ *
+ * ["TODO", "IN_PROGRESS"]
+ * ->
+ * ["TODO", "IN_PROGRESS"]
+ */
+const normalizeMultiValueFilter = (
+  value
+) => {
+  if (value === undefined || value === null) {
+    return [];
+  }
 
-  const {
-    page = 1,
-    limit = 10,
-    status,
-    priority,
-    assignedTo,
-    search,
-  } = query;
+  const values = Array.isArray(value)
+    ? value
+    : String(value).split(",");
 
-  /*
-   * Explicitly convert pagination values to numbers.
-   *
-   * Express query parameters arrive as strings.
-   * Sequelize requires numeric LIMIT/OFFSET values.
-   */
-  const currentPage = Number(page);
-  const currentLimit = Number(limit);
+  return values
+    .flatMap((item) =>
+      String(item).split(",")
+    )
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
 
-  const offset = (currentPage - 1) * currentLimit;
-
+/*
+ * Build the Sequelize WHERE clause for task listing.
+ *
+ * Supported filters:
+ * - projectId
+ * - single/multiple status
+ * - single/multiple priority
+ * - assignedTo
+ * - createdBy
+ * - dueDateFrom
+ * - dueDateTo
+ * - text search
+ */
+const buildTaskListWhere = ({
+  projectId,
+  status,
+  priority,
+  assignedTo,
+  createdBy,
+  dueDateFrom,
+  dueDateTo,
+  search,
+}) => {
   const where = {
     projectId,
   };
 
-  if (status) {
-    where.status = status;
+  /*
+   * Normalize status filter.
+   */
+  const statusValues =
+    normalizeMultiValueFilter(status);
+
+  if (statusValues.length === 1) {
+    where.status = statusValues[0];
+  } else if (statusValues.length > 1) {
+    where.status = {
+      [Op.in]: statusValues,
+    };
   }
 
-  if (priority) {
-    where.priority = priority;
+  /*
+   * Normalize priority filter.
+   */
+  const priorityValues =
+    normalizeMultiValueFilter(priority);
+
+  if (priorityValues.length === 1) {
+    where.priority = priorityValues[0];
+  } else if (priorityValues.length > 1) {
+    where.priority = {
+      [Op.in]: priorityValues,
+    };
   }
 
+  /*
+   * Exact assignee filtering.
+   */
   if (assignedTo) {
     where.assignedTo = assignedTo;
   }
 
+  /*
+   * Exact creator filtering.
+   */
+  if (createdBy) {
+    where.createdBy = createdBy;
+  }
+
+  /*
+   * Due-date filtering.
+   *
+   * Supports:
+   * - from only
+   * - to only
+   * - both from and to
+   */
+  if (dueDateFrom && dueDateTo) {
+    where.dueDate = {
+      [Op.between]: [
+        dueDateFrom,
+        dueDateTo,
+      ],
+    };
+  } else if (dueDateFrom) {
+    where.dueDate = {
+      [Op.gte]: dueDateFrom,
+    };
+  } else if (dueDateTo) {
+    where.dueDate = {
+      [Op.lte]: dueDateTo,
+    };
+  }
+
+  /*
+   * Text search across task title and description.
+   */
   if (search) {
     where[Op.or] = [
       {
@@ -391,34 +513,80 @@ const getProjectTasks = async (projectId, query = {}) => {
     ];
   }
 
-  const { count, rows } = await Task.findAndCountAll({
-    where,
-    include: [
-      {
-        model: User,
-        as: "assignee",
-        attributes: [
-          "id",
-          "firstName",
-          "lastName",
-          "email",
-        ],
-      },
-      {
-        model: User,
-        as: "creator",
-        attributes: [
-          "id",
-          "firstName",
-          "lastName",
-          "email",
-        ],
-      },
-    ],
-    order: [["createdAt", "DESC"]],
-    limit: currentLimit,
-    offset,
-  });
+  return where;
+};
+
+const getProjectTasks = async (
+  projectId,
+  query = {}
+) => {
+  await findProjectById(projectId);
+
+  const {
+    page = 1,
+    limit = 10,
+    status,
+    priority,
+    assignedTo,
+    createdBy,
+    dueDateFrom,
+    dueDateTo,
+    search,
+  } = query;
+
+  /*
+   * Explicitly convert pagination values to numbers.
+   */
+  const currentPage = Number(page);
+  const currentLimit = Number(limit);
+
+  const offset =
+    (currentPage - 1) *
+    currentLimit;
+
+  const where =
+    buildTaskListWhere({
+      projectId,
+      status,
+      priority,
+      assignedTo,
+      createdBy,
+      dueDateFrom,
+      dueDateTo,
+      search,
+    });
+
+  const { count, rows } =
+    await Task.findAndCountAll({
+      where,
+      include: [
+        {
+          model: User,
+          as: "assignee",
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "email",
+          ],
+        },
+        {
+          model: User,
+          as: "creator",
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "email",
+          ],
+        },
+      ],
+      order: [
+        ["createdAt", "DESC"],
+      ],
+      limit: currentLimit,
+      offset,
+    });
 
   return {
     tasks: rows,
@@ -426,20 +594,34 @@ const getProjectTasks = async (projectId, query = {}) => {
       page: currentPage,
       limit: currentLimit,
       totalItems: count,
-      totalPages: Math.ceil(count / currentLimit),
+      totalPages:
+        Math.ceil(
+          count / currentLimit
+        ),
     },
   };
 };
 
-const getTaskById = async (taskId, user) => {
-  const task = await findTaskById(taskId);
+const getTaskById = async (
+  taskId,
+  user
+) => {
+  const task =
+    await findTaskById(taskId);
 
-  await validateTaskAccess(task, user, "view");
+  await validateTaskAccess(
+    task,
+    user,
+    "view"
+  );
 
   return task;
 };
 
-const createTask = async (data, createdBy) => {
+const createTask = async (
+  data,
+  createdBy
+) => {
   const {
     projectId,
     assignedTo,
@@ -450,24 +632,36 @@ const createTask = async (data, createdBy) => {
     dueDate,
   } = data;
 
-  const project = await findProjectById(projectId);
-  const creator = await findUserById(createdBy);
+  const project =
+    await findProjectById(
+      projectId
+    );
+
+  const creator =
+    await findUserById(
+      createdBy
+    );
 
   if (creator.status !== "ACTIVE") {
     const error = new Error(
       "Only active users can create tasks."
     );
     error.statusCode = 403;
-    error.code = "TASK_CREATION_FORBIDDEN";
+    error.code =
+      "TASK_CREATION_FORBIDDEN";
     throw error;
   }
 
-  if (creator.organizationId !== project.organizationId) {
+  if (
+    creator.organizationId !==
+    project.organizationId
+  ) {
     const error = new Error(
       "You cannot create tasks in another organization."
     );
     error.statusCode = 403;
-    error.code = "CROSS_ORGANIZATION_ACCESS";
+    error.code =
+      "CROSS_ORGANIZATION_ACCESS";
     throw error;
   }
 
@@ -475,20 +669,26 @@ const createTask = async (data, createdBy) => {
    * Management users can create tasks in any project
    * within their organization.
    */
-  if (!MANAGEMENT_ROLES.includes(creator.role)) {
-    const membership = await ProjectMember.findOne({
-      where: {
-        projectId,
-        userId: createdBy,
-      },
-    });
+  if (
+    !MANAGEMENT_ROLES.includes(
+      creator.role
+    )
+  ) {
+    const membership =
+      await ProjectMember.findOne({
+        where: {
+          projectId,
+          userId: createdBy,
+        },
+      });
 
     if (!membership) {
       const error = new Error(
         "You must be a member of the project to create tasks."
       );
       error.statusCode = 403;
-      error.code = "CREATOR_NOT_PROJECT_MEMBER";
+      error.code =
+        "CREATOR_NOT_PROJECT_MEMBER";
       throw error;
     }
 
@@ -497,7 +697,8 @@ const createTask = async (data, createdBy) => {
         "Viewers do not have permission to create tasks."
       );
       error.statusCode = 403;
-      error.code = "TASK_CREATION_FORBIDDEN";
+      error.code =
+        "TASK_CREATION_FORBIDDEN";
       throw error;
     }
   }
@@ -508,29 +709,47 @@ const createTask = async (data, createdBy) => {
     project.id
   );
 
-  const task = await Task.create({
-    organizationId: project.organizationId,
-    projectId,
-    assignedTo: assignedTo || null,
-    createdBy,
-    title,
-    description: description || null,
-    priority,
-    status,
-    dueDate: dueDate || null,
-    completedAt:
-      status === "COMPLETED" ? new Date() : null,
-  });
+  const task =
+    await Task.create({
+      organizationId:
+        project.organizationId,
+      projectId,
+      assignedTo:
+        assignedTo || null,
+      createdBy,
+      title,
+      description:
+        description || null,
+      priority,
+      status,
+      dueDate:
+        dueDate || null,
+      completedAt:
+        status === "COMPLETED"
+          ? new Date()
+          : null,
+    });
 
   return findTaskById(task.id);
 };
 
-const updateTask = async (taskId, data, user) => {
-  const task = await findTaskById(taskId);
+const updateTask = async (
+  taskId,
+  data,
+  user
+) => {
+  const task =
+    await findTaskById(taskId);
 
-  await validateTaskAccess(task, user, "update");
+  await validateTaskAccess(
+    task,
+    user,
+    "update"
+  );
 
-  if (data.assignedTo !== undefined) {
+  if (
+    data.assignedTo !== undefined
+  ) {
     await validateAssignee(
       data.assignedTo,
       task.organizationId,
@@ -541,28 +760,40 @@ const updateTask = async (taskId, data, user) => {
   const updateData = {};
 
   if (data.title !== undefined) {
-    updateData.title = data.title;
+    updateData.title =
+      data.title;
   }
 
-  if (data.description !== undefined) {
-    updateData.description = data.description;
+  if (
+    data.description !==
+    undefined
+  ) {
+    updateData.description =
+      data.description;
   }
 
   if (data.priority !== undefined) {
-    updateData.priority = data.priority;
+    updateData.priority =
+      data.priority;
   }
 
-  if (data.assignedTo !== undefined) {
-    updateData.assignedTo = data.assignedTo;
+  if (
+    data.assignedTo !== undefined
+  ) {
+    updateData.assignedTo =
+      data.assignedTo;
   }
 
   if (data.dueDate !== undefined) {
-    updateData.dueDate = data.dueDate;
+    updateData.dueDate =
+      data.dueDate;
   }
 
   await task.update(updateData);
 
-  return findTaskById(task.id);
+  return findTaskById(
+    task.id
+  );
 };
 
 const updateTaskStatus = async (
@@ -570,14 +801,17 @@ const updateTaskStatus = async (
   status,
   user
 ) => {
-  const task = await findTaskById(taskId);
+  const task =
+    await findTaskById(taskId);
 
   /*
    * Authorization remains unchanged.
-   * Users must still have permission to modify
-   * the task before changing its status.
    */
-  await validateTaskAccess(task, user, "status");
+  await validateTaskAccess(
+    task,
+    user,
+    "status"
+  );
 
   /*
    * Validate the requested status transition.
@@ -596,20 +830,31 @@ const updateTaskStatus = async (
    * actually transitions to COMPLETED.
    */
   if (status === "COMPLETED") {
-    updateData.completedAt = new Date();
+    updateData.completedAt =
+      new Date();
   } else {
     updateData.completedAt = null;
   }
 
   await task.update(updateData);
 
-  return findTaskById(task.id);
+  return findTaskById(
+    task.id
+  );
 };
 
-const deleteTask = async (taskId, user) => {
-  const task = await findTaskById(taskId);
+const deleteTask = async (
+  taskId,
+  user
+) => {
+  const task =
+    await findTaskById(taskId);
 
-  await validateTaskAccess(task, user, "delete");
+  await validateTaskAccess(
+    task,
+    user,
+    "delete"
+  );
 
   await task.destroy();
 

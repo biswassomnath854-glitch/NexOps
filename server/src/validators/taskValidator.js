@@ -6,6 +6,21 @@ const uuidV4 = Joi.string()
     "string.guid": "ID must be a valid UUID.",
   });
 
+const TASK_STATUSES = [
+  "TODO",
+  "IN_PROGRESS",
+  "BLOCKED",
+  "COMPLETED",
+  "CANCELLED",
+];
+
+const TASK_PRIORITIES = [
+  "LOW",
+  "MEDIUM",
+  "HIGH",
+  "URGENT",
+];
+
 const createTaskSchema = Joi.object({
   projectId: uuidV4.required().messages({
     "any.required": "Project ID is required.",
@@ -23,7 +38,7 @@ const createTaskSchema = Joi.object({
   description: Joi.string().trim().allow("", null).optional(),
 
   priority: Joi.string()
-    .valid("LOW", "MEDIUM", "HIGH", "URGENT")
+    .valid(...TASK_PRIORITIES)
     .default("MEDIUM")
     .messages({
       "any.only":
@@ -31,13 +46,7 @@ const createTaskSchema = Joi.object({
     }),
 
   status: Joi.string()
-    .valid(
-      "TODO",
-      "IN_PROGRESS",
-      "BLOCKED",
-      "COMPLETED",
-      "CANCELLED"
-    )
+    .valid(...TASK_STATUSES)
     .default("TODO")
     .messages({
       "any.only":
@@ -46,6 +55,7 @@ const createTaskSchema = Joi.object({
 
   dueDate: Joi.date().iso().allow(null).optional().messages({
     "date.format": "Due date must be a valid ISO date.",
+    "date.base": "Due date must be a valid ISO date.",
   }),
 });
 
@@ -61,7 +71,7 @@ const updateTaskSchema = Joi.object({
   description: Joi.string().trim().allow("", null).optional(),
 
   priority: Joi.string()
-    .valid("LOW", "MEDIUM", "HIGH", "URGENT")
+    .valid(...TASK_PRIORITIES)
     .optional()
     .messages({
       "any.only":
@@ -70,6 +80,7 @@ const updateTaskSchema = Joi.object({
 
   dueDate: Joi.date().iso().allow(null).optional().messages({
     "date.format": "Due date must be a valid ISO date.",
+    "date.base": "Due date must be a valid ISO date.",
   }),
 })
   .min(1)
@@ -79,13 +90,7 @@ const updateTaskSchema = Joi.object({
 
 const updateTaskStatusSchema = Joi.object({
   status: Joi.string()
-    .valid(
-      "TODO",
-      "IN_PROGRESS",
-      "BLOCKED",
-      "COMPLETED",
-      "CANCELLED"
-    )
+    .valid(...TASK_STATUSES)
     .required()
     .messages({
       "any.only":
@@ -94,11 +99,34 @@ const updateTaskStatusSchema = Joi.object({
     }),
 });
 
-/*
- * Task List Query
- *
- * Used for pagination, filtering, and searching.
- */
+const commaSeparatedValues = (allowedValues, label) =>
+  Joi.string()
+    .trim()
+    .custom((value, helpers) => {
+      const values = value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      if (values.length === 0) {
+        return helpers.error("any.invalid");
+      }
+
+      const invalidValues = values.filter(
+        (item) => !allowedValues.includes(item)
+      );
+
+      if (invalidValues.length > 0) {
+        return helpers.error("any.invalid");
+      }
+
+      return values;
+    })
+    .messages({
+      "any.invalid": `${label} contains an invalid value.`,
+      "string.empty": `${label} cannot be empty.`,
+    });
+
 const getProjectTasksQuerySchema = Joi.object({
   page: Joi.number()
     .integer()
@@ -122,29 +150,39 @@ const getProjectTasksQuerySchema = Joi.object({
       "number.max": "Limit must not exceed 100.",
     }),
 
-  status: Joi.string()
-    .valid(
-      "TODO",
-      "IN_PROGRESS",
-      "BLOCKED",
-      "COMPLETED",
-      "CANCELLED"
-    )
-    .optional()
-    .messages({
-      "any.only":
-        "Task status must be TODO, IN_PROGRESS, BLOCKED, COMPLETED, or CANCELLED.",
-    }),
+  status: commaSeparatedValues(
+    TASK_STATUSES,
+    "Task status"
+  ).optional(),
 
-  priority: Joi.string()
-    .valid("LOW", "MEDIUM", "HIGH", "URGENT")
-    .optional()
-    .messages({
-      "any.only":
-        "Task priority must be LOW, MEDIUM, HIGH, or URGENT.",
-    }),
+  priority: commaSeparatedValues(
+    TASK_PRIORITIES,
+    "Task priority"
+  ).optional(),
 
   assignedTo: uuidV4.optional(),
+
+  createdBy: uuidV4.optional(),
+
+  dueDateFrom: Joi.date()
+    .iso()
+    .optional()
+    .messages({
+      "date.format":
+        "Due date from must be a valid ISO date.",
+      "date.base":
+        "Due date from must be a valid ISO date.",
+    }),
+
+  dueDateTo: Joi.date()
+    .iso()
+    .optional()
+    .messages({
+      "date.format":
+        "Due date to must be a valid ISO date.",
+      "date.base":
+        "Due date to must be a valid ISO date.",
+    }),
 
   search: Joi.string()
     .trim()
@@ -152,7 +190,8 @@ const getProjectTasksQuerySchema = Joi.object({
     .allow("")
     .optional()
     .messages({
-      "string.max": "Search text must not exceed 200 characters.",
+      "string.max":
+        "Search text must not exceed 200 characters.",
     }),
 });
 
