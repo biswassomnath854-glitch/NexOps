@@ -7,6 +7,7 @@ const RefreshToken = require("./RefreshToken");
 const Project = require("./Project");
 const ProjectMember = require("./ProjectMember");
 const Task = require("./Task");
+const TaskActivity = require("./TaskActivity");
 
 /*
  * Organization ↔ User
@@ -169,6 +170,62 @@ Task.belongsTo(User, {
 });
 
 /*
+ * Task ↔ TaskActivity
+ */
+
+Task.hasMany(TaskActivity, {
+  foreignKey: "taskId",
+  as: "activities",
+});
+
+TaskActivity.belongsTo(Task, {
+  foreignKey: "taskId",
+  as: "task",
+});
+
+/*
+ * User ↔ TaskActivity
+ */
+
+User.hasMany(TaskActivity, {
+  foreignKey: "userId",
+  as: "taskActivities",
+});
+
+TaskActivity.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+/*
+ * Organization ↔ TaskActivity
+ */
+
+Organization.hasMany(TaskActivity, {
+  foreignKey: "organizationId",
+  as: "taskActivities",
+});
+
+TaskActivity.belongsTo(Organization, {
+  foreignKey: "organizationId",
+  as: "organization",
+});
+
+/*
+ * Project ↔ TaskActivity
+ */
+
+Project.hasMany(TaskActivity, {
+  foreignKey: "projectId",
+  as: "taskActivities",
+});
+
+TaskActivity.belongsTo(Project, {
+  foreignKey: "projectId",
+  as: "project",
+});
+
+/*
  * User ↔ RefreshToken
  */
 
@@ -195,6 +252,7 @@ const db = {
   Project,
   ProjectMember,
   Task,
+  TaskActivity,
 };
 
 module.exports = db;
