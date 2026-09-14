@@ -21,6 +21,13 @@ const TASK_PRIORITIES = [
   "URGENT",
 ];
 
+const DEADLINE_FILTERS = [
+  "OVERDUE",
+  "DUE_TODAY",
+  "DUE_SOON",
+  "UPCOMING",
+];
+
 const createTaskSchema = Joi.object({
   projectId: uuidV4.required().messages({
     "any.required": "Project ID is required.",
@@ -77,6 +84,10 @@ const updateTaskSchema = Joi.object({
       "any.only":
         "Task priority must be LOW, MEDIUM, HIGH, or URGENT.",
     }),
+
+  status: Joi.string()
+    .valid(...TASK_STATUSES)
+    .optional(),
 
   dueDate: Joi.date().iso().allow(null).optional().messages({
     "date.format": "Due date must be a valid ISO date.",
@@ -184,6 +195,16 @@ const getProjectTasksQuerySchema = Joi.object({
         "Due date to must be a valid ISO date.",
     }),
 
+  deadline: Joi.string()
+    .trim()
+    .uppercase()
+    .valid(...DEADLINE_FILTERS)
+    .optional()
+    .messages({
+      "any.only":
+        "Deadline filter must be one of OVERDUE, DUE_TODAY, DUE_SOON, or UPCOMING.",
+    }),
+
   search: Joi.string()
     .trim()
     .max(200)
@@ -193,9 +214,25 @@ const getProjectTasksQuerySchema = Joi.object({
       "string.max":
         "Search text must not exceed 200 characters.",
     }),
+}).custom((value, helpers) => {
+  if (
+    value.dueDateFrom &&
+    value.dueDateTo &&
+    value.dueDateFrom > value.dueDateTo
+  ) {
+    return helpers.error("any.invalidDateRange");
+  }
+
+  return value;
+}).messages({
+  "any.invalidDateRange":
+    "Due date from cannot be later than due date to.",
 });
 
 module.exports = {
+  TASK_STATUSES,
+  TASK_PRIORITIES,
+  DEADLINE_FILTERS,
   createTaskSchema,
   updateTaskSchema,
   updateTaskStatusSchema,
