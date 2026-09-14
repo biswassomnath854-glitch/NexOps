@@ -14,6 +14,41 @@ const MANAGEMENT_ROLES = [
   "TEAM_LEAD",
 ];
 
+/*
+ * Task status transition rules.
+ *
+ * Each status explicitly defines which statuses
+ * are allowed as the next state.
+ */
+const TASK_STATUS_TRANSITIONS = {
+  TODO: [
+    "IN_PROGRESS",
+    "BLOCKED",
+    "CANCELLED",
+  ],
+
+  IN_PROGRESS: [
+    "TODO",
+    "BLOCKED",
+    "COMPLETED",
+    "CANCELLED",
+  ],
+
+  BLOCKED: [
+    "TODO",
+    "IN_PROGRESS",
+    "CANCELLED",
+  ],
+
+  COMPLETED: [
+    "TODO",
+  ],
+
+  CANCELLED: [
+    "TODO",
+  ],
+};
+
 const findProjectById = async (projectId) => {
   const project = await Project.findByPk(projectId);
 
@@ -269,6 +304,39 @@ const validateTaskAccess = async (task, user, action) => {
   };
 };
 
+/*
+ * Validate whether a task can move from its current
+ * status to the requested next status.
+ */
+const validateTaskStatusTransition = (
+  currentStatus,
+  nextStatus
+) => {
+  /*
+   * Prevent unnecessary same-status updates.
+   */
+  if (currentStatus === nextStatus) {
+    const error = new Error(
+      `Task is already in ${currentStatus} status.`
+    );
+    error.statusCode = 400;
+    error.code = "INVALID_TASK_STATUS_TRANSITION";
+    throw error;
+  }
+
+  const allowedStatuses =
+    TASK_STATUS_TRANSITIONS[currentStatus] || [];
+
+  if (!allowedStatuses.includes(nextStatus)) {
+    const error = new Error(
+      `Task status cannot transition from ${currentStatus} to ${nextStatus}.`
+    );
+    error.statusCode = 400;
+    error.code = "INVALID_TASK_STATUS_TRANSITION";
+    throw error;
+  }
+};
+
 const getProjectTasks = async (projectId, query = {}) => {
   await findProjectById(projectId);
 
@@ -504,12 +572,29 @@ const updateTaskStatus = async (
 ) => {
   const task = await findTaskById(taskId);
 
+  /*
+   * Authorization remains unchanged.
+   * Users must still have permission to modify
+   * the task before changing its status.
+   */
   await validateTaskAccess(task, user, "status");
+
+  /*
+   * Validate the requested status transition.
+   */
+  validateTaskStatusTransition(
+    task.status,
+    status
+  );
 
   const updateData = {
     status,
   };
 
+  /*
+   * completedAt is only populated when the task
+   * actually transitions to COMPLETED.
+   */
   if (status === "COMPLETED") {
     updateData.completedAt = new Date();
   } else {
