@@ -3,7 +3,6 @@ const { Op } = require("sequelize");
 const {
   Task,
   Project,
-  ProjectMember,
   User,
 } = require("../models");
 
@@ -14,155 +13,41 @@ const MANAGEMENT_ROLES = [
   "TEAM_LEAD",
 ];
 
-/*
- * Task status transition rules.
- *
- * Each status explicitly defines which statuses
- * are allowed as the next state.
- */
-const TASK_STATUS_TRANSITIONS = {
-  TODO: [
-    "IN_PROGRESS",
-    "BLOCKED",
-    "CANCELLED",
-  ],
+const ACTIVE_TASK_STATUSES = [
+  "TODO",
+  "IN_PROGRESS",
+  "BLOCKED",
+];
 
-  IN_PROGRESS: [
-    "TODO",
-    "BLOCKED",
-    "COMPLETED",
-    "CANCELLED",
-  ],
-
-  BLOCKED: [
-    "TODO",
-    "IN_PROGRESS",
-    "CANCELLED",
-  ],
-
-  COMPLETED: [
-    "TODO",
-  ],
-
-  CANCELLED: [
-    "TODO",
-  ],
-};
-
-const findProjectById = async (projectId) => {
-  const project = await Project.findByPk(projectId);
-
-  if (!project) {
-    const error = new Error("Project not found.");
-    error.statusCode = 404;
-    error.code = "PROJECT_NOT_FOUND";
-    throw error;
-  }
-
-  return project;
-};
-
-const findTaskById = async (taskId) => {
-  const task = await Task.findByPk(taskId, {
-    include: [
-      {
-        model: Project,
-        as: "project",
-        attributes: [
-          "id",
-          "organizationId",
-          "name",
-          "code",
-          "status",
-        ],
-      },
-      {
-        model: User,
-        as: "assignee",
-        attributes: [
-          "id",
-          "firstName",
-          "lastName",
-          "email",
-        ],
-      },
-      {
-        model: User,
-        as: "creator",
-        attributes: [
-          "id",
-          "firstName",
-          "lastName",
-          "email",
-        ],
-      },
-    ],
-  });
-
-  if (!task) {
-    const error = new Error("Task not found.");
-    error.statusCode = 404;
-    error.code = "TASK_NOT_FOUND";
-    throw error;
-  }
-
-  return task;
-};
-
-const findUserById = async (userId) => {
-  const user = await User.findByPk(userId);
-
-  if (!user) {
-    const error = new Error("User not found.");
-    error.statusCode = 404;
-    error.code = "USER_NOT_FOUND";
-    throw error;
-  }
-
-  return user;
-};
-
-/*
- * Validate task assignee.
- *
- * Rules:
- * - null/undefined -> no assignee
- * - user must exist
- * - user must be ACTIVE
- * - user must belong to the same organization
- * - user must be a member of the project
- * - VIEWER users cannot be assigned tasks
- */
 const validateAssignee = async (
   assignedTo,
-  organizationId,
-  projectId
+  organizationId
 ) => {
-  if (!assignedTo) {
+  if (
+    assignedTo === undefined ||
+    assignedTo === null
+  ) {
     return null;
   }
 
-  const user = await findUserById(assignedTo);
+  const assignee = await User.findOne({
+    where: {
+      id: assignedTo,
+      organizationId,
+      status: "ACTIVE",
+    },
+  });
 
-  if (user.organizationId !== organizationId) {
+  if (!assignee) {
     const error = new Error(
-      "Task assignee must belong to the same organization."
+      "Assigned user must belong to the same organization and be active."
     );
     error.statusCode = 400;
     error.code = "INVALID_TASK_ASSIGNEE";
     throw error;
   }
 
-  if (user.status !== "ACTIVE") {
-    const error = new Error(
-      "Task assignee must have an active account."
-    );
-    error.statusCode = 400;
-    error.code = "INVALID_TASK_ASSIGNEE";
-    throw error;
-  }
-
-  if (user.role === "VIEWER") {
+  if (assignee.role === "VIEWER") {
     const error = new Error(
       "Viewer users cannot be assigned tasks."
     );
@@ -171,140 +56,31 @@ const validateAssignee = async (
     throw error;
   }
 
-  const membership = await ProjectMember.findOne({
-    where: {
-      projectId,
-      userId: assignedTo,
-    },
-  });
-
-  if (!membership) {
-    const error = new Error(
-      "Task assignee must be a member of the project."
-    );
-    error.statusCode = 400;
-    error.code = "INVALID_TASK_ASSIGNEE";
-    throw error;
-  }
-
-  return user;
+  return assignee;
 };
 
 const validateTaskAccess = async (
   task,
-  user,
-  action
+  user
 ) => {
-  if (!user) {
-    const error = new Error(
-      "Authentication required."
-    );
-    error.statusCode = 401;
-    error.code = "AUTHENTICATION_REQUIRED";
-    throw error;
-  }
-
-  if (!task.organizationId) {
-    const error = new Error(
-      "Task organization is required."
-    );
-    error.statusCode = 400;
-    error.code = "TASK_ORGANIZATION_REQUIRED";
-    throw error;
-  }
-
-  if (!user.organizationId) {
-    const error = new Error(
-      "User organization is required."
-    );
-    error.statusCode = 403;
-    error.code = "USER_ORGANIZATION_REQUIRED";
-    throw error;
-  }
-
   if (
-    user.organizationId !==
-    task.organizationId
+    task.organizationId !==
+    user.organizationId
   ) {
     const error = new Error(
-      "You do not have access to tasks outside your organization."
+      "You do not have access to this task."
     );
     error.statusCode = 403;
-    error.code = "CROSS_ORGANIZATION_ACCESS";
+    error.code = "TASK_ACCESS_DENIED";
     throw error;
   }
 
-  /*
-   * Management users can access and manage
-   * tasks within their organization.
-   */
   if (
     MANAGEMENT_ROLES.includes(user.role)
   ) {
-    return {
-      membership: null,
-    };
+    return;
   }
 
-  /*
-   * Non-management users must be project members.
-   */
-  const membership =
-    await ProjectMember.findOne({
-      where: {
-        projectId: task.projectId,
-        userId: user.id,
-      },
-    });
-
-  if (!membership) {
-    const error = new Error(
-      "You must be a member of the project to access this task."
-    );
-    error.statusCode = 403;
-    error.code =
-      "PROJECT_MEMBERSHIP_REQUIRED";
-    throw error;
-  }
-
-  /*
-   * Project members can view tasks.
-   */
-  if (action === "view") {
-    return {
-      membership,
-    };
-  }
-
-  /*
-   * Viewers are read-only.
-   */
-  if (user.role === "VIEWER") {
-    const error = new Error(
-      "Viewers do not have permission to modify tasks."
-    );
-    error.statusCode = 403;
-    error.code =
-      "TASK_MODIFICATION_FORBIDDEN";
-    throw error;
-  }
-
-  /*
-   * Non-management users cannot delete tasks.
-   */
-  if (action === "delete") {
-    const error = new Error(
-      "Only management users can delete tasks."
-    );
-    error.statusCode = 403;
-    error.code = "TASK_DELETE_FORBIDDEN";
-    throw error;
-  }
-
-  /*
-   * Employees and other project members can modify
-   * only tasks they created or are assigned to.
-   */
   const isCreator =
     task.createdBy === user.id;
 
@@ -313,49 +89,60 @@ const validateTaskAccess = async (
 
   if (!isCreator && !isAssignee) {
     const error = new Error(
-      "You can only modify tasks you created or are assigned to."
+      "You can only access tasks you created or are assigned to."
     );
     error.statusCode = 403;
-    error.code = "TASK_OWNERSHIP_REQUIRED";
+    error.code = "TASK_ACCESS_DENIED";
     throw error;
   }
-
-  return {
-    membership,
-  };
 };
 
-/*
- * Validate whether a task can move from its current
- * status to the requested next status.
- */
 const validateTaskStatusTransition = (
   currentStatus,
   nextStatus
 ) => {
-  /*
-   * Prevent unnecessary same-status updates.
-   */
   if (currentStatus === nextStatus) {
-    const error = new Error(
-      `Task is already in ${currentStatus} status.`
-    );
-    error.statusCode = 400;
-    error.code =
-      "INVALID_TASK_STATUS_TRANSITION";
-    throw error;
+    return;
   }
 
+  const allowedTransitions = {
+    TODO: [
+      "IN_PROGRESS",
+      "BLOCKED",
+      "CANCELLED",
+    ],
+
+    IN_PROGRESS: [
+      "TODO",
+      "BLOCKED",
+      "COMPLETED",
+      "CANCELLED",
+    ],
+
+    BLOCKED: [
+      "TODO",
+      "IN_PROGRESS",
+      "CANCELLED",
+    ],
+
+    COMPLETED: [
+      "TODO",
+    ],
+
+    CANCELLED: [
+      "TODO",
+    ],
+  };
+
   const allowedStatuses =
-    TASK_STATUS_TRANSITIONS[
-      currentStatus
-    ] || [];
+    allowedTransitions[currentStatus] ||
+    [];
 
   if (
     !allowedStatuses.includes(nextStatus)
   ) {
     const error = new Error(
-      `Task status cannot transition from ${currentStatus} to ${nextStatus}.`
+      `Task status cannot be changed from ${currentStatus} to ${nextStatus}.`
     );
     error.statusCode = 400;
     error.code =
@@ -364,202 +151,438 @@ const validateTaskStatusTransition = (
   }
 };
 
-/*
- * Normalize a single-value or comma-separated
- * filter into an array.
- *
- * Examples:
- *
- * "TODO"
- * ->
- * ["TODO"]
- *
- * "TODO,IN_PROGRESS"
- * ->
- * ["TODO", "IN_PROGRESS"]
- *
- * ["TODO", "IN_PROGRESS"]
- * ->
- * ["TODO", "IN_PROGRESS"]
- */
+const validateTaskDueDate = (dueDate) => {
+  if (
+    dueDate === undefined ||
+    dueDate === null
+  ) {
+    return null;
+  }
+
+  const normalizedDueDate =
+    new Date(dueDate);
+
+  if (
+    Number.isNaN(
+      normalizedDueDate.getTime()
+    )
+  ) {
+    const error = new Error(
+      "Task due date must be a valid date."
+    );
+    error.statusCode = 400;
+    error.code =
+      "INVALID_TASK_DUE_DATE";
+    throw error;
+  }
+
+  const now = new Date();
+
+  if (normalizedDueDate < now) {
+    const error = new Error(
+      "Task due date cannot be in the past."
+    );
+    error.statusCode = 400;
+    error.code =
+      "INVALID_TASK_DUE_DATE";
+    throw error;
+  }
+
+  return normalizedDueDate;
+};
+
+const calculateDeadlineMetadata = (
+  task
+) => {
+  if (!task.dueDate) {
+    return {
+      hasDeadline: false,
+      isOverdue: false,
+      isDueToday: false,
+      isDueSoon: false,
+      daysUntilDue: null,
+    };
+  }
+
+  const dueDate =
+    new Date(task.dueDate);
+
+  const now = new Date();
+
+  const isActiveTask =
+    ACTIVE_TASK_STATUSES.includes(
+      task.status
+    );
+
+  if (!isActiveTask) {
+    return {
+      hasDeadline: true,
+      isOverdue: false,
+      isDueToday: false,
+      isDueSoon: false,
+      daysUntilDue: null,
+    };
+  }
+
+  const differenceInMilliseconds =
+    dueDate.getTime() -
+    now.getTime();
+
+  const differenceInDays =
+    Math.ceil(
+      differenceInMilliseconds /
+        (1000 * 60 * 60 * 24)
+    );
+
+  const nowStartOfDay =
+    new Date(now);
+
+  nowStartOfDay.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  const dueDateStartOfDay =
+    new Date(dueDate);
+
+  dueDateStartOfDay.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  const isOverdue =
+    dueDate.getTime() <
+    now.getTime();
+
+  const isDueToday =
+    dueDateStartOfDay.getTime() ===
+    nowStartOfDay.getTime();
+
+  const isDueSoon =
+    !isOverdue &&
+    differenceInDays >= 0 &&
+    differenceInDays <= 3;
+
+  return {
+    hasDeadline: true,
+    isOverdue,
+    isDueToday,
+    isDueSoon,
+    daysUntilDue: isOverdue
+      ? differenceInDays
+      : Math.max(
+          differenceInDays,
+          0
+        ),
+  };
+};
+
+const attachDeadlineMetadata = (
+  task
+) => {
+  const taskData =
+    typeof task.toJSON === "function"
+      ? task.toJSON()
+      : task;
+
+  return {
+    ...taskData,
+    deadline:
+      calculateDeadlineMetadata(
+        taskData
+      ),
+  };
+};
+
 const normalizeMultiValueFilter = (
   value
 ) => {
-  if (value === undefined || value === null) {
-    return [];
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
+    return undefined;
   }
 
-  const values = Array.isArray(value)
-    ? value
-    : String(value).split(",");
+  if (Array.isArray(value)) {
+    return value;
+  }
 
-  return values
-    .flatMap((item) =>
-      String(item).split(",")
-    )
-    .map((item) => item.trim())
-    .filter(Boolean);
+  return [value];
 };
 
-/*
- * Build the Sequelize WHERE clause for task listing.
- *
- * Supported filters:
- * - projectId
- * - single/multiple status
- * - single/multiple priority
- * - assignedTo
- * - createdBy
- * - dueDateFrom
- * - dueDateTo
- * - text search
- */
-const buildTaskListWhere = ({
-  projectId,
-  status,
-  priority,
-  assignedTo,
-  createdBy,
-  dueDateFrom,
-  dueDateTo,
-  search,
-}) => {
-  const where = {
-    projectId,
-  };
-
-  /*
-   * Normalize status filter.
-   */
-  const statusValues =
-    normalizeMultiValueFilter(status);
-
-  if (statusValues.length === 1) {
-    where.status = statusValues[0];
-  } else if (statusValues.length > 1) {
-    where.status = {
-      [Op.in]: statusValues,
-    };
-  }
-
-  /*
-   * Normalize priority filter.
-   */
-  const priorityValues =
-    normalizeMultiValueFilter(priority);
-
-  if (priorityValues.length === 1) {
-    where.priority = priorityValues[0];
-  } else if (priorityValues.length > 1) {
-    where.priority = {
-      [Op.in]: priorityValues,
-    };
-  }
-
-  /*
-   * Exact assignee filtering.
-   */
-  if (assignedTo) {
-    where.assignedTo = assignedTo;
-  }
-
-  /*
-   * Exact creator filtering.
-   */
-  if (createdBy) {
-    where.createdBy = createdBy;
-  }
-
-  /*
-   * Due-date filtering.
-   *
-   * Supports:
-   * - from only
-   * - to only
-   * - both from and to
-   */
-  if (dueDateFrom && dueDateTo) {
-    where.dueDate = {
-      [Op.between]: [
-        dueDateFrom,
-        dueDateTo,
-      ],
-    };
-  } else if (dueDateFrom) {
-    where.dueDate = {
-      [Op.gte]: dueDateFrom,
-    };
-  } else if (dueDateTo) {
-    where.dueDate = {
-      [Op.lte]: dueDateTo,
-    };
-  }
-
-  /*
-   * Text search across task title and description.
-   */
-  if (search) {
-    where[Op.or] = [
-      {
-        title: {
-          [Op.like]: `%${search}%`,
-        },
-      },
-      {
-        description: {
-          [Op.like]: `%${search}%`,
-        },
-      },
-    ];
-  }
-
-  return where;
-};
-
-const getProjectTasks = async (
-  projectId,
-  query = {}
+const buildDeadlineFilter = (
+  deadline
 ) => {
-  await findProjectById(projectId);
+  if (!deadline) {
+    return {};
+  }
 
+  const now = new Date();
+
+  const startOfToday =
+    new Date(now);
+
+  startOfToday.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  const endOfToday =
+    new Date(now);
+
+  endOfToday.setHours(
+    23,
+    59,
+    59,
+    999
+  );
+
+  const threeDaysFromNow =
+    new Date(
+      now.getTime() +
+        3 *
+          24 *
+          60 *
+          60 *
+          1000
+    );
+
+  switch (deadline) {
+    case "OVERDUE":
+      return {
+        status: {
+          [Op.in]:
+            ACTIVE_TASK_STATUSES,
+        },
+        dueDate: {
+          [Op.lt]: now,
+        },
+      };
+
+    case "DUE_TODAY":
+      return {
+        status: {
+          [Op.in]:
+            ACTIVE_TASK_STATUSES,
+        },
+        dueDate: {
+          [Op.gte]: startOfToday,
+          [Op.lte]: endOfToday,
+        },
+      };
+
+    case "DUE_SOON":
+      return {
+        status: {
+          [Op.in]:
+            ACTIVE_TASK_STATUSES,
+        },
+        dueDate: {
+          [Op.gt]: now,
+          [Op.lte]:
+            threeDaysFromNow,
+        },
+      };
+
+    case "UPCOMING":
+      return {
+        status: {
+          [Op.in]:
+            ACTIVE_TASK_STATUSES,
+        },
+        dueDate: {
+          [Op.gt]:
+            threeDaysFromNow,
+        },
+      };
+
+    default:
+      return {};
+  }
+};
+
+const buildTaskListWhere = (
+  projectId,
+  query
+) => {
   const {
-    page = 1,
-    limit = 10,
     status,
     priority,
     assignedTo,
     createdBy,
     dueDateFrom,
     dueDateTo,
+    deadline,
     search,
   } = query;
 
-  /*
-   * Explicitly convert pagination values to numbers.
-   */
-  const currentPage = Number(page);
-  const currentLimit = Number(limit);
+  const conditions = [
+    {
+      projectId,
+    },
+  ];
+
+  const normalizedStatuses =
+    normalizeMultiValueFilter(
+      status
+    );
+
+  const normalizedPriorities =
+    normalizeMultiValueFilter(
+      priority
+    );
+
+  if (normalizedStatuses) {
+    conditions.push({
+      status:
+        normalizedStatuses.length === 1
+          ? normalizedStatuses[0]
+          : {
+              [Op.in]:
+                normalizedStatuses,
+            },
+    });
+  }
+
+  if (normalizedPriorities) {
+    conditions.push({
+      priority:
+        normalizedPriorities.length === 1
+          ? normalizedPriorities[0]
+          : {
+              [Op.in]:
+                normalizedPriorities,
+            },
+    });
+  }
+
+  if (assignedTo) {
+    conditions.push({
+      assignedTo,
+    });
+  }
+
+  if (createdBy) {
+    conditions.push({
+      createdBy,
+    });
+  }
+
+  if (dueDateFrom || dueDateTo) {
+    const dueDateCondition = {};
+
+    if (dueDateFrom) {
+      dueDateCondition[Op.gte] =
+        dueDateFrom;
+    }
+
+    if (dueDateTo) {
+      dueDateCondition[Op.lte] =
+        dueDateTo;
+    }
+
+    conditions.push({
+      dueDate: dueDateCondition,
+    });
+  }
+
+  if (deadline) {
+    const deadlineWhere =
+      buildDeadlineFilter(
+        deadline
+      );
+
+    if (
+      Object.keys(deadlineWhere)
+        .length > 0
+    ) {
+      conditions.push(
+        deadlineWhere
+      );
+    }
+  }
+
+  if (search) {
+    conditions.push({
+      [Op.or]: [
+        {
+          title: {
+            [Op.like]: `%${search}%`,
+          },
+        },
+        {
+          description: {
+            [Op.like]: `%${search}%`,
+          },
+        },
+      ],
+    });
+  }
+
+  return {
+    [Op.and]: conditions,
+  };
+};
+
+const getProjectTasks = async (
+  projectId,
+  query = {}
+) => {
+  const project =
+    await Project.findByPk(
+      projectId
+    );
+
+  if (!project) {
+    const error = new Error(
+      "Project not found."
+    );
+    error.statusCode = 404;
+    error.code =
+      "PROJECT_NOT_FOUND";
+    throw error;
+  }
+
+  const {
+    page = 1,
+    limit = 10,
+  } = query;
 
   const offset =
-    (currentPage - 1) *
-    currentLimit;
+    (Number(page) - 1) *
+    Number(limit);
 
   const where =
-    buildTaskListWhere({
+    buildTaskListWhere(
       projectId,
-      status,
-      priority,
-      assignedTo,
-      createdBy,
-      dueDateFrom,
-      dueDateTo,
-      search,
-    });
+      query
+    );
 
   const { count, rows } =
     await Task.findAndCountAll({
       where,
+
       include: [
+        {
+          model: Project,
+          as: "project",
+          attributes: [
+            "id",
+            "organizationId",
+            "name",
+            "code",
+            "status",
+          ],
+        },
+
         {
           model: User,
           as: "assignee",
@@ -570,6 +593,7 @@ const getProjectTasks = async (
             "email",
           ],
         },
+
         {
           model: User,
           as: "creator",
@@ -581,23 +605,27 @@ const getProjectTasks = async (
           ],
         },
       ],
+
       order: [
         ["createdAt", "DESC"],
       ],
-      limit: currentLimit,
+
+      limit: Number(limit),
       offset,
     });
 
   return {
-    tasks: rows,
+    tasks: rows.map(
+      attachDeadlineMetadata
+    ),
+
     pagination: {
-      page: currentPage,
-      limit: currentLimit,
+      page: Number(page),
+      limit: Number(limit),
       totalItems: count,
-      totalPages:
-        Math.ceil(
-          count / currentLimit
-        ),
+      totalPages: Math.ceil(
+        count / Number(limit)
+      ),
     },
   };
 };
@@ -607,20 +635,70 @@ const getTaskById = async (
   user
 ) => {
   const task =
-    await findTaskById(taskId);
+    await Task.findByPk(
+      taskId,
+      {
+        include: [
+          {
+            model: Project,
+            as: "project",
+            attributes: [
+              "id",
+              "organizationId",
+              "name",
+              "code",
+              "status",
+            ],
+          },
+
+          {
+            model: User,
+            as: "assignee",
+            attributes: [
+              "id",
+              "firstName",
+              "lastName",
+              "email",
+            ],
+          },
+
+          {
+            model: User,
+            as: "creator",
+            attributes: [
+              "id",
+              "firstName",
+              "lastName",
+              "email",
+            ],
+          },
+        ],
+      }
+    );
+
+  if (!task) {
+    const error = new Error(
+      "Task not found."
+    );
+    error.statusCode = 404;
+    error.code =
+      "TASK_NOT_FOUND";
+    throw error;
+  }
 
   await validateTaskAccess(
     task,
-    user,
-    "view"
+    user
   );
 
-  return task;
+  return attachDeadlineMetadata(
+    task
+  );
 };
 
 const createTask = async (
   data,
-  createdBy
+  userId
 ) => {
   const {
     projectId,
@@ -632,105 +710,89 @@ const createTask = async (
     dueDate,
   } = data;
 
-  const project =
-    await findProjectById(
-      projectId
-    );
-
   const creator =
-    await findUserById(
-      createdBy
+    await User.findByPk(
+      userId
     );
 
-  if (creator.status !== "ACTIVE") {
+  if (!creator) {
     const error = new Error(
-      "Only active users can create tasks."
+      "Task creator not found."
     );
-    error.statusCode = 403;
+    error.statusCode = 404;
     error.code =
-      "TASK_CREATION_FORBIDDEN";
+      "TASK_CREATOR_NOT_FOUND";
     throw error;
   }
 
-  if (
-    creator.organizationId !==
-    project.organizationId
-  ) {
+  const project =
+    await Project.findOne({
+      where: {
+        id: projectId,
+        organizationId:
+          creator.organizationId,
+      },
+    });
+
+  if (!project) {
     const error = new Error(
-      "You cannot create tasks in another organization."
+      "Project not found or does not belong to your organization."
     );
-    error.statusCode = 403;
+    error.statusCode = 404;
     error.code =
-      "CROSS_ORGANIZATION_ACCESS";
+      "PROJECT_NOT_FOUND";
     throw error;
-  }
-
-  /*
-   * Management users can create tasks in any project
-   * within their organization.
-   */
-  if (
-    !MANAGEMENT_ROLES.includes(
-      creator.role
-    )
-  ) {
-    const membership =
-      await ProjectMember.findOne({
-        where: {
-          projectId,
-          userId: createdBy,
-        },
-      });
-
-    if (!membership) {
-      const error = new Error(
-        "You must be a member of the project to create tasks."
-      );
-      error.statusCode = 403;
-      error.code =
-        "CREATOR_NOT_PROJECT_MEMBER";
-      throw error;
-    }
-
-    if (creator.role === "VIEWER") {
-      const error = new Error(
-        "Viewers do not have permission to create tasks."
-      );
-      error.statusCode = 403;
-      error.code =
-        "TASK_CREATION_FORBIDDEN";
-      throw error;
-    }
   }
 
   await validateAssignee(
     assignedTo,
-    project.organizationId,
-    project.id
+    creator.organizationId
   );
+
+  const validatedDueDate =
+    validateTaskDueDate(
+      dueDate
+    );
 
   const task =
     await Task.create({
       organizationId:
-        project.organizationId,
+        creator.organizationId,
+
       projectId,
+
       assignedTo:
-        assignedTo || null,
-      createdBy,
+        assignedTo === undefined
+          ? null
+          : assignedTo,
+
+      createdBy: userId,
+
       title,
+
       description:
-        description || null,
-      priority,
-      status,
+        description === undefined
+          ? null
+          : description,
+
+      priority:
+        priority === undefined
+          ? "MEDIUM"
+          : priority,
+
+      status:
+        status === undefined
+          ? "TODO"
+          : status,
+
       dueDate:
-        dueDate || null,
-      completedAt:
-        status === "COMPLETED"
-          ? new Date()
-          : null,
+        validatedDueDate,
     });
 
-  return findTaskById(task.id);
+  return getTaskById(
+    task.id,
+    creator
+  );
 };
 
 const updateTask = async (
@@ -739,107 +801,174 @@ const updateTask = async (
   user
 ) => {
   const task =
-    await findTaskById(taskId);
+    await Task.findByPk(
+      taskId
+    );
+
+  if (!task) {
+    const error = new Error(
+      "Task not found."
+    );
+    error.statusCode = 404;
+    error.code =
+      "TASK_NOT_FOUND";
+    throw error;
+  }
 
   await validateTaskAccess(
     task,
-    user,
-    "update"
+    user
   );
 
+  if (user.role === "VIEWER") {
+    const error = new Error(
+      "Viewer users cannot update tasks."
+    );
+    error.statusCode = 403;
+    error.code =
+      "TASK_UPDATE_FORBIDDEN";
+    throw error;
+  }
+
+  const {
+    assignedTo,
+    title,
+    description,
+    priority,
+    status,
+    dueDate,
+  } = data;
+
   if (
-    data.assignedTo !== undefined
+    assignedTo !== undefined
   ) {
     await validateAssignee(
-      data.assignedTo,
-      task.organizationId,
-      task.projectId
+      assignedTo,
+      user.organizationId
+    );
+  }
+
+  if (status !== undefined) {
+    validateTaskStatusTransition(
+      task.status,
+      status
     );
   }
 
   const updateData = {};
 
-  if (data.title !== undefined) {
-    updateData.title =
-      data.title;
-  }
-
   if (
-    data.description !==
-    undefined
-  ) {
-    updateData.description =
-      data.description;
-  }
-
-  if (data.priority !== undefined) {
-    updateData.priority =
-      data.priority;
-  }
-
-  if (
-    data.assignedTo !== undefined
+    assignedTo !== undefined
   ) {
     updateData.assignedTo =
-      data.assignedTo;
+      assignedTo;
   }
 
-  if (data.dueDate !== undefined) {
+  if (title !== undefined) {
+    updateData.title = title;
+  }
+
+  if (
+    description !== undefined
+  ) {
+    updateData.description =
+      description;
+  }
+
+  if (priority !== undefined) {
+    updateData.priority =
+      priority;
+  }
+
+  if (status !== undefined) {
+    updateData.status =
+      status;
+
+    if (status === "COMPLETED") {
+      updateData.completedAt =
+        new Date();
+    } else {
+      updateData.completedAt =
+        null;
+    }
+  }
+
+  if (dueDate !== undefined) {
     updateData.dueDate =
-      data.dueDate;
+      validateTaskDueDate(
+        dueDate
+      );
   }
 
-  await task.update(updateData);
+  await task.update(
+    updateData
+  );
 
-  return findTaskById(
-    task.id
+  return getTaskById(
+    task.id,
+    user
   );
 };
 
 const updateTaskStatus = async (
   taskId,
-  status,
+  nextStatus,
   user
 ) => {
   const task =
-    await findTaskById(taskId);
+    await Task.findByPk(
+      taskId
+    );
 
-  /*
-   * Authorization remains unchanged.
-   */
+  if (!task) {
+    const error = new Error(
+      "Task not found."
+    );
+    error.statusCode = 404;
+    error.code =
+      "TASK_NOT_FOUND";
+    throw error;
+  }
+
   await validateTaskAccess(
     task,
-    user,
-    "status"
+    user
   );
 
-  /*
-   * Validate the requested status transition.
-   */
+  if (user.role === "VIEWER") {
+    const error = new Error(
+      "Viewer users cannot update task status."
+    );
+    error.statusCode = 403;
+    error.code =
+      "TASK_STATUS_UPDATE_FORBIDDEN";
+    throw error;
+  }
+
   validateTaskStatusTransition(
     task.status,
-    status
+    nextStatus
   );
 
   const updateData = {
-    status,
+    status: nextStatus,
   };
 
-  /*
-   * completedAt is only populated when the task
-   * actually transitions to COMPLETED.
-   */
-  if (status === "COMPLETED") {
+  if (nextStatus === "COMPLETED") {
     updateData.completedAt =
       new Date();
   } else {
-    updateData.completedAt = null;
+    updateData.completedAt =
+      null;
   }
 
-  await task.update(updateData);
+  await task.update(
+    updateData
+  );
 
-  return findTaskById(
-    task.id
+  return getTaskById(
+    task.id,
+    user
   );
 };
 
@@ -848,17 +977,55 @@ const deleteTask = async (
   user
 ) => {
   const task =
-    await findTaskById(taskId);
+    await Task.findByPk(
+      taskId
+    );
 
-  await validateTaskAccess(
-    task,
-    user,
-    "delete"
-  );
+  if (!task) {
+    const error = new Error(
+      "Task not found."
+    );
+    error.statusCode = 404;
+    error.code =
+      "TASK_NOT_FOUND";
+    throw error;
+  }
+
+  if (
+    task.organizationId !==
+    user.organizationId
+  ) {
+    const error = new Error(
+      "You do not have access to this task."
+    );
+    error.statusCode = 403;
+    error.code =
+      "TASK_ACCESS_DENIED";
+    throw error;
+  }
+
+  if (
+    !MANAGEMENT_ROLES.includes(
+      user.role
+    )
+  ) {
+    const error = new Error(
+      "Only management users can delete tasks."
+    );
+    error.statusCode = 403;
+    error.code =
+      "TASK_DELETE_FORBIDDEN";
+    throw error;
+  }
+
+  const deletedTask =
+    attachDeadlineMetadata(
+      task
+    );
 
   await task.destroy();
 
-  return task;
+  return deletedTask;
 };
 
 module.exports = {
