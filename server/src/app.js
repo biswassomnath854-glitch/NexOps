@@ -42,9 +42,18 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/departments", departmentRoutes);
+
+/*
+ * Task routes must be mounted before project routes.
+ *
+ * /api/projects/:projectId/tasks
+ * must be handled by task authorization rather than
+ * the project management ADMIN/SUPER_ADMIN middleware.
+ */
+app.use("/api", taskRoutes);
+
 app.use("/api/projects", projectRoutes);
 app.use("/api/projects", projectMemberRoutes);
-app.use("/api", taskRoutes);
 
 /*
  * Health Check

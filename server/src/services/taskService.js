@@ -5,20 +5,17 @@ const {
   Project,
   ProjectMember,
   User,
-  Organization,
-  Department,
 } = require("../models");
 
+const MANAGEMENT_ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "MANAGER",
+  "TEAM_LEAD",
+];
+
 const findProjectById = async (projectId) => {
-  const project = await Project.findByPk(projectId, {
-    include: [
-      {
-        model: Organization,
-        as: "organization",
-        attributes: ["id", "name", "slug", "status"],
-      },
-    ],
-  });
+  const project = await Project.findByPk(projectId);
 
   if (!project) {
     const error = new Error("Project not found.");
@@ -33,11 +30,6 @@ const findProjectById = async (projectId) => {
 const findTaskById = async (taskId) => {
   const task = await Task.findByPk(taskId, {
     include: [
-      {
-        model: Organization,
-        as: "organization",
-        attributes: ["id", "name", "slug", "status"],
-      },
       {
         model: Project,
         as: "project",
@@ -54,20 +46,9 @@ const findTaskById = async (taskId) => {
         as: "assignee",
         attributes: [
           "id",
-          "organizationId",
-          "departmentId",
           "firstName",
           "lastName",
           "email",
-          "role",
-          "status",
-        ],
-        include: [
-          {
-            model: Department,
-            as: "department",
-            attributes: ["id", "name", "code"],
-          },
         ],
       },
       {
@@ -75,13 +56,9 @@ const findTaskById = async (taskId) => {
         as: "creator",
         attributes: [
           "id",
-          "organizationId",
-          "departmentId",
           "firstName",
           "lastName",
           "email",
-          "role",
-          "status",
         ],
       },
     ],
@@ -98,20 +75,7 @@ const findTaskById = async (taskId) => {
 };
 
 const findUserById = async (userId) => {
-  const user = await User.findByPk(userId, {
-    include: [
-      {
-        model: Organization,
-        as: "organization",
-        attributes: ["id", "name", "slug", "status"],
-      },
-      {
-        model: Department,
-        as: "department",
-        attributes: ["id", "name", "code", "status"],
-      },
-    ],
-  });
+  const user = await User.findByPk(userId);
 
   if (!user) {
     const error = new Error("User not found.");
@@ -123,98 +87,197 @@ const findUserById = async (userId) => {
   return user;
 };
 
-const validateAssignee = async (project, assignedTo) => {
+const validateAssignee = async (assignedTo, organizationId) => {
   if (!assignedTo) {
     return null;
   }
 
   const user = await findUserById(assignedTo);
 
-  if (!user.organizationId) {
-    const error = new Error("User organization is required.");
-    error.statusCode = 400;
-    error.code = "USER_ORGANIZATION_REQUIRED";
-    throw error;
-  }
-
-  if (!project.organizationId) {
-    const error = new Error("Project organization is required.");
-    error.statusCode = 400;
-    error.code = "PROJECT_ORGANIZATION_REQUIRED";
-    throw error;
-  }
-
-  if (user.organizationId !== project.organizationId) {
+  if (user.organizationId !== organizationId) {
     const error = new Error(
-      "User and project must belong to the same organization."
+      "Task assignee must belong to the same organization."
     );
-    error.statusCode = 403;
-    error.code = "CROSS_ORGANIZATION_ASSIGNMENT";
+    error.statusCode = 400;
+    error.code = "INVALID_TASK_ASSIGNEE";
     throw error;
   }
 
   if (user.status !== "ACTIVE") {
     const error = new Error(
-      "Only active users can be assigned to tasks."
+      "Task assignee must have an active account."
     );
     error.statusCode = 400;
-    error.code = "USER_NOT_ACTIVE";
-    throw error;
-  }
-
-  const projectMembership = await ProjectMember.findOne({
-    where: {
-      projectId: project.id,
-      userId: user.id,
-    },
-  });
-
-  if (!projectMembership) {
-    const error = new Error(
-      "Task assignee must be a member of the project."
-    );
-    error.statusCode = 400;
-    error.code = "USER_NOT_PROJECT_MEMBER";
+    error.code = "INVALID_TASK_ASSIGNEE";
     throw error;
   }
 
   return user;
 };
 
+const validateTaskAccess = async (task, user, action) => {
+  if (!user) {
+    const error = new Error("Authentication required.");
+    error.statusCode = 401;
+    error.code = "AUTHENTICATION_REQUIRED";
+    throw error;
+  }
+
+  if (!task.organizationId) {
+    const error = new Error("Task organization is required.");
+    error.statusCode = 400;
+    error.code = "TASK_ORGANIZATION_REQUIRED";
+    throw error;
+  }
+
+  if (!user.organizationId) {
+    const error = new Error("User organization is required.");
+    error.statusCode = 403;
+    error.code = "USER_ORGANIZATION_REQUIRED";
+    throw error;
+  }
+
+  if (user.organizationId !== task.organizationId) {
+    const error = new Error(
+      "You do not have access to tasks outside your organization."
+    );
+    error.statusCode = 403;
+    error.code = "CROSS_ORGANIZATION_ACCESS";
+    throw error;
+  }
+
+  /*
+   * Management users can access and manage
+   * tasks within their organization.
+   */
+  if (MANAGEMENT_ROLES.includes(user.role)) {
+    return {
+      membership: null,
+    };
+  }
+
+  /*
+   * Non-management users must be project members.
+   */
+  const membership = await ProjectMember.findOne({
+    where: {
+      projectId: task.projectId,
+      userId: user.id,
+    },
+  });
+
+  if (!membership) {
+    const error = new Error(
+      "You must be a member of the project to access this task."
+    );
+    error.statusCode = 403;
+    error.code = "PROJECT_MEMBERSHIP_REQUIRED";
+    throw error;
+  }
+
+  /*
+   * Project members can view tasks.
+   */
+  if (action === "view") {
+    return {
+      membership,
+    };
+  }
+
+  /*
+   * Viewers are read-only.
+   */
+  if (user.role === "VIEWER") {
+    const error = new Error(
+      "Viewers do not have permission to modify tasks."
+    );
+    error.statusCode = 403;
+    error.code = "TASK_MODIFICATION_FORBIDDEN";
+    throw error;
+  }
+
+  /*
+   * Non-management users cannot delete tasks.
+   */
+  if (action === "delete") {
+    const error = new Error(
+      "Only management users can delete tasks."
+    );
+    error.statusCode = 403;
+    error.code = "TASK_DELETE_FORBIDDEN";
+    throw error;
+  }
+
+  /*
+   * Employees and other project members can modify
+   * only tasks they created or are assigned to.
+   */
+  const isCreator = task.createdBy === user.id;
+  const isAssignee = task.assignedTo === user.id;
+
+  if (!isCreator && !isAssignee) {
+    const error = new Error(
+      "You can only modify tasks you created or are assigned to."
+    );
+    error.statusCode = 403;
+    error.code = "TASK_OWNERSHIP_REQUIRED";
+    throw error;
+  }
+
+  return {
+    membership,
+  };
+};
+
 const getProjectTasks = async (projectId, query = {}) => {
   await findProjectById(projectId);
 
-  const page = Number(query.page) || 1;
-  const limit = Number(query.limit) || 10;
+  const {
+    page = 1,
+    limit = 10,
+    status,
+    priority,
+    assignedTo,
+    search,
+  } = query;
 
-  const offset = (page - 1) * limit;
+  /*
+   * Explicitly convert pagination values to numbers.
+   *
+   * Express query parameters arrive as strings.
+   * Sequelize requires numeric LIMIT/OFFSET values.
+   */
+  const currentPage = Number(page);
+  const currentLimit = Number(limit);
+
+  const offset = (currentPage - 1) * currentLimit;
 
   const where = {
     projectId,
   };
 
-  if (query.status) {
-    where.status = query.status;
+  if (status) {
+    where.status = status;
   }
 
-  if (query.priority) {
-    where.priority = query.priority;
+  if (priority) {
+    where.priority = priority;
   }
 
-  if (query.assignedTo) {
-    where.assignedTo = query.assignedTo;
+  if (assignedTo) {
+    where.assignedTo = assignedTo;
   }
 
-  if (query.search) {
+  if (search) {
     where[Op.or] = [
       {
         title: {
-          [Op.like]: `%${query.search}%`,
+          [Op.like]: `%${search}%`,
         },
       },
       {
         description: {
-          [Op.like]: `%${query.search}%`,
+          [Op.like]: `%${search}%`,
         },
       },
     ];
@@ -231,8 +294,6 @@ const getProjectTasks = async (projectId, query = {}) => {
           "firstName",
           "lastName",
           "email",
-          "role",
-          "status",
         ],
       },
       {
@@ -243,105 +304,131 @@ const getProjectTasks = async (projectId, query = {}) => {
           "firstName",
           "lastName",
           "email",
-          "role",
-          "status",
         ],
       },
     ],
     order: [["createdAt", "DESC"]],
-    limit,
+    limit: currentLimit,
     offset,
   });
-
-  const totalPages = count === 0 ? 0 : Math.ceil(count / limit);
 
   return {
     tasks: rows,
     pagination: {
-      page,
-      limit,
+      page: currentPage,
+      limit: currentLimit,
       totalItems: count,
-      totalPages,
+      totalPages: Math.ceil(count / currentLimit),
     },
   };
 };
 
-const getTaskById = async (taskId) => {
-  return findTaskById(taskId);
+const getTaskById = async (taskId, user) => {
+  const task = await findTaskById(taskId);
+
+  await validateTaskAccess(task, user, "view");
+
+  return task;
 };
 
 const createTask = async (data, createdBy) => {
-  const project = await findProjectById(data.projectId);
+  const {
+    projectId,
+    assignedTo,
+    title,
+    description,
+    priority,
+    status,
+    dueDate,
+  } = data;
 
-  if (project.status !== "ACTIVE") {
-    const error = new Error("Only active projects can have tasks created.");
-    error.statusCode = 400;
-    error.code = "PROJECT_NOT_ACTIVE";
-    throw error;
-  }
-
-  if (!project.organizationId) {
-    const error = new Error("Project organization is required.");
-    error.statusCode = 400;
-    error.code = "PROJECT_ORGANIZATION_REQUIRED";
-    throw error;
-  }
-
+  const project = await findProjectById(projectId);
   const creator = await findUserById(createdBy);
 
   if (creator.status !== "ACTIVE") {
-    const error = new Error("Only active users can create tasks.");
-    error.statusCode = 400;
-    error.code = "CREATOR_NOT_ACTIVE";
-    throw error;
-  }
-
-  if (!creator.organizationId) {
-    const error = new Error("Creator organization is required.");
-    error.statusCode = 400;
-    error.code = "CREATOR_ORGANIZATION_REQUIRED";
+    const error = new Error(
+      "Only active users can create tasks."
+    );
+    error.statusCode = 403;
+    error.code = "TASK_CREATION_FORBIDDEN";
     throw error;
   }
 
   if (creator.organizationId !== project.organizationId) {
     const error = new Error(
-      "Task creator and project must belong to the same organization."
+      "You cannot create tasks in another organization."
     );
     error.statusCode = 403;
-    error.code = "CROSS_ORGANIZATION_TASK";
+    error.code = "CROSS_ORGANIZATION_ACCESS";
     throw error;
   }
 
-  await validateAssignee(project, data.assignedTo);
+  /*
+   * Management users can create tasks in any project
+   * within their organization.
+   */
+  if (!MANAGEMENT_ROLES.includes(creator.role)) {
+    const membership = await ProjectMember.findOne({
+      where: {
+        projectId,
+        userId: createdBy,
+      },
+    });
+
+    if (!membership) {
+      const error = new Error(
+        "You must be a member of the project to create tasks."
+      );
+      error.statusCode = 403;
+      error.code = "CREATOR_NOT_PROJECT_MEMBER";
+      throw error;
+    }
+
+    if (creator.role === "VIEWER") {
+      const error = new Error(
+        "Viewers do not have permission to create tasks."
+      );
+      error.statusCode = 403;
+      error.code = "TASK_CREATION_FORBIDDEN";
+      throw error;
+    }
+  }
+
+  await validateAssignee(
+    assignedTo,
+    project.organizationId
+  );
 
   const task = await Task.create({
     organizationId: project.organizationId,
-    projectId: project.id,
-    assignedTo: data.assignedTo || null,
+    projectId,
+    assignedTo: assignedTo || null,
     createdBy,
-    title: data.title,
-    description: data.description || null,
-    priority: data.priority,
-    status: data.status,
-    dueDate: data.dueDate || null,
-    completedAt: data.status === "COMPLETED" ? new Date() : null,
+    title,
+    description: description || null,
+    priority,
+    status,
+    dueDate: dueDate || null,
+    completedAt:
+      status === "COMPLETED" ? new Date() : null,
   });
 
   return findTaskById(task.id);
 };
 
-const updateTask = async (taskId, data) => {
+const updateTask = async (taskId, data, user) => {
   const task = await findTaskById(taskId);
 
+  await validateTaskAccess(task, user, "update");
+
   if (data.assignedTo !== undefined) {
-    await validateAssignee(task.project, data.assignedTo);
+    await validateAssignee(
+      data.assignedTo,
+      task.organizationId
+    );
   }
 
   const updateData = {};
-
-  if (data.assignedTo !== undefined) {
-    updateData.assignedTo = data.assignedTo;
-  }
 
   if (data.title !== undefined) {
     updateData.title = data.title;
@@ -355,17 +442,27 @@ const updateTask = async (taskId, data) => {
     updateData.priority = data.priority;
   }
 
+  if (data.assignedTo !== undefined) {
+    updateData.assignedTo = data.assignedTo;
+  }
+
   if (data.dueDate !== undefined) {
     updateData.dueDate = data.dueDate;
   }
 
   await task.update(updateData);
 
-  return findTaskById(taskId);
+  return findTaskById(task.id);
 };
 
-const updateTaskStatus = async (taskId, status) => {
+const updateTaskStatus = async (
+  taskId,
+  status,
+  user
+) => {
   const task = await findTaskById(taskId);
+
+  await validateTaskAccess(task, user, "status");
 
   const updateData = {
     status,
@@ -379,19 +476,17 @@ const updateTaskStatus = async (taskId, status) => {
 
   await task.update(updateData);
 
-  return findTaskById(taskId);
+  return findTaskById(task.id);
 };
 
-const deleteTask = async (taskId) => {
+const deleteTask = async (taskId, user) => {
   const task = await findTaskById(taskId);
+
+  await validateTaskAccess(task, user, "delete");
 
   await task.destroy();
 
-  return {
-    id: task.id,
-    projectId: task.projectId,
-    title: task.title,
-  };
+  return task;
 };
 
 module.exports = {

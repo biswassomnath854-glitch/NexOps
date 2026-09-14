@@ -23,7 +23,8 @@ const getProjectTasks = async (req, res, next) => {
 const getTaskById = async (req, res, next) => {
   try {
     const task = await taskService.getTaskById(
-      req.params.taskId
+      req.params.taskId,
+      req.user
     );
 
     return res.status(200).json({
@@ -64,7 +65,8 @@ const updateTask = async (req, res, next) => {
   try {
     const task = await taskService.updateTask(
       req.params.taskId,
-      req.body
+      req.body,
+      req.user
     );
 
     return res.status(200).json({
@@ -83,7 +85,8 @@ const updateTaskStatus = async (req, res, next) => {
   try {
     const task = await taskService.updateTaskStatus(
       req.params.taskId,
-      req.body.status
+      req.body.status,
+      req.user
     );
 
     return res.status(200).json({
@@ -101,7 +104,8 @@ const updateTaskStatus = async (req, res, next) => {
 const deleteTask = async (req, res, next) => {
   try {
     const deletedTask = await taskService.deleteTask(
-      req.params.taskId
+      req.params.taskId,
+      req.user
     );
 
     return res.status(200).json({

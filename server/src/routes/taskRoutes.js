@@ -2,6 +2,10 @@ const express = require("express");
 
 const taskController = require("../controllers/taskController");
 const { authenticate } = require("../middleware/authMiddleware");
+const {
+  authorizeTaskAccess,
+  authorizeProjectTaskListAccess,
+} = require("../middleware/taskAuthorizationMiddleware");
 
 const {
   createTaskSchema,
@@ -69,6 +73,13 @@ const validateCreateTask = (req, res, next) => {
 
 /*
  * Project Tasks
+ *
+ * Authorization:
+ * - Management users -> allowed within their organization
+ * - Project members -> allowed
+ * - Project viewers -> allowed
+ * - Same-organization non-members -> denied
+ * - Cross-organization users -> denied
  */
 
 router.post(
@@ -81,23 +92,31 @@ router.post(
 router.get(
   "/projects/:projectId/tasks",
   authenticate,
+  authorizeProjectTaskListAccess,
   validateQuery(getProjectTasksQuerySchema),
   taskController.getProjectTasks
 );
 
 /*
  * Individual Tasks
+ *
+ * Authorization:
+ * - view   -> authenticated project member
+ * - update -> management OR creator/assignee
+ * - delete -> management only
  */
 
 router.get(
   "/tasks/:taskId",
   authenticate,
+  authorizeTaskAccess("view"),
   taskController.getTaskById
 );
 
 router.patch(
   "/tasks/:taskId",
   authenticate,
+  authorizeTaskAccess("update"),
   validateBody(updateTaskSchema),
   taskController.updateTask
 );
@@ -105,6 +124,7 @@ router.patch(
 router.patch(
   "/tasks/:taskId/status",
   authenticate,
+  authorizeTaskAccess("update"),
   validateBody(updateTaskStatusSchema),
   taskController.updateTaskStatus
 );
@@ -112,6 +132,7 @@ router.patch(
 router.delete(
   "/tasks/:taskId",
   authenticate,
+  authorizeTaskAccess("delete"),
   taskController.deleteTask
 );
 
