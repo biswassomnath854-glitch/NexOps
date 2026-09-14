@@ -87,7 +87,22 @@ const findUserById = async (userId) => {
   return user;
 };
 
-const validateAssignee = async (assignedTo, organizationId) => {
+/*
+ * Validate task assignee.
+ *
+ * Rules:
+ * - null/undefined -> no assignee
+ * - user must exist
+ * - user must be ACTIVE
+ * - user must belong to the same organization
+ * - user must be a member of the project
+ * - VIEWER users cannot be assigned tasks
+ */
+const validateAssignee = async (
+  assignedTo,
+  organizationId,
+  projectId
+) => {
   if (!assignedTo) {
     return null;
   }
@@ -106,6 +121,31 @@ const validateAssignee = async (assignedTo, organizationId) => {
   if (user.status !== "ACTIVE") {
     const error = new Error(
       "Task assignee must have an active account."
+    );
+    error.statusCode = 400;
+    error.code = "INVALID_TASK_ASSIGNEE";
+    throw error;
+  }
+
+  if (user.role === "VIEWER") {
+    const error = new Error(
+      "Viewer users cannot be assigned tasks."
+    );
+    error.statusCode = 400;
+    error.code = "INVALID_TASK_ASSIGNEE";
+    throw error;
+  }
+
+  const membership = await ProjectMember.findOne({
+    where: {
+      projectId,
+      userId: assignedTo,
+    },
+  });
+
+  if (!membership) {
+    const error = new Error(
+      "Task assignee must be a member of the project."
     );
     error.statusCode = 400;
     error.code = "INVALID_TASK_ASSIGNEE";
@@ -396,7 +436,8 @@ const createTask = async (data, createdBy) => {
 
   await validateAssignee(
     assignedTo,
-    project.organizationId
+    project.organizationId,
+    project.id
   );
 
   const task = await Task.create({
@@ -424,7 +465,8 @@ const updateTask = async (taskId, data, user) => {
   if (data.assignedTo !== undefined) {
     await validateAssignee(
       data.assignedTo,
-      task.organizationId
+      task.organizationId,
+      task.projectId
     );
   }
 
