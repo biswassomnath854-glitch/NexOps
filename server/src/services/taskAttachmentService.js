@@ -239,6 +239,53 @@ const getTaskAttachmentById = async ({
   return attachment;
 };
 
+const getTaskAttachmentFile = async ({
+  organizationId,
+  projectId,
+  taskId,
+  attachmentId,
+}) => {
+  const attachment = await getTaskAttachmentById({
+    organizationId,
+    projectId,
+    taskId,
+    attachmentId,
+  });
+
+  const physicalFilePath = getPhysicalFilePath(
+    attachment.filePath
+  );
+
+  if (!physicalFilePath) {
+    const error = new Error(
+      "Attachment file path is not available."
+    );
+    error.statusCode = 500;
+    error.code = "ATTACHMENT_FILE_PATH_MISSING";
+    throw error;
+  }
+
+  try {
+    await fs.access(physicalFilePath);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      const fileError = new Error(
+        "Attachment file is no longer available."
+      );
+      fileError.statusCode = 404;
+      fileError.code = "ATTACHMENT_FILE_NOT_FOUND";
+      throw fileError;
+    }
+
+    throw error;
+  }
+
+  return {
+    attachment,
+    physicalFilePath,
+  };
+};
+
 const deleteTaskAttachment = async ({
   organizationId,
   projectId,
@@ -309,5 +356,6 @@ module.exports = {
   createTaskAttachment,
   getTaskAttachments,
   getTaskAttachmentById,
+  getTaskAttachmentFile,
   deleteTaskAttachment,
 };
