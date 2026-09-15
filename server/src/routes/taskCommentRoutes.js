@@ -9,6 +9,7 @@ const {
 const {
   createTaskCommentSchema,
   getTaskCommentsQuerySchema,
+  updateTaskCommentSchema,
 } = require("../validators/taskCommentValidator");
 
 const router = express.Router();
@@ -68,6 +69,16 @@ const validateQuery = (schema) => {
  * - Same-organization non-members -> denied
  * - Cross-organization users -> denied
  * - Unauthenticated users -> denied
+ *
+ * Update:
+ * - Task access -> required
+ * - Management users -> allowed within their organization
+ * - Comment owner -> allowed
+ * - Other project members -> denied by comment ownership
+ * - Viewers -> denied by comment ownership/role rules
+ * - Same-organization non-members -> denied
+ * - Cross-organization users -> denied
+ * - Unauthenticated users -> denied
  */
 
 router.post(
@@ -91,6 +102,14 @@ router.get(
   authenticate,
   authorizeTaskAccess("view"),
   taskCommentController.getTaskCommentById
+);
+
+router.patch(
+  "/tasks/:taskId/comments/:commentId",
+  authenticate,
+  authorizeTaskAccess("view"),
+  validateBody(updateTaskCommentSchema),
+  taskCommentController.updateTaskComment
 );
 
 module.exports = router;

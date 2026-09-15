@@ -4,6 +4,17 @@ const {
   User,
 } = require("../models");
 
+const MANAGEMENT_ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "MANAGER",
+  "TEAM_LEAD",
+];
+
+const isManagementUser = (user) => {
+  return MANAGEMENT_ROLES.includes(user.role);
+};
+
 const createTaskComment = async ({
   organizationId,
   projectId,
@@ -162,6 +173,7 @@ const updateTaskComment = async ({
   taskId,
   commentId,
   content,
+  user,
 }) => {
   const comment = await TaskComment.findOne({
     where: {
@@ -176,6 +188,24 @@ const updateTaskComment = async ({
     const error = new Error("Comment not found.");
     error.statusCode = 404;
     error.code = "COMMENT_NOT_FOUND";
+    throw error;
+  }
+
+  if (user.role === "VIEWER") {
+    const error = new Error(
+      "Viewers do not have permission to update comments."
+    );
+    error.statusCode = 403;
+    error.code = "COMMENT_UPDATE_FORBIDDEN";
+    throw error;
+  }
+
+  if (!isManagementUser(user) && comment.userId !== user.id) {
+    const error = new Error(
+      "You can only update comments that you created."
+    );
+    error.statusCode = 403;
+    error.code = "COMMENT_OWNERSHIP_REQUIRED";
     throw error;
   }
 

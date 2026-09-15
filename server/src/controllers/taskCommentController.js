@@ -68,8 +68,32 @@ const getTaskCommentById = async (req, res, next) => {
   }
 };
 
+const updateTaskComment = async (req, res, next) => {
+  try {
+    const comment = await taskCommentService.updateTaskComment({
+      organizationId: req.task.organizationId,
+      projectId: req.task.projectId,
+      taskId: req.task.id,
+      commentId: req.params.commentId,
+      content: req.body.content,
+      user: req.user,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Task comment updated successfully.",
+      data: {
+        comment,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createTaskComment,
   getTaskComments,
   getTaskCommentById,
+  updateTaskComment,
 };
