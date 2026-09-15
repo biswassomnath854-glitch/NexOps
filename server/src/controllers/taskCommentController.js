@@ -22,6 +22,32 @@ const createTaskComment = async (req, res, next) => {
   }
 };
 
+const getTaskComments = async (req, res, next) => {
+  try {
+    const query = req.validatedQuery || {};
+
+    const result = await taskCommentService.getTaskComments({
+      organizationId: req.task.organizationId,
+      projectId: req.task.projectId,
+      taskId: req.task.id,
+      page: query.page,
+      limit: query.limit,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Task comments retrieved successfully.",
+      data: {
+        comments: result.comments,
+        pagination: result.pagination,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createTaskComment,
+  getTaskComments,
 };
