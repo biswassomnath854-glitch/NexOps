@@ -1,3 +1,5 @@
+const { Op } = require("sequelize");
+
 const {
   TaskActivity,
   Task,
@@ -24,21 +26,27 @@ const createTaskActivity = async ({
   metadata = null,
 }) => {
   if (!task) {
-    const error = new Error("Task is required to create activity.");
+    const error = new Error(
+      "Task is required to create activity."
+    );
     error.statusCode = 400;
     error.code = "TASK_REQUIRED";
     throw error;
   }
 
   if (!userId) {
-    const error = new Error("User ID is required to create activity.");
+    const error = new Error(
+      "User ID is required to create activity."
+    );
     error.statusCode = 400;
     error.code = "USER_REQUIRED";
     throw error;
   }
 
   if (!ACTIVITY_ACTIONS.includes(action)) {
-    const error = new Error("Invalid task activity action.");
+    const error = new Error(
+      "Invalid task activity action."
+    );
     error.statusCode = 400;
     error.code = "INVALID_ACTIVITY_ACTION";
     throw error;
@@ -56,7 +64,9 @@ const createTaskActivity = async ({
   const user = await User.findByPk(userId);
 
   if (!user) {
-    const error = new Error("Activity user not found.");
+    const error = new Error(
+      "Activity user not found."
+    );
     error.statusCode = 404;
     error.code = "ACTIVITY_USER_NOT_FOUND";
     throw error;
@@ -97,7 +107,9 @@ const getTaskActivities = async (
   }
 
   if (!organizationId) {
-    const error = new Error("Organization ID is required.");
+    const error = new Error(
+      "Organization ID is required."
+    );
     error.statusCode = 400;
     error.code = "ORGANIZATION_ID_REQUIRED";
     throw error;
@@ -121,31 +133,67 @@ const getTaskActivities = async (
   const limit = Number(options.limit) || 10;
   const offset = (page - 1) * limit;
 
-  const { count, rows } = await TaskActivity.findAndCountAll({
-    where: {
-      taskId,
-      organizationId,
-    },
-    include: [
-      {
-        model: User,
-        as: "user",
-        attributes: [
-          "id",
-          "firstName",
-          "lastName",
-          "email",
-          "role",
-        ],
-      },
-    ],
-    order: [["createdAt", "DESC"]],
-    limit,
-    offset,
-  });
+  const activityWhere = {
+    taskId,
+    organizationId,
+  };
+
+  if (options.action) {
+    activityWhere.action = options.action;
+  }
+
+  if (options.userId) {
+    activityWhere.userId = options.userId;
+  }
+
+  if (options.dateFrom || options.dateTo) {
+    activityWhere.createdAt = {};
+
+    if (options.dateFrom) {
+      activityWhere.createdAt[Op.gte] = new Date(
+        options.dateFrom
+      );
+    }
+
+    if (options.dateTo) {
+      activityWhere.createdAt[Op.lte] = new Date(
+        options.dateTo
+      );
+    }
+  }
+
+  const { count, rows } =
+    await TaskActivity.findAndCountAll({
+      where: activityWhere,
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "email",
+            "role",
+          ],
+        },
+      ],
+      order: [
+        ["createdAt", "DESC"],
+        ["id", "DESC"],
+      ],
+      limit,
+      offset,
+    });
 
   return {
     activities: rows,
+    filters: {
+      action: options.action || null,
+      userId: options.userId || null,
+      dateFrom: options.dateFrom || null,
+      dateTo: options.dateTo || null,
+    },
     pagination: {
       currentPage: page,
       pageSize: limit,

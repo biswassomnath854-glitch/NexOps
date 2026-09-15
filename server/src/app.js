@@ -11,6 +11,7 @@ const departmentRoutes = require("./routes/departmentRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const projectMemberRoutes = require("./routes/projectMemberRoutes");
 const taskRoutes = require("./routes/taskRoutes");
+const taskActivityRoutes = require("./routes/taskActivityRoutes");
 
 const { errorHandler } = require("./middleware/errorMiddleware");
 
@@ -51,6 +52,14 @@ app.use("/api/departments", departmentRoutes);
  * the project management ADMIN/SUPER_ADMIN middleware.
  */
 app.use("/api", taskRoutes);
+
+/*
+ * Task Activity routes
+ *
+ * /api/tasks/:taskId/activities
+ * provides the activity timeline for an individual task.
+ */
+app.use("/api", taskActivityRoutes);
 
 app.use("/api/projects", projectRoutes);
 app.use("/api/projects", projectMemberRoutes);

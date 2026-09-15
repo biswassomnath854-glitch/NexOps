@@ -6,6 +6,8 @@ const {
   User,
 } = require("../models");
 
+const taskActivityService = require("./taskActivityService");
+
 const MANAGEMENT_ROLES = [
   "SUPER_ADMIN",
   "ADMIN",
@@ -532,6 +534,22 @@ const buildTaskListWhere = (
   };
 };
 
+const createTaskActivity = async ({
+  task,
+  userId,
+  action,
+  description,
+  metadata = null,
+}) => {
+  await taskActivityService.createTaskActivity({
+    task,
+    userId,
+    action,
+    description,
+    metadata,
+  });
+};
+
 const getProjectTasks = async (
   projectId,
   query = {}
@@ -789,6 +807,20 @@ const createTask = async (
         validatedDueDate,
     });
 
+  await createTaskActivity({
+    task,
+    userId,
+    action: "TASK_CREATED",
+    description: `Task "${task.title}" was created.`,
+    metadata: {
+      title: task.title,
+      priority: task.priority,
+      status: task.status,
+      assignedTo: task.assignedTo,
+      dueDate: task.dueDate,
+    },
+  });
+
   return getTaskById(
     task.id,
     creator
@@ -839,6 +871,24 @@ const updateTask = async (
     dueDate,
   } = data;
 
+  const previousAssignedTo =
+    task.assignedTo;
+
+  const previousTitle =
+    task.title;
+
+  const previousDescription =
+    task.description;
+
+  const previousPriority =
+    task.priority;
+
+  const previousStatus =
+    task.status;
+
+  const previousDueDate =
+    task.dueDate;
+
   if (
     assignedTo !== undefined
   ) {
@@ -875,7 +925,9 @@ const updateTask = async (
       description;
   }
 
-  if (priority !== undefined) {
+  if (
+    priority !== undefined
+  ) {
     updateData.priority =
       priority;
   }
@@ -903,6 +955,144 @@ const updateTask = async (
   await task.update(
     updateData
   );
+
+  if (
+    assignedTo !== undefined &&
+    previousAssignedTo !==
+      task.assignedTo
+  ) {
+    const isNewAssignment =
+      previousAssignedTo === null &&
+      task.assignedTo !== null;
+
+    await createTaskActivity({
+      task,
+      userId: user.id,
+      action: isNewAssignment
+        ? "TASK_ASSIGNED"
+        : "TASK_REASSIGNED",
+      description: isNewAssignment
+        ? `Task "${task.title}" was assigned to a user.`
+        : `Task "${task.title}" was reassigned.`,
+      metadata: {
+        previousAssignedTo,
+        assignedTo:
+          task.assignedTo,
+      },
+    });
+  }
+
+  if (
+    priority !== undefined &&
+    previousPriority !==
+      task.priority
+  ) {
+    await createTaskActivity({
+      task,
+      userId: user.id,
+      action:
+        "TASK_PRIORITY_CHANGED",
+      description: `Task "${task.title}" priority changed from ${previousPriority} to ${task.priority}.`,
+      metadata: {
+        previousPriority,
+        priority: task.priority,
+      },
+    });
+  }
+
+  if (
+    dueDate !== undefined &&
+    (
+      previousDueDate?.getTime?.() !==
+        task.dueDate?.getTime?.() ||
+      (
+        previousDueDate === null &&
+        task.dueDate !== null
+      ) ||
+      (
+        previousDueDate !== null &&
+        task.dueDate === null
+      )
+    )
+  ) {
+    await createTaskActivity({
+      task,
+      userId: user.id,
+      action:
+        "TASK_DUE_DATE_CHANGED",
+      description: `Task "${task.title}" due date was changed.`,
+      metadata: {
+        previousDueDate,
+        dueDate:
+          task.dueDate,
+      },
+    });
+  }
+
+  if (
+    status !== undefined &&
+    previousStatus !==
+      task.status
+  ) {
+    let action =
+      "TASK_STATUS_CHANGED";
+
+    if (task.status === "COMPLETED") {
+      action =
+        "TASK_COMPLETED";
+    } else if (
+      task.status === "CANCELLED"
+    ) {
+      action =
+        "TASK_CANCELLED";
+    }
+
+    await createTaskActivity({
+      task,
+      userId: user.id,
+      action,
+      description:
+        action === "TASK_COMPLETED"
+          ? `Task "${task.title}" was completed.`
+          : action ===
+              "TASK_CANCELLED"
+            ? `Task "${task.title}" was cancelled.`
+            : `Task "${task.title}" status changed from ${previousStatus} to ${task.status}.`,
+      metadata: {
+        previousStatus,
+        status: task.status,
+      },
+    });
+  }
+
+  const hasGeneralUpdate =
+    (
+      title !== undefined &&
+      previousTitle !== task.title
+    ) ||
+    (
+      description !== undefined &&
+      previousDescription !==
+        task.description
+    );
+
+  if (hasGeneralUpdate) {
+    await createTaskActivity({
+      task,
+      userId: user.id,
+      action: "TASK_UPDATED",
+      description: `Task "${task.title}" details were updated.`,
+      metadata: {
+        titleChanged:
+          title !== undefined &&
+          previousTitle !== task.title,
+        descriptionChanged:
+          description !== undefined &&
+          previousDescription !==
+            task.description,
+      },
+    });
+  }
 
   return getTaskById(
     task.id,
@@ -950,6 +1140,9 @@ const updateTaskStatus = async (
     nextStatus
   );
 
+  const previousStatus =
+    task.status;
+
   const updateData = {
     status: nextStatus,
   };
@@ -965,6 +1158,36 @@ const updateTaskStatus = async (
   await task.update(
     updateData
   );
+
+  let action =
+    "TASK_STATUS_CHANGED";
+
+  if (nextStatus === "COMPLETED") {
+    action =
+      "TASK_COMPLETED";
+  } else if (
+    nextStatus === "CANCELLED"
+  ) {
+    action =
+      "TASK_CANCELLED";
+  }
+
+  await createTaskActivity({
+    task,
+    userId: user.id,
+    action,
+    description:
+      action === "TASK_COMPLETED"
+        ? `Task "${task.title}" was completed.`
+        : action ===
+            "TASK_CANCELLED"
+          ? `Task "${task.title}" was cancelled.`
+          : `Task "${task.title}" status changed from ${previousStatus} to ${nextStatus}.`,
+    metadata: {
+      previousStatus,
+      status: nextStatus,
+    },
+  });
 
   return getTaskById(
     task.id,
