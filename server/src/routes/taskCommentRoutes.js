@@ -86,4 +86,11 @@ router.get(
   taskCommentController.getTaskComments
 );
 
+router.get(
+  "/tasks/:taskId/comments/:commentId",
+  authenticate,
+  authorizeTaskAccess("view"),
+  taskCommentController.getTaskCommentById
+);
+
 module.exports = router;

@@ -22,6 +22,7 @@ const createTaskComment = async ({
   if (!task) {
     const error = new Error("Task not found.");
     error.statusCode = 404;
+    error.code = "TASK_NOT_FOUND";
     throw error;
   }
 
@@ -35,6 +36,7 @@ const createTaskComment = async ({
   if (!user) {
     const error = new Error("User not found in this organization.");
     error.statusCode = 404;
+    error.code = "USER_NOT_FOUND";
     throw error;
   }
 
@@ -72,6 +74,7 @@ const getTaskComments = async ({
   if (!task) {
     const error = new Error("Task not found.");
     error.statusCode = 404;
+    error.code = "TASK_NOT_FOUND";
     throw error;
   }
 
@@ -87,7 +90,13 @@ const getTaskComments = async ({
       {
         model: User,
         as: "user",
-        attributes: ["id", "firstName", "lastName", "email", "role"],
+        attributes: [
+          "id",
+          "firstName",
+          "lastName",
+          "email",
+          "role",
+        ],
       },
     ],
     order: [
@@ -126,7 +135,13 @@ const getTaskCommentById = async ({
       {
         model: User,
         as: "user",
-        attributes: ["id", "firstName", "lastName", "email", "role"],
+        attributes: [
+          "id",
+          "firstName",
+          "lastName",
+          "email",
+          "role",
+        ],
       },
     ],
   });
@@ -134,6 +149,7 @@ const getTaskCommentById = async ({
   if (!comment) {
     const error = new Error("Comment not found.");
     error.statusCode = 404;
+    error.code = "COMMENT_NOT_FOUND";
     throw error;
   }
 
@@ -159,6 +175,7 @@ const updateTaskComment = async ({
   if (!comment) {
     const error = new Error("Comment not found.");
     error.statusCode = 404;
+    error.code = "COMMENT_NOT_FOUND";
     throw error;
   }
 
@@ -192,6 +209,7 @@ const deleteTaskComment = async ({
   if (!comment) {
     const error = new Error("Comment not found.");
     error.statusCode = 404;
+    error.code = "COMMENT_NOT_FOUND";
     throw error;
   }
 

@@ -47,7 +47,29 @@ const getTaskComments = async (req, res, next) => {
   }
 };
 
+const getTaskCommentById = async (req, res, next) => {
+  try {
+    const comment = await taskCommentService.getTaskCommentById({
+      organizationId: req.task.organizationId,
+      projectId: req.task.projectId,
+      taskId: req.task.id,
+      commentId: req.params.commentId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Task comment retrieved successfully.",
+      data: {
+        comment,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createTaskComment,
   getTaskComments,
+  getTaskCommentById,
 };
