@@ -3,9 +3,9 @@ const taskCommentService = require("../services/taskCommentService");
 const createTaskComment = async (req, res, next) => {
   try {
     const comment = await taskCommentService.createTaskComment({
-      organizationId: req.task.organizationId,
+      organizationId: req.user.organizationId,
       projectId: req.task.projectId,
-      taskId: req.task.id,
+      taskId: req.params.taskId,
       userId: req.user.id,
       content: req.body.content,
     });
@@ -24,14 +24,12 @@ const createTaskComment = async (req, res, next) => {
 
 const getTaskComments = async (req, res, next) => {
   try {
-    const query = req.validatedQuery || {};
-
     const result = await taskCommentService.getTaskComments({
-      organizationId: req.task.organizationId,
+      organizationId: req.user.organizationId,
       projectId: req.task.projectId,
-      taskId: req.task.id,
-      page: query.page,
-      limit: query.limit,
+      taskId: req.params.taskId,
+      page: req.validatedQuery.page,
+      limit: req.validatedQuery.limit,
     });
 
     return res.status(200).json({
@@ -50,9 +48,9 @@ const getTaskComments = async (req, res, next) => {
 const getTaskCommentById = async (req, res, next) => {
   try {
     const comment = await taskCommentService.getTaskCommentById({
-      organizationId: req.task.organizationId,
+      organizationId: req.user.organizationId,
       projectId: req.task.projectId,
-      taskId: req.task.id,
+      taskId: req.params.taskId,
       commentId: req.params.commentId,
     });
 
@@ -71,9 +69,9 @@ const getTaskCommentById = async (req, res, next) => {
 const updateTaskComment = async (req, res, next) => {
   try {
     const comment = await taskCommentService.updateTaskComment({
-      organizationId: req.task.organizationId,
+      organizationId: req.user.organizationId,
       projectId: req.task.projectId,
-      taskId: req.task.id,
+      taskId: req.params.taskId,
       commentId: req.params.commentId,
       content: req.body.content,
       user: req.user,
@@ -91,9 +89,32 @@ const updateTaskComment = async (req, res, next) => {
   }
 };
 
+const deleteTaskComment = async (req, res, next) => {
+  try {
+    const comment = await taskCommentService.deleteTaskComment({
+      organizationId: req.user.organizationId,
+      projectId: req.task.projectId,
+      taskId: req.params.taskId,
+      commentId: req.params.commentId,
+      user: req.user,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Task comment deleted successfully.",
+      data: {
+        comment,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createTaskComment,
   getTaskComments,
   getTaskCommentById,
   updateTaskComment,
+  deleteTaskComment,
 };

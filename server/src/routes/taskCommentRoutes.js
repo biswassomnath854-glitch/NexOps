@@ -2,9 +2,7 @@ const express = require("express");
 
 const taskCommentController = require("../controllers/taskCommentController");
 const { authenticate } = require("../middleware/authMiddleware");
-const {
-  authorizeTaskAccess,
-} = require("../middleware/taskAuthorizationMiddleware");
+const { authorizeTaskAccess } = require("../middleware/taskAuthorizationMiddleware");
 
 const {
   createTaskCommentSchema,
@@ -51,36 +49,6 @@ const validateQuery = (schema) => {
   };
 };
 
-/*
- * Task Comments
- *
- * Create:
- * - Management users -> allowed within their organization
- * - Project members -> allowed
- * - Project viewers -> allowed
- * - Same-organization non-members -> denied
- * - Cross-organization users -> denied
- * - Unauthenticated users -> denied
- *
- * Read:
- * - Management users -> allowed within their organization
- * - Project members -> allowed
- * - Project viewers -> allowed
- * - Same-organization non-members -> denied
- * - Cross-organization users -> denied
- * - Unauthenticated users -> denied
- *
- * Update:
- * - Task access -> required
- * - Management users -> allowed within their organization
- * - Comment owner -> allowed
- * - Other project members -> denied by comment ownership
- * - Viewers -> denied by comment ownership/role rules
- * - Same-organization non-members -> denied
- * - Cross-organization users -> denied
- * - Unauthenticated users -> denied
- */
-
 router.post(
   "/tasks/:taskId/comments",
   authenticate,
@@ -110,6 +78,13 @@ router.patch(
   authorizeTaskAccess("view"),
   validateBody(updateTaskCommentSchema),
   taskCommentController.updateTaskComment
+);
+
+router.delete(
+  "/tasks/:taskId/comments/:commentId",
+  authenticate,
+  authorizeTaskAccess("view"),
+  taskCommentController.deleteTaskComment
 );
 
 module.exports = router;

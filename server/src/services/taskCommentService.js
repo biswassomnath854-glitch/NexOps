@@ -15,6 +15,20 @@ const isManagementUser = (user) => {
   return MANAGEMENT_ROLES.includes(user.role);
 };
 
+const getTaskContext = async ({
+  organizationId,
+  projectId,
+  taskId,
+}) => {
+  return Task.findOne({
+    where: {
+      id: taskId,
+      organizationId,
+      projectId,
+    },
+  });
+};
+
 const createTaskComment = async ({
   organizationId,
   projectId,
@@ -22,32 +36,16 @@ const createTaskComment = async ({
   userId,
   content,
 }) => {
-  const task = await Task.findOne({
-    where: {
-      id: taskId,
-      organizationId,
-      projectId,
-    },
+  const task = await getTaskContext({
+    organizationId,
+    projectId,
+    taskId,
   });
 
   if (!task) {
     const error = new Error("Task not found.");
     error.statusCode = 404;
     error.code = "TASK_NOT_FOUND";
-    throw error;
-  }
-
-  const user = await User.findOne({
-    where: {
-      id: userId,
-      organizationId,
-    },
-  });
-
-  if (!user) {
-    const error = new Error("User not found in this organization.");
-    error.statusCode = 404;
-    error.code = "USER_NOT_FOUND";
     throw error;
   }
 
@@ -74,12 +72,10 @@ const getTaskComments = async ({
   page = 1,
   limit = 20,
 }) => {
-  const task = await Task.findOne({
-    where: {
-      id: taskId,
-      organizationId,
-      projectId,
-    },
+  const task = await getTaskContext({
+    organizationId,
+    projectId,
+    taskId,
   });
 
   if (!task) {
@@ -110,10 +106,7 @@ const getTaskComments = async ({
         ],
       },
     ],
-    order: [
-      ["createdAt", "ASC"],
-      ["id", "ASC"],
-    ],
+    order: [["createdAt", "DESC"]],
     limit,
     offset,
   });
@@ -135,6 +128,19 @@ const getTaskCommentById = async ({
   taskId,
   commentId,
 }) => {
+  const task = await getTaskContext({
+    organizationId,
+    projectId,
+    taskId,
+  });
+
+  if (!task) {
+    const error = new Error("Task not found.");
+    error.statusCode = 404;
+    error.code = "TASK_NOT_FOUND";
+    throw error;
+  }
+
   const comment = await TaskComment.findOne({
     where: {
       id: commentId,
@@ -226,6 +232,7 @@ const deleteTaskComment = async ({
   projectId,
   taskId,
   commentId,
+  user,
 }) => {
   const comment = await TaskComment.findOne({
     where: {
@@ -243,11 +250,38 @@ const deleteTaskComment = async ({
     throw error;
   }
 
+  if (user.role === "VIEWER") {
+    const error = new Error(
+      "Viewers do not have permission to delete comments."
+    );
+    error.statusCode = 403;
+    error.code = "COMMENT_DELETE_FORBIDDEN";
+    throw error;
+  }
+
+  if (!isManagementUser(user) && comment.userId !== user.id) {
+    const error = new Error(
+      "You can only delete comments that you created."
+    );
+    error.statusCode = 403;
+    error.code = "COMMENT_OWNERSHIP_REQUIRED";
+    throw error;
+  }
+
+  const deletedComment = {
+    id: comment.id,
+    organizationId: comment.organizationId,
+    projectId: comment.projectId,
+    taskId: comment.taskId,
+    userId: comment.userId,
+    content: comment.content,
+    createdAt: comment.createdAt,
+    updatedAt: comment.updatedAt,
+  };
+
   await comment.destroy();
 
-  return {
-    id: commentId,
-  };
+  return deletedComment;
 };
 
 module.exports = {
