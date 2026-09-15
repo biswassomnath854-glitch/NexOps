@@ -12,6 +12,7 @@ const projectRoutes = require("./routes/projectRoutes");
 const projectMemberRoutes = require("./routes/projectMemberRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const taskActivityRoutes = require("./routes/taskActivityRoutes");
+const taskCommentRoutes = require("./routes/taskCommentRoutes");
 
 const { errorHandler } = require("./middleware/errorMiddleware");
 
@@ -35,38 +36,17 @@ if (process.env.NODE_ENV !== "test") {
   app.use(morgan("dev"));
 }
 
-/*
- * API Routes
- */
-
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/departments", departmentRoutes);
 
-/*
- * Task routes must be mounted before project routes.
- *
- * /api/projects/:projectId/tasks
- * must be handled by task authorization rather than
- * the project management ADMIN/SUPER_ADMIN middleware.
- */
 app.use("/api", taskRoutes);
-
-/*
- * Task Activity routes
- *
- * /api/tasks/:taskId/activities
- * provides the activity timeline for an individual task.
- */
 app.use("/api", taskActivityRoutes);
+app.use("/api", taskCommentRoutes);
 
 app.use("/api/projects", projectRoutes);
 app.use("/api/projects", projectMemberRoutes);
-
-/*
- * Health Check
- */
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
@@ -75,12 +55,6 @@ app.get("/api/health", (req, res) => {
     environment: process.env.NODE_ENV,
   });
 });
-
-/*
- * Global Error Handler
- *
- * This must be registered after all routes.
- */
 
 app.use(errorHandler);
 
