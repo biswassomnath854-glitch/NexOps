@@ -13,6 +13,7 @@ const projectMemberRoutes = require("./routes/projectMemberRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const taskActivityRoutes = require("./routes/taskActivityRoutes");
 const taskCommentRoutes = require("./routes/taskCommentRoutes");
+const taskAttachmentRoutes = require("./routes/taskAttachmentRoutes");
 
 const { errorHandler } = require("./middleware/errorMiddleware");
 
@@ -44,6 +45,7 @@ app.use("/api/departments", departmentRoutes);
 app.use("/api", taskRoutes);
 app.use("/api", taskActivityRoutes);
 app.use("/api", taskCommentRoutes);
+app.use("/api", taskAttachmentRoutes);
 
 app.use("/api/projects", projectRoutes);
 app.use("/api/projects", projectMemberRoutes);
