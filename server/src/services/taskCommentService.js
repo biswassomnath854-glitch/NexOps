@@ -4,6 +4,8 @@ const {
   User,
 } = require("../models");
 
+const taskActivityService = require("./taskActivityService");
+
 const MANAGEMENT_ROLES = [
   "SUPER_ADMIN",
   "ADMIN",
@@ -55,6 +57,17 @@ const createTaskComment = async ({
     taskId,
     userId,
     content: content.trim(),
+  });
+
+  await taskActivityService.createTaskActivity({
+    task,
+    userId,
+    action: "COMMENT_CREATED",
+    description: `A comment was added to task "${task.title}".`,
+    metadata: {
+      commentId: comment.id,
+      contentLength: comment.content.length,
+    },
   });
 
   return getTaskCommentById({
@@ -181,6 +194,19 @@ const updateTaskComment = async ({
   content,
   user,
 }) => {
+  const task = await getTaskContext({
+    organizationId,
+    projectId,
+    taskId,
+  });
+
+  if (!task) {
+    const error = new Error("Task not found.");
+    error.statusCode = 404;
+    error.code = "TASK_NOT_FOUND";
+    throw error;
+  }
+
   const comment = await TaskComment.findOne({
     where: {
       id: commentId,
@@ -219,6 +245,17 @@ const updateTaskComment = async ({
 
   await comment.save();
 
+  await taskActivityService.createTaskActivity({
+    task,
+    userId: user.id,
+    action: "COMMENT_UPDATED",
+    description: `A comment was updated on task "${task.title}".`,
+    metadata: {
+      commentId: comment.id,
+      contentLength: comment.content.length,
+    },
+  });
+
   return getTaskCommentById({
     organizationId,
     projectId,
@@ -234,6 +271,19 @@ const deleteTaskComment = async ({
   commentId,
   user,
 }) => {
+  const task = await getTaskContext({
+    organizationId,
+    projectId,
+    taskId,
+  });
+
+  if (!task) {
+    const error = new Error("Task not found.");
+    error.statusCode = 404;
+    error.code = "TASK_NOT_FOUND";
+    throw error;
+  }
+
   const comment = await TaskComment.findOne({
     where: {
       id: commentId,
@@ -279,7 +329,20 @@ const deleteTaskComment = async ({
     updatedAt: comment.updatedAt,
   };
 
+  const contentLength = comment.content.length;
+
   await comment.destroy();
+
+  await taskActivityService.createTaskActivity({
+    task,
+    userId: user.id,
+    action: "COMMENT_DELETED",
+    description: `A comment was deleted from task "${task.title}".`,
+    metadata: {
+      commentId: deletedComment.id,
+      contentLength,
+    },
+  });
 
   return deletedComment;
 };

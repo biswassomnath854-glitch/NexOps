@@ -65,7 +65,10 @@ const TaskActivity = sequelize.define(
         "TASK_PRIORITY_CHANGED",
         "TASK_DUE_DATE_CHANGED",
         "TASK_COMPLETED",
-        "TASK_CANCELLED"
+        "TASK_CANCELLED",
+        "COMMENT_CREATED",
+        "COMMENT_UPDATED",
+        "COMMENT_DELETED"
       ),
       allowNull: false,
     },

@@ -16,6 +16,9 @@ const ACTIVITY_ACTIONS = [
   "TASK_DUE_DATE_CHANGED",
   "TASK_COMPLETED",
   "TASK_CANCELLED",
+  "COMMENT_CREATED",
+  "COMMENT_UPDATED",
+  "COMMENT_DELETED",
 ];
 
 const createTaskActivity = async ({
