@@ -14,6 +14,7 @@ const taskRoutes = require("./routes/taskRoutes");
 const taskActivityRoutes = require("./routes/taskActivityRoutes");
 const taskCommentRoutes = require("./routes/taskCommentRoutes");
 const taskAttachmentRoutes = require("./routes/taskAttachmentRoutes");
+const overdueTaskRoutes = require("./routes/overdueTaskRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const taskAnalyticsRoutes = require("./routes/taskAnalyticsRoutes");
 const projectAnalyticsRoutes = require("./routes/projectAnalyticsRoutes");
@@ -32,6 +33,7 @@ app.use(
 );
 
 app.use(express.json({ limit: "1mb" }));
+
 app.use(
   express.urlencoded({
     extended: true,
@@ -49,10 +51,19 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/departments", departmentRoutes);
+
+/*
+ * Overdue task routes must be mounted before the
+ * generic task routes because taskRoutes contains
+ * dynamic routes such as /tasks/:taskId.
+ */
+app.use("/api", overdueTaskRoutes);
+
 app.use("/api", taskRoutes);
 app.use("/api", taskActivityRoutes);
 app.use("/api", taskCommentRoutes);
 app.use("/api", taskAttachmentRoutes);
+
 app.use("/api/projects", projectRoutes);
 app.use("/api/projects", projectMemberRoutes);
 app.use("/api/dashboard", dashboardRoutes);
