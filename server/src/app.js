@@ -16,6 +16,7 @@ const taskCommentRoutes = require("./routes/taskCommentRoutes");
 const taskAttachmentRoutes = require("./routes/taskAttachmentRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const taskAnalyticsRoutes = require("./routes/taskAnalyticsRoutes");
+const projectAnalyticsRoutes = require("./routes/projectAnalyticsRoutes");
 
 const { errorHandler } = require("./middleware/errorMiddleware");
 
@@ -31,7 +32,12 @@ app.use(
 );
 
 app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "1mb",
+  })
+);
 
 app.use(cookieParser());
 
@@ -43,21 +49,21 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/departments", departmentRoutes);
-
 app.use("/api", taskRoutes);
 app.use("/api", taskActivityRoutes);
 app.use("/api", taskCommentRoutes);
 app.use("/api", taskAttachmentRoutes);
-
 app.use("/api/projects", projectRoutes);
 app.use("/api/projects", projectMemberRoutes);
-
 app.use("/api/dashboard", dashboardRoutes);
-
 app.use("/api/analytics/tasks", taskAnalyticsRoutes);
+app.use(
+  "/api/analytics/projects",
+  projectAnalyticsRoutes
+);
 
 app.get("/api/health", (req, res) => {
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "NexOps API is running",
     environment: process.env.NODE_ENV,
