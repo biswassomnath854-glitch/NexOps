@@ -15,6 +15,7 @@ const taskActivityRoutes = require("./routes/taskActivityRoutes");
 const taskCommentRoutes = require("./routes/taskCommentRoutes");
 const taskAttachmentRoutes = require("./routes/taskAttachmentRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const taskAnalyticsRoutes = require("./routes/taskAnalyticsRoutes");
 
 const { errorHandler } = require("./middleware/errorMiddleware");
 
@@ -52,6 +53,8 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/projects", projectMemberRoutes);
 
 app.use("/api/dashboard", dashboardRoutes);
+
+app.use("/api/analytics/tasks", taskAnalyticsRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
