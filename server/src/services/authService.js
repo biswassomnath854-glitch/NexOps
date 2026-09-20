@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+
 const { User, RefreshToken } = require("../models");
 const { hashPassword, comparePassword } = require("../utils/password");
 const {
@@ -8,6 +10,13 @@ const {
 const { sanitizeUser } = require("../utils/user");
 
 const REFRESH_TOKEN_EXPIRES_IN_DAYS = 7;
+
+const hashRefreshToken = (refreshToken) => {
+  return crypto
+    .createHash("sha256")
+    .update(refreshToken)
+    .digest("hex");
+};
 
 const getRefreshTokenExpiryDate = () => {
   const expiresAt = new Date();
@@ -33,9 +42,11 @@ const createAuthenticationTokens = async (user) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
+  const refreshTokenHash = hashRefreshToken(refreshToken);
+
   await RefreshToken.create({
     userId: user.id,
-    token: refreshToken,
+    token: refreshTokenHash,
     expiresAt: getRefreshTokenExpiryDate(),
   });
 
@@ -60,7 +71,9 @@ const register = async ({
   });
 
   if (existingUser) {
-    const error = new Error("Unable to register with the provided information.");
+    const error = new Error(
+      "Unable to register with the provided information."
+    );
     error.statusCode = 409;
     error.code = "EMAIL_ALREADY_EXISTS";
 
@@ -103,7 +116,10 @@ const login = async ({ email, password }) => {
     throw error;
   }
 
-  const passwordMatches = await comparePassword(password, user.password);
+  const passwordMatches = await comparePassword(
+    password,
+    user.password
+  );
 
   if (!passwordMatches) {
     const error = new Error("Invalid email or password.");
@@ -147,21 +163,27 @@ const refresh = async (refreshToken) => {
   try {
     decoded = verifyRefreshToken(refreshToken);
   } catch (error) {
-    const authError = new Error("Invalid or expired refresh token.");
+    const authError = new Error(
+      "Invalid or expired refresh token."
+    );
     authError.statusCode = 401;
     authError.code = "INVALID_REFRESH_TOKEN";
 
     throw authError;
   }
 
+  const refreshTokenHash = hashRefreshToken(refreshToken);
+
   const storedToken = await RefreshToken.findOne({
     where: {
-      token: refreshToken,
+      token: refreshTokenHash,
     },
   });
 
   if (!storedToken) {
-    const error = new Error("Invalid or expired refresh token.");
+    const error = new Error(
+      "Invalid or expired refresh token."
+    );
     error.statusCode = 401;
     error.code = "INVALID_REFRESH_TOKEN";
 
@@ -169,7 +191,9 @@ const refresh = async (refreshToken) => {
   }
 
   if (storedToken.revokedAt) {
-    const error = new Error("Refresh token has been revoked.");
+    const error = new Error(
+      "Refresh token has been revoked."
+    );
     error.statusCode = 401;
     error.code = "REFRESH_TOKEN_REVOKED";
 
@@ -177,7 +201,9 @@ const refresh = async (refreshToken) => {
   }
 
   if (storedToken.expiresAt <= new Date()) {
-    const error = new Error("Refresh token has expired.");
+    const error = new Error(
+      "Refresh token has expired."
+    );
     error.statusCode = 401;
     error.code = "REFRESH_TOKEN_EXPIRED";
 
@@ -195,7 +221,9 @@ const refresh = async (refreshToken) => {
   const user = await User.findByPk(decoded.id);
 
   if (!user) {
-    const error = new Error("User account no longer exists.");
+    const error = new Error(
+      "User account no longer exists."
+    );
     error.statusCode = 401;
     error.code = "USER_NOT_FOUND";
 
@@ -203,7 +231,9 @@ const refresh = async (refreshToken) => {
   }
 
   if (user.status !== "ACTIVE") {
-    const error = new Error("Your account is not active.");
+    const error = new Error(
+      "Your account is not active."
+    );
     error.statusCode = 403;
     error.code = "ACCOUNT_NOT_ACTIVE";
 
@@ -227,13 +257,15 @@ const logout = async (refreshToken) => {
     return;
   }
 
+  const refreshTokenHash = hashRefreshToken(refreshToken);
+
   await RefreshToken.update(
     {
       revokedAt: new Date(),
     },
     {
       where: {
-        token: refreshToken,
+        token: refreshTokenHash,
         revokedAt: null,
       },
     }
