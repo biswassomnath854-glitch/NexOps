@@ -13,6 +13,59 @@ const MANAGEMENT_ROLES = [
   "TEAM_LEAD",
 ];
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+
+const createServiceError = (
+  message,
+  statusCode,
+  code
+) => {
+  const error = new Error(message);
+
+  error.statusCode = statusCode;
+  error.code = code;
+
+  return error;
+};
+
+const validatePagination = (
+  page,
+  limit
+) => {
+  const normalizedPage = Number(page);
+  const normalizedLimit = Number(limit);
+
+  if (
+    !Number.isInteger(normalizedPage) ||
+    normalizedPage < 1
+  ) {
+    throw createServiceError(
+      "Page must be a positive integer.",
+      400,
+      "INVALID_PAGE"
+    );
+  }
+
+  if (
+    !Number.isInteger(normalizedLimit) ||
+    normalizedLimit < 1 ||
+    normalizedLimit > MAX_LIMIT
+  ) {
+    throw createServiceError(
+      `Limit must be an integer between 1 and ${MAX_LIMIT}.`,
+      400,
+      "INVALID_LIMIT"
+    );
+  }
+
+  return {
+    page: normalizedPage,
+    limit: normalizedLimit,
+  };
+};
+
 const isManagementUser = (user) => {
   return MANAGEMENT_ROLES.includes(user.role);
 };
@@ -82,8 +135,8 @@ const getTaskComments = async ({
   organizationId,
   projectId,
   taskId,
-  page = 1,
-  limit = 20,
+  page = DEFAULT_PAGE,
+  limit = DEFAULT_LIMIT,
 }) => {
   const task = await getTaskContext({
     organizationId,
@@ -98,39 +151,52 @@ const getTaskComments = async ({
     throw error;
   }
 
-  const offset = (page - 1) * limit;
+  const {
+    page: normalizedPage,
+    limit: normalizedLimit,
+  } = validatePagination(
+    page,
+    limit
+  );
 
-  const { count, rows } = await TaskComment.findAndCountAll({
-    where: {
-      organizationId,
-      projectId,
-      taskId,
-    },
-    include: [
-      {
-        model: User,
-        as: "user",
-        attributes: [
-          "id",
-          "firstName",
-          "lastName",
-          "email",
-          "role",
-        ],
+  const offset =
+    (normalizedPage - 1) *
+    normalizedLimit;
+
+  const { count, rows } =
+    await TaskComment.findAndCountAll({
+      where: {
+        organizationId,
+        projectId,
+        taskId,
       },
-    ],
-    order: [["createdAt", "DESC"]],
-    limit,
-    offset,
-  });
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "email",
+            "role",
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+      limit: normalizedLimit,
+      offset,
+    });
 
   return {
     comments: rows,
     pagination: {
-      page,
-      limit,
+      page: normalizedPage,
+      limit: normalizedLimit,
       totalItems: count,
-      totalPages: Math.ceil(count / limit),
+      totalPages: Math.ceil(
+        count / normalizedLimit
+      ),
     },
   };
 };
