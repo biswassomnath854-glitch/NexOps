@@ -19,6 +19,23 @@ const ACTIVE_TASK_STATUSES = [
   "BLOCKED",
 ];
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 100;
+
+const createServiceError = (
+  message,
+  statusCode,
+  code
+) => {
+  const error = new Error(message);
+
+  error.statusCode = statusCode;
+  error.code = code;
+
+  return error;
+};
+
 const normalizeFilterValue = (value) => {
   if (
     value === undefined ||
@@ -33,6 +50,42 @@ const normalizeFilterValue = (value) => {
   }
 
   return [value];
+};
+
+const validatePagination = (
+  page,
+  limit
+) => {
+  const normalizedPage = Number(page);
+  const normalizedLimit = Number(limit);
+
+  if (
+    !Number.isInteger(normalizedPage) ||
+    normalizedPage < 1
+  ) {
+    throw createServiceError(
+      "Page must be a positive integer.",
+      400,
+      "INVALID_PAGE"
+    );
+  }
+
+  if (
+    !Number.isInteger(normalizedLimit) ||
+    normalizedLimit < 1 ||
+    normalizedLimit > MAX_LIMIT
+  ) {
+    throw createServiceError(
+      `Limit must be an integer between 1 and ${MAX_LIMIT}.`,
+      400,
+      "INVALID_LIMIT"
+    );
+  }
+
+  return {
+    page: normalizedPage,
+    limit: normalizedLimit,
+  };
 };
 
 const calculateDaysOverdue = (dueDate) => {
@@ -199,12 +252,17 @@ const getOverdueTasks = async (
   }
 
   const {
-    page = 1,
-    limit = 10,
+    page = DEFAULT_PAGE,
+    limit = DEFAULT_LIMIT,
   } = query;
 
-  const normalizedPage = Number(page);
-  const normalizedLimit = Number(limit);
+  const {
+    page: normalizedPage,
+    limit: normalizedLimit,
+  } = validatePagination(
+    page,
+    limit
+  );
 
   const offset =
     (normalizedPage - 1) *
