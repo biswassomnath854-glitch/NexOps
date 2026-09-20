@@ -34,6 +34,10 @@ const TASK_PRIORITIES = [
   "URGENT",
 ];
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 100;
+
 const createServiceError = (
   message,
   statusCode,
@@ -85,6 +89,65 @@ const normalizeFilterValue = (value) => {
   return [value];
 };
 
+const validatePriority = (priority) => {
+  const normalizedPriorities =
+    normalizeFilterValue(priority);
+
+  if (!normalizedPriorities) {
+    return;
+  }
+
+  const invalidPriorities =
+    normalizedPriorities.filter(
+      (value) =>
+        !TASK_PRIORITIES.includes(value)
+    );
+
+  if (invalidPriorities.length > 0) {
+    throw createServiceError(
+      `Invalid priority. Allowed values: ${TASK_PRIORITIES.join(", ")}.`,
+      400,
+      "INVALID_PRIORITY"
+    );
+  }
+};
+
+const validatePagination = (
+  page,
+  limit
+) => {
+  const normalizedPage = Number(page);
+  const normalizedLimit = Number(limit);
+
+  if (
+    !Number.isInteger(normalizedPage) ||
+    normalizedPage < 1
+  ) {
+    throw createServiceError(
+      "Page must be a positive integer.",
+      400,
+      "INVALID_PAGE"
+    );
+  }
+
+  if (
+    !Number.isInteger(normalizedLimit) ||
+    normalizedLimit < 1 ||
+    normalizedLimit > MAX_LIMIT
+  ) {
+    throw createServiceError(
+      `Limit must be an integer between 1 and ${MAX_LIMIT}.`,
+      400,
+      "INVALID_LIMIT"
+    );
+  }
+
+  return {
+    page: normalizedPage,
+    limit: normalizedLimit,
+  };
+};
+
 const validateProjectScope = async (
   user,
   projectId
@@ -106,7 +169,7 @@ const validateProjectScope = async (
       404,
       "PROJECT_NOT_FOUND"
     );
-  };
+  }
 };
 
 const validateUserScope = async (
@@ -657,6 +720,21 @@ const getWorkload = async (
 ) => {
   validateWorkloadUser(user);
 
+  validatePriority(query.priority);
+
+  const {
+    page = DEFAULT_PAGE,
+    limit = DEFAULT_LIMIT,
+  } = query;
+
+  const {
+    page: normalizedPage,
+    limit: normalizedLimit,
+  } = validatePagination(
+    page,
+    limit
+  );
+
   await validateProjectScope(
     user,
     query.projectId
@@ -666,14 +744,6 @@ const getWorkload = async (
     user,
     query.userId
   );
-
-  const {
-    page = 1,
-    limit = 10,
-  } = query;
-
-  const normalizedPage = Number(page);
-  const normalizedLimit = Number(limit);
 
   const offset =
     (normalizedPage - 1) *
