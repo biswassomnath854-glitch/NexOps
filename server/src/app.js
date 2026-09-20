@@ -18,6 +18,7 @@ const overdueTaskRoutes = require("./routes/overdueTaskRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const taskAnalyticsRoutes = require("./routes/taskAnalyticsRoutes");
 const projectAnalyticsRoutes = require("./routes/projectAnalyticsRoutes");
+const workloadRoutes = require("./routes/workloadRoutes");
 
 const { errorHandler } = require("./middleware/errorMiddleware");
 
@@ -72,6 +73,7 @@ app.use(
   "/api/analytics/projects",
   projectAnalyticsRoutes
 );
+app.use("/api/workload", workloadRoutes);
 
 app.get("/api/health", (req, res) => {
   return res.status(200).json({
