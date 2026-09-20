@@ -10,6 +10,7 @@ const Task = require("./Task");
 const TaskActivity = require("./TaskActivity");
 const TaskComment = require("./TaskComment");
 const TaskAttachment = require("./TaskAttachment");
+const Notification = require("./Notification");
 
 /*
  * Organization ↔ User
@@ -327,6 +328,71 @@ RefreshToken.belongsTo(User, {
   as: "user",
 });
 
+/*
+ * Organization ↔ Notification
+ */
+Organization.hasMany(Notification, {
+  foreignKey: "organizationId",
+  as: "notifications",
+});
+
+Notification.belongsTo(Organization, {
+  foreignKey: "organizationId",
+  as: "organization",
+});
+
+/*
+ * Recipient User ↔ Notification
+ */
+User.hasMany(Notification, {
+  foreignKey: "recipientId",
+  as: "notifications",
+});
+
+Notification.belongsTo(User, {
+  foreignKey: "recipientId",
+  as: "recipient",
+});
+
+/*
+ * Actor User ↔ Notification
+ */
+User.hasMany(Notification, {
+  foreignKey: "actorId",
+  as: "triggeredNotifications",
+});
+
+Notification.belongsTo(User, {
+  foreignKey: "actorId",
+  as: "actor",
+});
+
+/*
+ * Task ↔ Notification
+ */
+Task.hasMany(Notification, {
+  foreignKey: "taskId",
+  as: "notifications",
+});
+
+Notification.belongsTo(Task, {
+  foreignKey: "taskId",
+  as: "task",
+});
+
+/*
+ * Project ↔ Notification
+ */
+Project.hasMany(Notification, {
+  foreignKey: "projectId",
+  as: "notifications",
+});
+
+Notification.belongsTo(Project, {
+  foreignKey: "projectId",
+  as: "project",
+});
+
 const db = {
   sequelize,
   User,
@@ -339,6 +405,7 @@ const db = {
   TaskActivity,
   TaskComment,
   TaskAttachment,
+  Notification,
 };
 
 module.exports = db;
