@@ -4,6 +4,12 @@ const authController = require("../controllers/authController");
 const { authenticate } = require("../middleware/authMiddleware");
 const { authorize } = require("../middleware/authorizationMiddleware");
 const {
+  loginRateLimiter,
+  registerRateLimiter,
+  refreshRateLimiter,
+} = require("../middleware/rateLimitMiddleware");
+
+const {
   validateRegister,
   validateLogin,
 } = require("../validators/authValidator");
@@ -38,17 +44,23 @@ const validateRequest = (validator) => {
 
 router.post(
   "/register",
+  registerRateLimiter,
   validateRequest(validateRegister),
   authController.register
 );
 
 router.post(
   "/login",
+  loginRateLimiter,
   validateRequest(validateLogin),
   authController.login
 );
 
-router.post("/refresh", authController.refresh);
+router.post(
+  "/refresh",
+  refreshRateLimiter,
+  authController.refresh
+);
 
 router.post("/logout", authController.logout);
 
