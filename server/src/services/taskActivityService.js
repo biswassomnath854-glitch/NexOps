@@ -198,8 +198,8 @@ const getTaskActivities = async (
       dateTo: options.dateTo || null,
     },
     pagination: {
-      currentPage: page,
-      pageSize: limit,
+      page,
+      limit,
       totalItems: count,
       totalPages: Math.ceil(count / limit),
     },
