@@ -22,6 +22,11 @@ router.patch(
   notificationController.markAllNotificationsAsRead
 );
 
+router.get(
+  "/:notificationId",
+  notificationController.getNotificationById
+);
+
 router.patch(
   "/:notificationId/read",
   notificationController.markNotificationAsRead

@@ -14,6 +14,30 @@ const getAuthenticatedUserContext = (req) => {
   };
 };
 
+const getNotificationById = async (req, res, next) => {
+  try {
+    const { userId, organizationId } =
+      getAuthenticatedUserContext(req);
+
+    const notification =
+      await notificationService.getNotificationById({
+        notificationId: req.params.notificationId,
+        userId,
+        organizationId,
+      });
+
+    return res.status(200).json({
+      success: true,
+      message: "Notification retrieved successfully.",
+      data: {
+        notification,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getNotifications = async (req, res, next) => {
   try {
     const { userId, organizationId } =
@@ -158,6 +182,7 @@ const deleteNotification = async (
 };
 
 module.exports = {
+  getNotificationById,
   getNotifications,
   getUnreadNotificationCount,
   markNotificationAsRead,
