@@ -2,6 +2,7 @@ const { Op } = require("sequelize");
 
 const {
   Notification,
+  NotificationPreference,
   Organization,
   User,
   Task,
@@ -19,11 +20,26 @@ const NOTIFICATION_TYPES = [
   "TASK_COMPLETED",
 ];
 
+const NOTIFICATION_PREFERENCE_FIELDS = {
+  TASK_ASSIGNED: "taskAssigned",
+  TASK_REASSIGNED: "taskReassigned",
+  TASK_STATUS_CHANGED: "taskStatusChanged",
+  TASK_COMMENTED: "taskCommented",
+  TASK_MENTIONED: "taskMentioned",
+  TASK_DUE_SOON: "taskDueSoon",
+  TASK_OVERDUE: "taskOverdue",
+  TASK_COMPLETED: "taskCompleted",
+};
+
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 
-const createServiceError = (message, statusCode = 400, code = "SERVICE_ERROR") => {
+const createServiceError = (
+  message,
+  statusCode = 400,
+  code = "SERVICE_ERROR"
+) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   error.code = code;
@@ -43,7 +59,10 @@ const normalizePagination = (page, limit) => {
   };
 };
 
-const validateAuthenticatedUser = async (userId, organizationId) => {
+const validateAuthenticatedUser = async (
+  userId,
+  organizationId
+) => {
   if (!userId) {
     throw createServiceError(
       "Authenticated user is required.",
@@ -82,7 +101,45 @@ const validateNotificationType = (type) => {
   }
 };
 
-const validateOrganization = async (organizationId) => {
+const getNotificationPreferenceField = (type) => {
+  validateNotificationType(type);
+
+  return NOTIFICATION_PREFERENCE_FIELDS[type];
+};
+
+const isNotificationTypeEnabled = async ({
+  recipientId,
+  organizationId,
+  type,
+}) => {
+  const preferenceField =
+    getNotificationPreferenceField(type);
+
+  const preferences =
+    await NotificationPreference.findOne({
+      where: {
+        organizationId,
+        userId: recipientId,
+      },
+      attributes: [preferenceField],
+    });
+
+  /*
+   * No preference row means the user is using
+   * the default notification behavior.
+   */
+  if (!preferences) {
+    return true;
+  }
+
+  return Boolean(
+    preferences[preferenceField]
+  );
+};
+
+const validateOrganization = async (
+  organizationId
+) => {
   if (!organizationId) {
     throw createServiceError(
       "Organization ID is required.",
@@ -91,7 +148,10 @@ const validateOrganization = async (organizationId) => {
     );
   }
 
-  const organization = await Organization.findByPk(organizationId);
+  const organization =
+    await Organization.findByPk(
+      organizationId
+    );
 
   if (!organization) {
     throw createServiceError(
@@ -104,7 +164,10 @@ const validateOrganization = async (organizationId) => {
   return organization;
 };
 
-const validateRecipient = async (recipientId, organizationId) => {
+const validateRecipient = async (
+  recipientId,
+  organizationId
+) => {
   if (!recipientId) {
     throw createServiceError(
       "Recipient ID is required.",
@@ -131,7 +194,10 @@ const validateRecipient = async (recipientId, organizationId) => {
   return recipient;
 };
 
-const validateActor = async (actorId, organizationId) => {
+const validateActor = async (
+  actorId,
+  organizationId
+) => {
   if (!actorId) {
     return null;
   }
@@ -195,7 +261,10 @@ const validateTaskAndProject = async ({
       );
     }
 
-    if (projectId && task.projectId !== projectId) {
+    if (
+      projectId &&
+      task.projectId !== projectId
+    ) {
       throw createServiceError(
         "Task does not belong to the specified project.",
         400,
@@ -230,15 +299,34 @@ const createNotification = async ({
   message,
   metadata = null,
 }) => {
-  await validateOrganization(organizationId);
+  await validateOrganization(
+    organizationId
+  );
 
-  await validateRecipient(recipientId, organizationId);
+  await validateRecipient(
+    recipientId,
+    organizationId
+  );
 
   if (actorId) {
-    await validateActor(actorId, organizationId);
+    await validateActor(
+      actorId,
+      organizationId
+    );
   }
 
   validateNotificationType(type);
+
+  const notificationEnabled =
+    await isNotificationTypeEnabled({
+      recipientId,
+      organizationId,
+      type,
+    });
+
+  if (!notificationEnabled) {
+    return null;
+  }
 
   if (!title || !title.trim()) {
     throw createServiceError(
@@ -248,7 +336,10 @@ const createNotification = async ({
     );
   }
 
-  if (title.trim().length < 2 || title.trim().length > 200) {
+  if (
+    title.trim().length < 2 ||
+    title.trim().length > 200
+  ) {
     throw createServiceError(
       "Notification title must be between 2 and 200 characters.",
       400,
@@ -264,7 +355,10 @@ const createNotification = async ({
     );
   }
 
-  if (message.trim().length < 2 || message.trim().length > 500) {
+  if (
+    message.trim().length < 2 ||
+    message.trim().length > 500
+  ) {
     throw createServiceError(
       "Notification message must be between 2 and 500 characters.",
       400,
@@ -272,7 +366,10 @@ const createNotification = async ({
     );
   }
 
-  const { task, project } = await validateTaskAndProject({
+  const {
+    task,
+    project,
+  } = await validateTaskAndProject({
     taskId,
     projectId,
     organizationId,
@@ -282,8 +379,12 @@ const createNotification = async ({
     organizationId,
     recipientId,
     actorId,
-    taskId: task ? task.id : taskId,
-    projectId: project ? project.id : projectId,
+    taskId: task
+      ? task.id
+      : taskId,
+    projectId: project
+      ? project.id
+      : projectId,
     type,
     title: title.trim(),
     message: message.trim(),
@@ -296,10 +397,12 @@ const createNotification = async ({
 /**
  * Creates notifications for multiple recipients related to a task.
  *
- * This helper is intentionally best-effort:
+ * Preference-aware behavior:
  * - Duplicate recipient IDs are removed.
- * - The actor is excluded from recipients.
- * - Individual notification failures do not fail the parent task operation.
+ * - The actor is excluded.
+ * - Disabled notification types are skipped.
+ * - Individual notification failures do not fail
+ *   the parent task operation.
  */
 const createTaskNotifications = async ({
   task,
@@ -310,11 +413,18 @@ const createTaskNotifications = async ({
   message,
   metadata = null,
 }) => {
-  if (!task || !task.id || !task.organizationId) {
+  if (
+    !task ||
+    !task.id ||
+    !task.organizationId
+  ) {
     return [];
   }
 
-  if (!Array.isArray(recipientIds) || recipientIds.length === 0) {
+  if (
+    !Array.isArray(recipientIds) ||
+    recipientIds.length === 0
+  ) {
     return [];
   }
 
@@ -324,43 +434,68 @@ const createTaskNotifications = async ({
     ...new Set(
       recipientIds
         .filter(Boolean)
-        .map((recipientId) => String(recipientId))
+        .map((recipientId) =>
+          String(recipientId)
+        )
     ),
-  ].filter((recipientId) => recipientId !== String(actorId));
+  ].filter(
+    (recipientId) =>
+      recipientId !== String(actorId)
+  );
 
-  if (uniqueRecipientIds.length === 0) {
+  if (
+    uniqueRecipientIds.length === 0
+  ) {
     return [];
   }
 
-  const results = await Promise.allSettled(
-    uniqueRecipientIds.map((recipientId) =>
-      createNotification({
-        organizationId: task.organizationId,
-        recipientId,
-        actorId,
-        taskId: task.id,
-        projectId: task.projectId || null,
-        type,
-        title,
-        message,
-        metadata,
-      })
-    )
-  );
+  const results =
+    await Promise.allSettled(
+      uniqueRecipientIds.map(
+        (recipientId) =>
+          createNotification({
+            organizationId:
+              task.organizationId,
+            recipientId,
+            actorId,
+            taskId: task.id,
+            projectId:
+              task.projectId || null,
+            type,
+            title,
+            message,
+            metadata,
+          })
+      )
+    );
 
   const successfulNotifications = [];
 
-  results.forEach((result, index) => {
-    if (result.status === "fulfilled") {
-      successfulNotifications.push(result.value);
-      return;
-    }
+  results.forEach(
+    (result, index) => {
+      if (
+        result.status === "fulfilled"
+      ) {
+        /*
+         * createNotification returns null
+         * when the recipient disabled this
+         * notification type.
+         */
+        if (result.value) {
+          successfulNotifications.push(
+            result.value
+          );
+        }
 
-    console.error(
-      `[Notification] Failed to create notification for recipient ${uniqueRecipientIds[index]}:`,
-      result.reason
-    );
-  });
+        return;
+      }
+
+      console.error(
+        `[Notification] Failed to create notification for recipient ${uniqueRecipientIds[index]}:`,
+        result.reason
+      );
+    }
+  );
 
   return successfulNotifications;
 };
@@ -370,51 +505,55 @@ const getNotificationById = async ({
   userId,
   organizationId,
 }) => {
-  await validateAuthenticatedUser(userId, organizationId);
+  await validateAuthenticatedUser(
+    userId,
+    organizationId
+  );
 
-  const notification = await Notification.findOne({
-    where: {
-      id: notificationId,
-      organizationId,
-      recipientId: userId,
-    },
-    include: [
-      {
-        model: User,
-        as: "actor",
-        attributes: [
-          "id",
-          "firstName",
-          "lastName",
-          "email",
-          "role",
-        ],
-        required: false,
+  const notification =
+    await Notification.findOne({
+      where: {
+        id: notificationId,
+        organizationId,
+        recipientId: userId,
       },
-      {
-        model: Task,
-        as: "task",
-        attributes: [
-          "id",
-          "title",
-          "status",
-          "priority",
-        ],
-        required: false,
-      },
-      {
-        model: Project,
-        as: "project",
-        attributes: [
-          "id",
-          "name",
-          "code",
-          "status",
-        ],
-        required: false,
-      },
-    ],
-  });
+      include: [
+        {
+          model: User,
+          as: "actor",
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "email",
+            "role",
+          ],
+          required: false,
+        },
+        {
+          model: Task,
+          as: "task",
+          attributes: [
+            "id",
+            "title",
+            "status",
+            "priority",
+          ],
+          required: false,
+        },
+        {
+          model: Project,
+          as: "project",
+          attributes: [
+            "id",
+            "name",
+            "code",
+            "status",
+          ],
+          required: false,
+        },
+      ],
+    });
 
   if (!notification) {
     throw createServiceError(
@@ -435,25 +574,50 @@ const getNotifications = async ({
   isRead,
   type,
 }) => {
-  await validateAuthenticatedUser(userId, organizationId);
+  await validateAuthenticatedUser(
+    userId,
+    organizationId
+  );
 
-  if (type !== undefined && type !== null && type !== "") {
+  if (
+    type !== undefined &&
+    type !== null &&
+    type !== ""
+  ) {
     validateNotificationType(type);
   }
 
-  const pagination = normalizePagination(page, limit);
-  const offset = (pagination.page - 1) * pagination.limit;
+  const pagination =
+    normalizePagination(
+      page,
+      limit
+    );
+
+  const offset =
+    (pagination.page - 1) *
+    pagination.limit;
 
   const where = {
     organizationId,
     recipientId: userId,
   };
 
-  if (isRead !== undefined && isRead !== null && isRead !== "") {
-    if (isRead === true || isRead === false) {
+  if (
+    isRead !== undefined &&
+    isRead !== null &&
+    isRead !== ""
+  ) {
+    if (
+      isRead === true ||
+      isRead === false
+    ) {
       where.isRead = isRead;
-    } else if (isRead === "true" || isRead === "false") {
-      where.isRead = isRead === "true";
+    } else if (
+      isRead === "true" ||
+      isRead === "false"
+    ) {
+      where.isRead =
+        isRead === "true";
     }
   }
 
@@ -461,7 +625,10 @@ const getNotifications = async ({
     where.type = type;
   }
 
-  const { count, rows } = await Notification.findAndCountAll({
+  const {
+    count,
+    rows,
+  } = await Notification.findAndCountAll({
     where,
     include: [
       {
@@ -513,97 +680,115 @@ const getNotifications = async ({
       page: pagination.page,
       limit: pagination.limit,
       total: count,
-      totalPages: Math.ceil(count / pagination.limit),
+      totalPages: Math.ceil(
+        count / pagination.limit
+      ),
     },
   };
 };
 
-const getUnreadNotificationCount = async ({
-  userId,
-  organizationId,
-}) => {
-  await validateAuthenticatedUser(userId, organizationId);
+const getUnreadNotificationCount =
+  async ({
+    userId,
+    organizationId,
+  }) => {
+    await validateAuthenticatedUser(
+      userId,
+      organizationId
+    );
 
-  const count = await Notification.count({
-    where: {
-      organizationId,
-      recipientId: userId,
-      isRead: false,
-    },
-  });
+    const count =
+      await Notification.count({
+        where: {
+          organizationId,
+          recipientId: userId,
+          isRead: false,
+        },
+      });
 
-  return {
-    unreadCount: count,
+    return {
+      unreadCount: count,
+    };
   };
-};
 
-const markNotificationAsRead = async ({
-  notificationId,
-  userId,
-  organizationId,
-}) => {
-  const notification = await getNotificationById({
+const markNotificationAsRead =
+  async ({
     notificationId,
     userId,
     organizationId,
-  });
-
-  if (!notification.isRead) {
-    notification.isRead = true;
-    notification.readAt = new Date();
-
-    await notification.save();
-  }
-
-  return notification;
-};
-
-const markAllNotificationsAsRead = async ({
-  userId,
-  organizationId,
-}) => {
-  await validateAuthenticatedUser(userId, organizationId);
-
-  const [updatedCount] = await Notification.update(
-    {
-      isRead: true,
-      readAt: new Date(),
-    },
-    {
-      where: {
+  }) => {
+    const notification =
+      await getNotificationById({
+        notificationId,
+        userId,
         organizationId,
-        recipientId: userId,
-        isRead: false,
-      },
+      });
+
+    if (!notification.isRead) {
+      notification.isRead = true;
+      notification.readAt =
+        new Date();
+
+      await notification.save();
     }
-  );
 
-  return {
-    updatedCount,
+    return notification;
   };
-};
 
-const deleteNotification = async ({
-  notificationId,
-  userId,
-  organizationId,
-}) => {
-  const notification = await getNotificationById({
+const markAllNotificationsAsRead =
+  async ({
+    userId,
+    organizationId,
+  }) => {
+    await validateAuthenticatedUser(
+      userId,
+      organizationId
+    );
+
+    const [updatedCount] =
+      await Notification.update(
+        {
+          isRead: true,
+          readAt: new Date(),
+        },
+        {
+          where: {
+            organizationId,
+            recipientId: userId,
+            isRead: false,
+          },
+        }
+      );
+
+    return {
+      updatedCount,
+    };
+  };
+
+const deleteNotification =
+  async ({
     notificationId,
     userId,
     organizationId,
-  });
+  }) => {
+    const notification =
+      await getNotificationById({
+        notificationId,
+        userId,
+        organizationId,
+      });
 
-  await notification.destroy();
+    await notification.destroy();
 
-  return {
-    deleted: true,
-    notificationId,
+    return {
+      deleted: true,
+      notificationId,
+    };
   };
-};
 
 module.exports = {
   NOTIFICATION_TYPES,
+  NOTIFICATION_PREFERENCE_FIELDS,
   DEFAULT_PAGE,
   DEFAULT_LIMIT,
   MAX_LIMIT,
