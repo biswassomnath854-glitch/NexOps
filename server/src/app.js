@@ -20,6 +20,7 @@ const taskAnalyticsRoutes = require("./routes/taskAnalyticsRoutes");
 const projectAnalyticsRoutes = require("./routes/projectAnalyticsRoutes");
 const workloadRoutes = require("./routes/workloadRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const notificationPreferenceRoutes = require("./routes/notificationPreferenceRoutes");
 
 const { errorHandler } = require("./middleware/errorMiddleware");
 
@@ -84,6 +85,10 @@ app.use(
 app.use("/api/workload", workloadRoutes);
 
 app.use("/api/notifications", notificationRoutes);
+app.use(
+  "/api/notifications/preferences",
+  notificationPreferenceRoutes
+);
 
 app.get("/api/health", (req, res) => {
   return res.status(200).json({

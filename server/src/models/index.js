@@ -11,6 +11,7 @@ const TaskActivity = require("./TaskActivity");
 const TaskComment = require("./TaskComment");
 const TaskAttachment = require("./TaskAttachment");
 const Notification = require("./Notification");
+const NotificationPreference = require("./NotificationPreference");
 
 /*
  * Organization ↔ User
@@ -393,6 +394,32 @@ Notification.belongsTo(Project, {
   as: "project",
 });
 
+/*
+ * Organization ↔ NotificationPreference
+ */
+Organization.hasMany(NotificationPreference, {
+  foreignKey: "organizationId",
+  as: "notificationPreferences",
+});
+
+NotificationPreference.belongsTo(Organization, {
+  foreignKey: "organizationId",
+  as: "organization",
+});
+
+/*
+ * User ↔ NotificationPreference
+ */
+User.hasOne(NotificationPreference, {
+  foreignKey: "userId",
+  as: "notificationPreference",
+});
+
+NotificationPreference.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
 const db = {
   sequelize,
   User,
@@ -406,6 +433,7 @@ const db = {
   TaskComment,
   TaskAttachment,
   Notification,
+  NotificationPreference,
 };
 
 module.exports = db;
