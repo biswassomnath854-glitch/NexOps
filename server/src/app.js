@@ -21,8 +21,11 @@ const projectAnalyticsRoutes = require("./routes/projectAnalyticsRoutes");
 const workloadRoutes = require("./routes/workloadRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const notificationPreferenceRoutes = require("./routes/notificationPreferenceRoutes");
+const globalSearchRoutes = require("./routes/globalSearchRoutes");
 
-const { errorHandler } = require("./middleware/errorMiddleware");
+const {
+  errorHandler,
+} = require("./middleware/errorMiddleware");
 
 const app = express();
 
@@ -56,6 +59,16 @@ app.use("/api/organizations", organizationRoutes);
 app.use("/api/departments", departmentRoutes);
 
 /*
+ * Global search is mounted before dynamic task routes.
+ * The endpoint is isolated under /api/search, so it
+ * does not conflict with /tasks/:taskId.
+ */
+app.use(
+  "/api/search",
+  globalSearchRoutes
+);
+
+/*
  * Overdue task routes must be mounted before the
  * generic task routes because taskRoutes contains
  * dynamic routes such as /tasks/:taskId.
@@ -84,7 +97,11 @@ app.use(
 
 app.use("/api/workload", workloadRoutes);
 
-app.use("/api/notifications", notificationRoutes);
+app.use(
+  "/api/notifications",
+  notificationRoutes
+);
+
 app.use(
   "/api/notifications/preferences",
   notificationPreferenceRoutes
