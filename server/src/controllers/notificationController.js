@@ -1,10 +1,28 @@
 const notificationService = require("../services/notificationService");
 
+const getAuthenticatedUserContext = (req) => {
+  if (!req.user) {
+    const error = new Error("Authenticated user is required.");
+    error.statusCode = 401;
+    error.code = "AUTHENTICATION_REQUIRED";
+    throw error;
+  }
+
+  return {
+    userId: req.user.id,
+    organizationId: req.user.organizationId,
+  };
+};
+
 const getNotifications = async (req, res, next) => {
   try {
+    const { userId, organizationId } =
+      getAuthenticatedUserContext(req);
+
     const result =
       await notificationService.getNotifications({
-        user: req.user,
+        userId,
+        organizationId,
         page: req.query.page,
         limit: req.query.limit,
         isRead: req.query.isRead,
@@ -30,9 +48,13 @@ const getUnreadNotificationCount = async (
   next
 ) => {
   try {
+    const { userId, organizationId } =
+      getAuthenticatedUserContext(req);
+
     const result =
       await notificationService.getUnreadNotificationCount({
-        user: req.user,
+        userId,
+        organizationId,
       });
 
     return res.status(200).json({
@@ -54,11 +76,15 @@ const markNotificationAsRead = async (
   next
 ) => {
   try {
+    const { userId, organizationId } =
+      getAuthenticatedUserContext(req);
+
     const notification =
       await notificationService.markNotificationAsRead({
         notificationId:
           req.params.notificationId,
-        user: req.user,
+        userId,
+        organizationId,
       });
 
     return res.status(200).json({
@@ -80,9 +106,13 @@ const markAllNotificationsAsRead = async (
   next
 ) => {
   try {
+    const { userId, organizationId } =
+      getAuthenticatedUserContext(req);
+
     const result =
       await notificationService.markAllNotificationsAsRead({
-        user: req.user,
+        userId,
+        organizationId,
       });
 
     return res.status(200).json({
@@ -104,11 +134,15 @@ const deleteNotification = async (
   next
 ) => {
   try {
+    const { userId, organizationId } =
+      getAuthenticatedUserContext(req);
+
     const result =
       await notificationService.deleteNotification({
         notificationId:
           req.params.notificationId,
-        user: req.user,
+        userId,
+        organizationId,
       });
 
     return res.status(200).json({

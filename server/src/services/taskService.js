@@ -7,6 +7,7 @@ const {
 } = require("../models");
 
 const taskActivityService = require("./taskActivityService");
+const notificationService = require("./notificationService");
 
 const MANAGEMENT_ROLES = [
   "SUPER_ADMIN",
@@ -550,6 +551,57 @@ const createTaskActivity = async ({
   });
 };
 
+const createTaskNotification = async ({
+  task,
+  actorId,
+  recipientIds,
+  type,
+  title,
+  message,
+  metadata = null,
+}) => {
+  try {
+    await notificationService.createTaskNotifications({
+      task,
+      actorId,
+      recipientIds,
+      type,
+      title,
+      message,
+      metadata,
+    });
+  } catch (error) {
+    console.error(
+      "[Task Notification] Failed to create notification:",
+      error
+    );
+  }
+};
+
+const getTaskNotificationRecipients = (
+  task,
+  actorId,
+  additionalRecipientIds = []
+) => {
+  const recipientIds = [
+    task.assignedTo,
+    task.createdBy,
+    ...additionalRecipientIds,
+  ].filter(Boolean);
+
+  return [
+    ...new Set(
+      recipientIds.map(
+        (recipientId) =>
+          String(recipientId)
+      )
+    ),
+  ].filter(
+    (recipientId) =>
+      recipientId !== String(actorId)
+  );
+};
+
 const getProjectTasks = async (
   projectId,
   query = {}
@@ -821,6 +873,22 @@ const createTask = async (
     },
   });
 
+  if (task.assignedTo) {
+    await createTaskNotification({
+      task,
+      actorId: userId,
+      recipientIds: [task.assignedTo],
+      type: "TASK_ASSIGNED",
+      title: "Task assigned to you",
+      message: `You were assigned the task "${task.title}".`,
+      metadata: {
+        taskId: task.id,
+        projectId: task.projectId,
+        assignedTo: task.assignedTo,
+      },
+    });
+  }
+
   return getTaskById(
     task.id,
     creator
@@ -980,6 +1048,51 @@ const updateTask = async (
           task.assignedTo,
       },
     });
+
+    if (task.assignedTo) {
+      await createTaskNotification({
+        task,
+        actorId: user.id,
+        recipientIds: [task.assignedTo],
+        type: isNewAssignment
+          ? "TASK_ASSIGNED"
+          : "TASK_REASSIGNED",
+        title: isNewAssignment
+          ? "Task assigned to you"
+          : "Task reassigned to you",
+        message: isNewAssignment
+          ? `You were assigned the task "${task.title}".`
+          : `The task "${task.title}" was reassigned to you.`,
+        metadata: {
+          taskId: task.id,
+          projectId: task.projectId,
+          previousAssignedTo,
+          assignedTo:
+            task.assignedTo,
+        },
+      });
+    }
+
+    if (
+      previousAssignedTo &&
+      previousAssignedTo !== task.assignedTo
+    ) {
+      await createTaskNotification({
+        task,
+        actorId: user.id,
+        recipientIds: [previousAssignedTo],
+        type: "TASK_REASSIGNED",
+        title: "Task reassigned",
+        message: `The task "${task.title}" was reassigned to another user.`,
+        metadata: {
+          taskId: task.id,
+          projectId: task.projectId,
+          previousAssignedTo,
+          assignedTo:
+            task.assignedTo,
+        },
+      });
+    }
   }
 
   if (
@@ -1063,6 +1176,50 @@ const updateTask = async (
         status: task.status,
       },
     });
+
+    const notificationRecipients =
+      getTaskNotificationRecipients(
+        task,
+        user.id
+      );
+
+    if (
+      notificationRecipients.length > 0
+    ) {
+      if (task.status === "COMPLETED") {
+        await createTaskNotification({
+          task,
+          actorId: user.id,
+          recipientIds:
+            notificationRecipients,
+          type: "TASK_COMPLETED",
+          title: "Task completed",
+          message: `The task "${task.title}" was completed.`,
+          metadata: {
+            taskId: task.id,
+            projectId: task.projectId,
+            previousStatus,
+            status: task.status,
+          },
+        });
+      } else {
+        await createTaskNotification({
+          task,
+          actorId: user.id,
+          recipientIds:
+            notificationRecipients,
+          type: "TASK_STATUS_CHANGED",
+          title: "Task status changed",
+          message: `The task "${task.title}" status changed from ${previousStatus} to ${task.status}.`,
+          metadata: {
+            taskId: task.id,
+            projectId: task.projectId,
+            previousStatus,
+            status: task.status,
+          },
+        });
+      }
+    }
   }
 
   const hasGeneralUpdate =
@@ -1188,6 +1345,50 @@ const updateTaskStatus = async (
       status: nextStatus,
     },
   });
+
+  const notificationRecipients =
+    getTaskNotificationRecipients(
+      task,
+      user.id
+    );
+
+  if (
+    notificationRecipients.length > 0
+  ) {
+    if (nextStatus === "COMPLETED") {
+      await createTaskNotification({
+        task,
+        actorId: user.id,
+        recipientIds:
+          notificationRecipients,
+        type: "TASK_COMPLETED",
+        title: "Task completed",
+        message: `The task "${task.title}" was completed.`,
+        metadata: {
+          taskId: task.id,
+          projectId: task.projectId,
+          previousStatus,
+          status: nextStatus,
+        },
+      });
+    } else {
+      await createTaskNotification({
+        task,
+        actorId: user.id,
+        recipientIds:
+          notificationRecipients,
+        type: "TASK_STATUS_CHANGED",
+        title: "Task status changed",
+        message: `The task "${task.title}" status changed from ${previousStatus} to ${nextStatus}.`,
+        metadata: {
+          taskId: task.id,
+          projectId: task.projectId,
+          previousStatus,
+          status: nextStatus,
+        },
+      });
+    }
+  }
 
   return getTaskById(
     task.id,
