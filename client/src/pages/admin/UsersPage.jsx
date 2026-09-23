@@ -316,7 +316,7 @@ export function UsersPage() {
                   setSearchQuery(e.target.value)
                   setCurrentPage(1)
                 }}
-                leftIcon={<Search className="w-4 h-4 text-slate-400" />}
+                leftIcon={Search}
                 className="py-1.5 text-xs"
               />
             </div>
