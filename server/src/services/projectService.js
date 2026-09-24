@@ -1,9 +1,21 @@
 const {
   Project,
+  ProjectMember,
   Organization,
 } = require("../models");
 
-const createServiceError = (message, statusCode, code) => {
+const MANAGEMENT_ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "MANAGER",
+  "TEAM_LEAD",
+];
+
+const createServiceError = (
+  message,
+  statusCode,
+  code
+) => {
   const error = new Error(message);
 
   error.statusCode = statusCode;
@@ -29,7 +41,9 @@ const buildProjectIncludes = () => {
   ];
 };
 
-const verifyOrganizationExists = async (organizationId) => {
+const verifyOrganizationExists = async (
+  organizationId
+) => {
   const organization = await Organization.findByPk(
     organizationId
   );
@@ -62,7 +76,58 @@ const findAllProjects = async () => {
   return projects;
 };
 
-const findProjectById = async (projectId) => {
+const findAccessibleProjects = async (
+  user
+) => {
+  if (!user?.id || !user?.organizationId) {
+    throw createServiceError(
+      "Authenticated user organization is required.",
+      403,
+      "ORGANIZATION_ACCESS_REQUIRED"
+    );
+  }
+
+  if (MANAGEMENT_ROLES.includes(user.role)) {
+    return Project.findAll({
+      where: {
+        organizationId: user.organizationId,
+      },
+      include: buildProjectIncludes(),
+      order: [["createdAt", "DESC"]],
+    });
+  }
+
+  const memberships =
+    await ProjectMember.findAll({
+      where: {
+        userId: user.id,
+      },
+      include: [
+        {
+          model: Project,
+          as: "project",
+          where: {
+            organizationId:
+              user.organizationId,
+          },
+          include:
+            buildProjectIncludes(),
+        },
+      ],
+      order: [["assignedAt", "ASC"]],
+    });
+
+  return memberships
+    .map(
+      (membership) =>
+        membership.project
+    )
+    .filter(Boolean);
+};
+
+const findProjectById = async (
+  projectId
+) => {
   const project = await Project.findByPk(
     projectId,
     {
@@ -81,17 +146,21 @@ const findProjectById = async (projectId) => {
   return project;
 };
 
-const createProject = async (projectData) => {
+const createProject = async (
+  projectData
+) => {
   await verifyOrganizationExists(
     projectData.organizationId
   );
 
-  const existingProject = await Project.findOne({
-    where: {
-      organizationId: projectData.organizationId,
-      code: projectData.code,
-    },
-  });
+  const existingProject =
+    await Project.findOne({
+      where: {
+        organizationId:
+          projectData.organizationId,
+        code: projectData.code,
+      },
+    });
 
   if (existingProject) {
     throw createServiceError(
@@ -112,9 +181,10 @@ const updateProject = async (
   projectId,
   projectData
 ) => {
-  const project = await Project.findByPk(
-    projectId
-  );
+  const project =
+    await Project.findByPk(
+      projectId
+    );
 
   if (!project) {
     throw createServiceError(
@@ -140,15 +210,19 @@ const updateProject = async (
 
   if (
     projectData.code &&
-    (projectData.code !== project.code ||
-      organizationId !== project.organizationId)
+    (
+      projectData.code !== project.code ||
+      organizationId !==
+        project.organizationId
+    )
   ) {
-    const existingProject = await Project.findOne({
-      where: {
-        organizationId,
-        code: projectData.code,
-      },
-    });
+    const existingProject =
+      await Project.findOne({
+        where: {
+          organizationId,
+          code: projectData.code,
+        },
+      });
 
     if (
       existingProject &&
@@ -162,18 +236,23 @@ const updateProject = async (
     }
   }
 
-  await project.update(projectData);
+  await project.update(
+    projectData
+  );
 
-  return findProjectById(projectId);
+  return findProjectById(
+    projectId
+  );
 };
 
 const updateProjectStatus = async (
   projectId,
   status
 ) => {
-  const project = await Project.findByPk(
-    projectId
-  );
+  const project =
+    await Project.findByPk(
+      projectId
+    );
 
   if (!project) {
     throw createServiceError(
@@ -187,13 +266,18 @@ const updateProjectStatus = async (
     status,
   });
 
-  return findProjectById(projectId);
-};
-
-const deleteProject = async (projectId) => {
-  const project = await Project.findByPk(
+  return findProjectById(
     projectId
   );
+};
+
+const deleteProject = async (
+  projectId
+) => {
+  const project =
+    await Project.findByPk(
+      projectId
+    );
 
   if (!project) {
     throw createServiceError(
@@ -212,6 +296,7 @@ const deleteProject = async (projectId) => {
 
 module.exports = {
   findAllProjects,
+  findAccessibleProjects,
   findProjectById,
   createProject,
   updateProject,

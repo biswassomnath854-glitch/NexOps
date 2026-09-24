@@ -4,6 +4,7 @@ const {
   Task,
   Project,
   User,
+  ProjectMember,
 } = require("../models");
 
 const taskActivityService = require("./taskActivityService");
@@ -90,9 +91,21 @@ const validateTaskAccess = async (
   const isAssignee =
     task.assignedTo === user.id;
 
-  if (!isCreator && !isAssignee) {
+  if (isCreator || isAssignee) {
+    return;
+  }
+
+  const membership =
+    await ProjectMember.findOne({
+      where: {
+        projectId: task.projectId,
+        userId: user.id,
+      },
+    });
+
+  if (!membership) {
     const error = new Error(
-      "You can only access tasks you created or are assigned to."
+      "You can only access tasks from projects you are a member of."
     );
     error.statusCode = 403;
     error.code = "TASK_ACCESS_DENIED";

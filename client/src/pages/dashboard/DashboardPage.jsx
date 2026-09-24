@@ -17,6 +17,18 @@ import {
   DashboardSkeleton,
 } from '@/components/dashboard'
 
+const MANAGEMENT_ROLES = [
+  ROLES.SUPER_ADMIN,
+  ROLES.ADMIN,
+  ROLES.MANAGER,
+  ROLES.TEAM_LEAD,
+]
+
+const PROJECT_MANAGEMENT_ROLES = [
+  ROLES.SUPER_ADMIN,
+  ROLES.ADMIN,
+]
+
 export function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null)
   const [overdueTasks, setOverdueTasks] = useState([])
@@ -28,23 +40,37 @@ export function DashboardPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const isManagement = user?.role && [
-    ROLES.SUPER_ADMIN,
-    ROLES.ADMIN,
-    ROLES.MANAGER,
-    ROLES.TEAM_LEAD,
-  ].includes(user.role)
+  const isManagement =
+    user?.role && MANAGEMENT_ROLES.includes(user.role)
+
+  const canCreateProjects =
+    user?.role && PROJECT_MANAGEMENT_ROLES.includes(user.role)
+
+  const canCreateTasks =
+    user?.role && user.role !== ROLES.VIEWER
 
   const loadData = useCallback(async () => {
     try {
       const dashRes = await analyticsApi.getDashboard()
-      const data = dashRes?.data?.dashboard || dashRes?.dashboard || dashRes?.data || dashRes
+
+      const data =
+        dashRes?.data?.dashboard ||
+        dashRes?.dashboard ||
+        dashRes?.data ||
+        dashRes
+
       setDashboardData(data)
       setError(null)
 
       try {
         const overdueRes = await tasksApi.getOverdueTasks({ limit: 5 })
-        const overdueList = overdueRes?.data?.tasks || overdueRes?.tasks || overdueRes?.data || []
+
+        const overdueList =
+          overdueRes?.data?.tasks ||
+          overdueRes?.tasks ||
+          overdueRes?.data ||
+          []
+
         setOverdueTasks(overdueList)
       } catch {
         setOverdueTasks([])
@@ -53,39 +79,58 @@ export function DashboardPage() {
       if (isManagement) {
         try {
           const workloadRes = await analyticsApi.getWorkload({ limit: 5 })
-          const workloadList = workloadRes?.data?.workload || workloadRes?.workload || []
+
+          const workloadList =
+            workloadRes?.data?.workload ||
+            workloadRes?.workload ||
+            []
+
           setWorkloadData(workloadList)
         } catch {
           setWorkloadData(null)
         }
+      } else {
+        setWorkloadData(null)
       }
     } catch (err) {
       console.error('Failed to load dashboard:', err)
-      setError(err.message || 'Unable to connect to NexOps dashboard service.')
+
+      setError(
+        err.message ||
+          'Unable to connect to NexOps dashboard service.'
+      )
     }
   }, [isManagement])
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
+
     await loadData()
+
     setIsRefreshing(false)
   }
 
   const handleRetry = async () => {
     setIsLoading(true)
+
     await loadData()
+
     setIsLoading(false)
   }
 
   useEffect(() => {
     let ignore = false
+
     async function init() {
       await loadData()
+
       if (!ignore) {
         setIsLoading(false)
       }
     }
+
     init()
+
     return () => {
       ignore = true
     }
@@ -112,17 +157,28 @@ export function DashboardPage() {
   const taskStatistics = dashboardData?.taskStatistics
   const projectStatistics = dashboardData?.projectStatistics
   const recentActivities = dashboardData?.recentActivities || []
-  const scope = dashboardData?.scope || (isManagement ? 'ORGANIZATION' : 'PERSONAL')
+
+  const scope =
+    dashboardData?.scope ||
+    (isManagement ? 'ORGANIZATION' : 'PERSONAL')
 
   return (
     <div className="space-y-8 animate-in fade-in duration-150">
-      {/* 1. Header with greeting, scope, and quick controls */}
+      {/* 1. Header with greeting, scope, and role-aware quick controls */}
       <DashboardHeader
         scope={scope}
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
-        onNewTask={() => navigate(ROUTES.TASKS)}
-        onNewProject={() => navigate(ROUTES.PROJECTS)}
+        onNewTask={
+          canCreateTasks
+            ? () => navigate(ROUTES.TASKS)
+            : undefined
+        }
+        onNewProject={
+          canCreateProjects
+            ? () => navigate(ROUTES.PROJECTS)
+            : undefined
+        }
       />
 
       {/* 2. Primary KPI Cards Grid */}
@@ -139,7 +195,13 @@ export function DashboardPage() {
 
       {/* 4. Actionable Tasks Widget & Workload Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className={isManagement ? 'lg:col-span-2' : 'lg:col-span-3'}>
+        <div
+          className={
+            isManagement
+              ? 'lg:col-span-2'
+              : 'lg:col-span-3'
+          }
+        >
           <RecentTasksWidget tasks={overdueTasks} />
         </div>
 
@@ -161,6 +223,7 @@ export function DashboardPage() {
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
           Quick Workspaces
         </p>
+
         <DashboardQuickActions />
       </div>
     </div>

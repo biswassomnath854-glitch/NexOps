@@ -51,7 +51,7 @@ export const API_ENDPOINTS = {
   },
   NOTIFICATIONS: {
     BASE: '/notifications',
-    PREFERENCES: '/notification-preferences',
+    PREFERENCES: '/notifications/preferences',
   },
   SEARCH: {
     GLOBAL: '/search',

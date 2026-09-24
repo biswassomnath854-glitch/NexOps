@@ -1,13 +1,18 @@
 const projectService = require("../services/projectService");
 
-const getProjects = async (req, res, next) => {
+const getProjects = async (
+  req,
+  res,
+  next
+) => {
   try {
     const projects =
       await projectService.findAllProjects();
 
     return res.status(200).json({
       success: true,
-      message: "Projects retrieved successfully.",
+      message:
+        "Projects retrieved successfully.",
       data: {
         projects,
       },
@@ -17,7 +22,35 @@ const getProjects = async (req, res, next) => {
   }
 };
 
-const getProjectById = async (req, res, next) => {
+const getAccessibleProjects = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const projects =
+      await projectService.findAccessibleProjects(
+        req.user
+      );
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Accessible projects retrieved successfully.",
+      data: {
+        projects,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getProjectById = async (
+  req,
+  res,
+  next
+) => {
   try {
     const project =
       await projectService.findProjectById(
@@ -26,7 +59,8 @@ const getProjectById = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: "Project retrieved successfully.",
+      message:
+        "Project retrieved successfully.",
       data: {
         project,
       },
@@ -36,14 +70,21 @@ const getProjectById = async (req, res, next) => {
   }
 };
 
-const createProject = async (req, res, next) => {
+const createProject = async (
+  req,
+  res,
+  next
+) => {
   try {
     const project =
-      await projectService.createProject(req.body);
+      await projectService.createProject(
+        req.body
+      );
 
     return res.status(201).json({
       success: true,
-      message: "Project created successfully.",
+      message:
+        "Project created successfully.",
       data: {
         project,
       },
@@ -53,7 +94,11 @@ const createProject = async (req, res, next) => {
   }
 };
 
-const updateProject = async (req, res, next) => {
+const updateProject = async (
+  req,
+  res,
+  next
+) => {
   try {
     const project =
       await projectService.updateProject(
@@ -63,7 +108,8 @@ const updateProject = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: "Project updated successfully.",
+      message:
+        "Project updated successfully.",
       data: {
         project,
       },
@@ -73,7 +119,11 @@ const updateProject = async (req, res, next) => {
   }
 };
 
-const updateProjectStatus = async (req, res, next) => {
+const updateProjectStatus = async (
+  req,
+  res,
+  next
+) => {
   try {
     const project =
       await projectService.updateProjectStatus(
@@ -83,7 +133,8 @@ const updateProjectStatus = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: "Project status updated successfully.",
+      message:
+        "Project status updated successfully.",
       data: {
         project,
       },
@@ -93,7 +144,11 @@ const updateProjectStatus = async (req, res, next) => {
   }
 };
 
-const deleteProject = async (req, res, next) => {
+const deleteProject = async (
+  req,
+  res,
+  next
+) => {
   try {
     const result =
       await projectService.deleteProject(
@@ -102,7 +157,8 @@ const deleteProject = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: "Project deleted successfully.",
+      message:
+        "Project deleted successfully.",
       data: result,
     });
   } catch (error) {
@@ -112,6 +168,7 @@ const deleteProject = async (req, res, next) => {
 
 module.exports = {
   getProjects,
+  getAccessibleProjects,
   getProjectById,
   createProject,
   updateProject,

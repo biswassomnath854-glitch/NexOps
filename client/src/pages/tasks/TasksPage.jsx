@@ -25,7 +25,12 @@ import {
   ClipboardList,
 } from 'lucide-react'
 
-const MANAGEMENT_ROLES = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.TEAM_LEAD]
+const MANAGEMENT_ROLES = [
+  ROLES.SUPER_ADMIN,
+  ROLES.ADMIN,
+  ROLES.MANAGER,
+  ROLES.TEAM_LEAD,
+]
 
 const DEFAULT_FILTERS = {
   page: 1,
@@ -44,14 +49,21 @@ export function TasksPage() {
   const { user: currentUser } = useAuth()
   const navigate = useNavigate()
 
-  const isManagement = currentUser?.role && MANAGEMENT_ROLES.includes(currentUser.role)
+  const isManagement =
+    currentUser?.role && MANAGEMENT_ROLES.includes(currentUser.role)
+
   const isViewer = currentUser?.role === ROLES.VIEWER
 
   // Data state
   const [projects, setProjects] = useState([])
   const [selectedProjectId, setSelectedProjectId] = useState('')
   const [tasks, setTasks] = useState([])
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, totalItems: 0, totalPages: 0 })
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    totalItems: 0,
+    totalPages: 0,
+  })
   const [members, setMembers] = useState([])
 
   // UI state
@@ -73,45 +85,85 @@ export function TasksPage() {
     setTimeout(() => setFeedback(null), 4500)
   }
 
-  // Load projects for the project selector
-  useEffect(() => {
-    async function loadProjects() {
-      setIsProjectsLoading(true)
-      try {
-        const res = await projectsApi.getProjects()
-        const list = res?.data?.projects || res?.projects || []
-        setProjects(list)
-        if (list.length > 0) {
-          setSelectedProjectId(list[0].id)
-        }
-      } catch (err) {
-        console.error('Failed to load projects:', err)
-        setError('Failed to load projects. ' + (err?.message || ''))
-      } finally {
-        setIsProjectsLoading(false)
-      }
-    }
-    loadProjects()
-  }, [])
+  // Load projects available to the authenticated user.
+  //
+  // Management roles use the existing project-management endpoint.
+  // Employee/Viewer roles use the accessible-project endpoint because
+  // the normal project-management endpoint is intentionally admin-only.
+  const loadProjects = useCallback(async () => {
+    if (!currentUser?.role) return
 
-  // Load project members when project changes (for assignee filter)
+    setIsProjectsLoading(true)
+    setError(null)
+
+    try {
+      const res = isManagement
+        ? await projectsApi.getProjects()
+        : await projectsApi.getAccessibleProjects()
+
+      const list = res?.data?.projects || res?.projects || []
+
+      setProjects(list)
+
+      if (list.length > 0) {
+        setSelectedProjectId((currentSelectedId) => {
+          const stillAvailable = list.some(
+            (project) => project.id === currentSelectedId
+          )
+
+          return stillAvailable ? currentSelectedId : list[0].id
+        })
+      } else {
+        setSelectedProjectId('')
+        setTasks([])
+        setMembers([])
+      }
+    } catch (err) {
+      console.error('Failed to load projects:', err)
+      setProjects([])
+      setSelectedProjectId('')
+      setTasks([])
+      setMembers([])
+      setError('Failed to load projects. ' + (err?.message || ''))
+    } finally {
+      setIsProjectsLoading(false)
+    }
+  }, [currentUser?.role, isManagement])
+
   useEffect(() => {
-    if (!selectedProjectId) return
+    loadProjects()
+  }, [loadProjects])
+
+  // Load project members only for management users.
+  //
+  // The project-members endpoint is intentionally restricted to
+  // SUPER_ADMIN/ADMIN, so Employee/Viewer users must not call it.
+  useEffect(() => {
+    if (!selectedProjectId || !isManagement) {
+      setMembers([])
+      return
+    }
+
     projectsApi
       .getMembers(selectedProjectId)
       .then((res) => {
         const list = res?.data?.projectMembers || res?.projectMembers || []
         setMembers(list)
       })
-      .catch(() => setMembers([]))
-  }, [selectedProjectId])
+      .catch((err) => {
+        console.error('Failed to load project members:', err)
+        setMembers([])
+      })
+  }, [selectedProjectId, isManagement])
 
   // Load tasks
   const loadTasks = useCallback(
     async (projectId, queryFilters) => {
       if (!projectId) return
+
       setIsLoading(true)
       setError(null)
+
       try {
         // Clean undefined/empty values before sending
         const params = Object.fromEntries(
@@ -119,13 +171,24 @@ export function TasksPage() {
             ([, v]) => v !== undefined && v !== null && v !== ''
           )
         )
+
         const res = await tasksApi.getProjectTasks(projectId, params)
         const data = res?.data || res
+
         setTasks(data?.tasks || [])
-        setPagination(data?.pagination || { page: 1, limit: 10, totalItems: 0, totalPages: 0 })
+        setPagination(
+          data?.pagination || {
+            page: 1,
+            limit: 10,
+            totalItems: 0,
+            totalPages: 0,
+          }
+        )
       } catch (err) {
         console.error('Failed to load tasks:', err)
+
         const msg = err?.message || 'Failed to load tasks.'
+
         setError(msg)
         setTasks([])
       } finally {
@@ -160,6 +223,11 @@ export function TasksPage() {
   }
 
   const handleRefresh = async () => {
+    if (error && projects.length === 0) {
+      await loadProjects()
+      return
+    }
+
     await loadTasks(selectedProjectId, filters)
   }
 
@@ -171,6 +239,7 @@ export function TasksPage() {
   // Create task
   const handleCreateTask = async (formData) => {
     setIsActionLoading(true)
+
     try {
       await tasksApi.createProjectTask(selectedProjectId, formData)
       showFeedback('Task created successfully.')
@@ -183,7 +252,9 @@ export function TasksPage() {
   // Edit task
   const handleUpdateTask = async (formData) => {
     if (!editTarget) return
+
     setIsActionLoading(true)
+
     try {
       await tasksApi.updateTask(editTarget.id, formData)
       showFeedback('Task updated successfully.')
@@ -196,11 +267,16 @@ export function TasksPage() {
   // Change status
   const handleStatusChange = async (newStatus) => {
     if (!statusTarget) return
+
     setIsActionLoading(true)
+
     try {
       await tasksApi.updateTaskStatus(statusTarget.id, { status: newStatus })
+
       showFeedback(`Task status updated to ${newStatus.replace('_', ' ')}.`)
+
       setStatusTarget(null)
+
       await loadTasks(selectedProjectId, filters)
     } catch (err) {
       throw err
@@ -212,11 +288,16 @@ export function TasksPage() {
   // Delete task
   const handleDeleteTask = async () => {
     if (!deleteTarget) return
+
     setIsActionLoading(true)
+
     try {
       await tasksApi.deleteTask(deleteTarget.id)
+
       showFeedback('Task deleted.')
+
       setDeleteTarget(null)
+
       await loadTasks(selectedProjectId, filters)
     } catch (err) {
       showFeedback(err?.message || 'Failed to delete task.', 'error')
@@ -228,17 +309,24 @@ export function TasksPage() {
   // Determine per-task authorization
   const canEditTask = (task) => {
     if (isViewer) return false
+
     if (isManagement) return true
-    return task.createdBy === currentUser?.id || task.assignedTo === currentUser?.id
+
+    return (
+      task.createdBy === currentUser?.id ||
+      task.assignedTo === currentUser?.id
+    )
   }
 
   const canDeleteTask = () => isManagement
 
-  const selectedProject = projects.find((p) => p.id === selectedProjectId)
+  const selectedProject = projects.find(
+    (project) => project.id === selectedProjectId
+  )
 
-  const projectOptions = projects.map((p) => ({
-    value: p.id,
-    label: `${p.name} (${p.code})`,
+  const projectOptions = projects.map((project) => ({
+    value: project.id,
+    label: `${project.name} (${project.code})`,
   }))
 
   if (error && !isLoading && tasks.length === 0) {
@@ -248,6 +336,7 @@ export function TasksPage() {
           title="Task Management"
           description="Manage project tasks, assignments, and delivery timelines."
         />
+
         <ErrorState
           title="Unable to Load Tasks"
           message={error}
@@ -275,6 +364,7 @@ export function TasksPage() {
               <RotateCw className="w-3.5 h-3.5" />
               Refresh
             </Button>
+
             {!isViewer && selectedProjectId && (
               <Button
                 variant="primary"
@@ -312,14 +402,18 @@ export function TasksPage() {
               <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
                 <FolderKanban className="w-4 h-4 text-indigo-600" />
               </div>
+
               <div className="min-w-[220px]">
                 <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
                   Project Context
                 </label>
+
                 {isProjectsLoading ? (
                   <div className="h-9 bg-slate-100 rounded-lg animate-pulse w-56" />
                 ) : projects.length === 0 ? (
-                  <p className="text-xs text-slate-400">No accessible projects found.</p>
+                  <p className="text-xs text-slate-400">
+                    No accessible projects found.
+                  </p>
                 ) : (
                   <Select
                     value={selectedProjectId}
@@ -335,12 +429,16 @@ export function TasksPage() {
               <div className="flex items-center gap-3 text-xs text-slate-500 border-l border-slate-200 pl-4">
                 <span>
                   Status:{' '}
-                  <span className="font-semibold text-slate-700">{selectedProject.status}</span>
+                  <span className="font-semibold text-slate-700">
+                    {selectedProject.status}
+                  </span>
                 </span>
+
                 <span>
                   Total:{' '}
                   <span className="font-semibold text-slate-700">
-                    {pagination.totalItems} task{pagination.totalItems !== 1 ? 's' : ''}
+                    {pagination.totalItems} task
+                    {pagination.totalItems !== 1 ? 's' : ''}
                   </span>
                 </span>
               </div>
@@ -355,10 +453,12 @@ export function TasksPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <ClipboardList className="w-4 h-4 text-slate-400" />
+
               <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
                 Filters
               </span>
             </div>
+
             <TaskFilters
               filters={filters}
               onChange={handleFiltersChange}
@@ -383,19 +483,25 @@ export function TasksPage() {
           onEdit={(task) => setEditTarget(task)}
           onChangeStatus={(task) => setStatusTarget(task)}
           onDelete={(task) => setDeleteTarget(task)}
-          canEdit={true} // action menu respects per-task canEdit logic from auth checks
+          canEdit={true}
           canDelete={canDeleteTask()}
         />
-      ) : !isProjectsLoading && (
-        <Card className="border-slate-200/80">
-          <CardContent className="py-16 text-center">
-            <FolderKanban className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-slate-600">Select a Project</p>
-            <p className="text-xs text-slate-400 mt-1">
-              Choose a project above to view and manage its tasks.
-            </p>
-          </CardContent>
-        </Card>
+      ) : (
+        !isProjectsLoading && (
+          <Card className="border-slate-200/80">
+            <CardContent className="py-16 text-center">
+              <FolderKanban className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+
+              <p className="text-sm font-semibold text-slate-600">
+                Select a Project
+              </p>
+
+              <p className="text-xs text-slate-400 mt-1">
+                Choose a project above to view and manage its tasks.
+              </p>
+            </CardContent>
+          </Card>
+        )
       )}
 
       {/* Create Task Modal */}

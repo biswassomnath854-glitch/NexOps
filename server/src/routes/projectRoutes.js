@@ -1,8 +1,12 @@
 const express = require("express");
 
 const projectController = require("../controllers/projectController");
-const { authenticate } = require("../middleware/authMiddleware");
-const { authorize } = require("../middleware/authorizationMiddleware");
+const {
+  authenticate,
+} = require("../middleware/authMiddleware");
+const {
+  authorize,
+} = require("../middleware/authorizationMiddleware");
 
 const {
   createProjectSchema,
@@ -12,9 +16,14 @@ const {
 
 const router = express.Router();
 
-const validateRequestBody = (schema) => {
+const validateRequestBody = (
+  schema
+) => {
   return (req, res, next) => {
-    const { error, value } = schema.validate(req.body, {
+    const {
+      error,
+      value,
+    } = schema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
     });
@@ -24,10 +33,14 @@ const validateRequestBody = (schema) => {
         success: false,
         message: "Validation failed.",
         code: "VALIDATION_ERROR",
-        errors: error.details.map((detail) => ({
-          field: detail.path.join("."),
-          message: detail.message,
-        })),
+        errors: error.details.map(
+          (detail) => ({
+            field:
+              detail.path.join("."),
+            message:
+              detail.message,
+          })
+        ),
       });
     }
 
@@ -37,20 +50,46 @@ const validateRequestBody = (schema) => {
   };
 };
 
-const validateProjectId = (req, res, next) => {
+const validateProjectId = (
+  req,
+  res,
+  next
+) => {
   const uuidV4Pattern =
     /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-  if (!uuidV4Pattern.test(req.params.projectId)) {
+  if (
+    !uuidV4Pattern.test(
+      req.params.projectId
+    )
+  ) {
     return res.status(400).json({
       success: false,
-      message: "Project ID must be a valid UUID.",
+      message:
+        "Project ID must be a valid UUID.",
       code: "INVALID_PROJECT_ID",
     });
   }
 
   next();
 };
+
+/*
+ * Accessible Projects
+ *
+ * Available to every authenticated user.
+ *
+ * Management users receive projects
+ * from their organization.
+ *
+ * Non-management users receive only
+ * projects where they are members.
+ */
+router.get(
+  "/accessible",
+  authenticate,
+  projectController.getAccessibleProjects
+);
 
 /*
  * Project Management Routes
@@ -60,7 +99,9 @@ const validateProjectId = (req, res, next) => {
  */
 
 router.use(authenticate);
-router.use(authorize("SUPER_ADMIN", "ADMIN"));
+router.use(
+  authorize("SUPER_ADMIN", "ADMIN")
+);
 
 router.get(
   "/",
@@ -75,21 +116,27 @@ router.get(
 
 router.post(
   "/",
-  validateRequestBody(createProjectSchema),
+  validateRequestBody(
+    createProjectSchema
+  ),
   projectController.createProject
 );
 
 router.patch(
   "/:projectId",
   validateProjectId,
-  validateRequestBody(updateProjectSchema),
+  validateRequestBody(
+    updateProjectSchema
+  ),
   projectController.updateProject
 );
 
 router.patch(
   "/:projectId/status",
   validateProjectId,
-  validateRequestBody(updateProjectStatusSchema),
+  validateRequestBody(
+    updateProjectStatusSchema
+  ),
   projectController.updateProjectStatus
 );
 
