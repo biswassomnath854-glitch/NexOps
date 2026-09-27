@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
 const JWT_ALGORITHM = "HS256";
@@ -9,6 +10,7 @@ const generateAccessToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
     expiresIn: ACCESS_TOKEN_EXPIRES_IN,
     algorithm: JWT_ALGORITHM,
+    jwtid: crypto.randomUUID(),
   });
 };
 
@@ -16,6 +18,7 @@ const generateRefreshToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRES_IN,
     algorithm: JWT_ALGORITHM,
+    jwtid: crypto.randomUUID(),
   });
 };
 

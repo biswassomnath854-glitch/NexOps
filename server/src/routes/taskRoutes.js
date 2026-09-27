@@ -102,6 +102,7 @@ const validateCreateTask = (req, res, next) => {
 router.post(
   "/projects/:projectId/tasks",
   authenticate,
+  authorizeProjectTaskListAccess,
   validateCreateTask,
   taskController.createTask
 );
