@@ -4,11 +4,11 @@ export function Table({ children, className, containerClassName, ...props }) {
   return (
     <div
       className={cn(
-        'w-full overflow-x-auto rounded-xl border border-slate-200/80 bg-white shadow-xs',
+        'w-full overflow-x-auto rounded-xl border border-slate-200/80 bg-white shadow-2xs',
         containerClassName
       )}
     >
-      <table className={cn('w-full text-left text-sm text-slate-600', className)} {...props}>
+      <table className={cn('w-full text-left text-xs text-slate-600', className)} {...props}>
         {children}
       </table>
     </div>
@@ -19,7 +19,7 @@ export function TableHeader({ children, className, ...props }) {
   return (
     <thead
       className={cn(
-        'border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wider text-slate-600',
+        'border-b border-slate-200/90 bg-slate-50/70 text-[11px] font-semibold uppercase tracking-wider text-slate-500',
         className
       )}
       {...props}
@@ -42,7 +42,7 @@ export function TableRow({ children, className, isClickable = false, ...props })
     <tr
       className={cn(
         'transition-colors duration-100',
-        isClickable ? 'cursor-pointer hover:bg-slate-50/80' : 'hover:bg-slate-50/50',
+        isClickable ? 'cursor-pointer hover:bg-slate-50/90' : 'hover:bg-slate-50/50',
         className
       )}
       {...props}
@@ -62,7 +62,7 @@ export function TableHead({ children, className, align = 'left', ...props }) {
   return (
     <th
       className={cn(
-        'px-5 py-3.5 whitespace-nowrap font-semibold',
+        'px-4 py-3 whitespace-nowrap font-semibold',
         alignments[align] || alignments.left,
         className
       )}
@@ -83,7 +83,7 @@ export function TableCell({ children, className, align = 'left', ...props }) {
   return (
     <td
       className={cn(
-        'px-5 py-4 whitespace-nowrap text-slate-700',
+        'px-4 py-3.5 whitespace-nowrap text-slate-700',
         alignments[align] || alignments.left,
         className
       )}

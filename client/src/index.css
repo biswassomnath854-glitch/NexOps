@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-50: #f5f4ff;
+  --color-brand-100: #ece9fe;
+  --color-brand-200: #dad6fe;
+  --color-brand-300: #bcb5fd;
+  --color-brand-400: #998dfc;
+  --color-brand-500: #7a66f8;
+  --color-brand-600: #635bff; /* NexOps primary */
+  --color-brand-700: #5148e5; /* NexOps primary dark */
+  --color-brand-800: #4238be;
+  --color-brand-900: #37309a;
+  --color-brand-950: #201c5b;
+
+  --color-surface: #ffffff;
+  --color-app-bg: #f8fafc;
+}
+
 @layer base {
   :root {
     --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

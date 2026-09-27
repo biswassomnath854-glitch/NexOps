@@ -58,7 +58,7 @@ export const Input = forwardRef(
               'disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed',
               error
                 ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200'
-                : 'border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-indigo-100',
+                : 'border-slate-200 hover:border-slate-300 focus:border-[#635BFF] focus:ring-[#635BFF]/20',
               LeftIcon && 'pl-9',
               RightIcon && 'pr-9',
               className

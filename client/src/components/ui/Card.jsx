@@ -4,7 +4,7 @@ export function Card({ children, className, ...props }) {
   return (
     <div
       className={cn(
-        'rounded-xl border border-slate-200/80 bg-white shadow-xs transition-shadow duration-150',
+        'rounded-xl border border-slate-200/80 bg-white shadow-2xs transition-shadow duration-150',
         className
       )}
       {...props}
@@ -18,12 +18,12 @@ export function CardHeader({ children, className, action, ...props }) {
   return (
     <div
       className={cn(
-        'flex items-center justify-between px-6 py-4 border-b border-slate-100',
+        'flex items-center justify-between px-5 py-3.5 border-b border-slate-100',
         className
       )}
       {...props}
     >
-      <div className="space-y-0.5">{children}</div>
+      <div className="space-y-0.5 min-w-0 flex-1">{children}</div>
       {action && <div className="shrink-0 ml-4">{action}</div>}
     </div>
   )
@@ -32,7 +32,7 @@ export function CardHeader({ children, className, action, ...props }) {
 export function CardTitle({ children, className, ...props }) {
   return (
     <h3
-      className={cn('text-base font-semibold text-slate-900 tracking-tight', className)}
+      className={cn('text-sm font-semibold text-slate-900 tracking-tight', className)}
       {...props}
     >
       {children}
@@ -42,7 +42,7 @@ export function CardTitle({ children, className, ...props }) {
 
 export function CardDescription({ children, className, ...props }) {
   return (
-    <p className={cn('text-xs text-slate-500', className)} {...props}>
+    <p className={cn('text-xs text-slate-500 mt-0.5', className)} {...props}>
       {children}
     </p>
   )
@@ -50,7 +50,7 @@ export function CardDescription({ children, className, ...props }) {
 
 export function CardContent({ children, className, ...props }) {
   return (
-    <div className={cn('p-6 text-sm text-slate-600', className)} {...props}>
+    <div className={cn('p-5 text-sm text-slate-600', className)} {...props}>
       {children}
     </div>
   )
@@ -60,7 +60,7 @@ export function CardFooter({ children, className, ...props }) {
   return (
     <div
       className={cn(
-        'flex items-center justify-between px-6 py-4 bg-slate-50/50 rounded-b-xl border-t border-slate-100',
+        'flex items-center justify-between px-5 py-3 bg-slate-50/60 rounded-b-xl border-t border-slate-100 text-xs',
         className
       )}
       {...props}
