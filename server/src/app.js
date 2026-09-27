@@ -1,4 +1,4 @@
-﻿const express = require("express");
+const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
@@ -117,6 +117,18 @@ app.get("/api/health", (req, res) => {
   return res.status(200).json({
     success: true,
     message: "NexOps API is running",
+  });
+});
+
+/*
+ * Catch-all 404 handler for unmatched routes.
+ * Must be registered after all valid routes but before errorHandler.
+ */
+app.use((req, res) => {
+  return res.status(404).json({
+    success: false,
+    message: `Resource not found: ${req.method} ${req.originalUrl}`,
+    code: "ROUTE_NOT_FOUND",
   });
 });
 

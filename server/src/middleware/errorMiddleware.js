@@ -1,4 +1,4 @@
-﻿const multer = require("multer");
+const multer = require("multer");
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
@@ -42,7 +42,43 @@ const errorHandler = (error, req, res, next) => {
     });
   }
 
-  const statusCode = error.statusCode || 500;
+  if (
+    error instanceof SyntaxError &&
+    (error.status === 400 || error.statusCode === 400) &&
+    "body" in error
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Malformed JSON payload in request body.",
+      code: "INVALID_JSON_PAYLOAD",
+    });
+  }
+
+  if (error.name === "SequelizeValidationError") {
+    return res.status(400).json({
+      success: false,
+      message: "Validation error.",
+      code: "VALIDATION_ERROR",
+      errors: (error.errors || []).map((err) => ({
+        field: err.path,
+        message: err.message,
+      })),
+    });
+  }
+
+  if (error.name === "SequelizeUniqueConstraintError") {
+    return res.status(409).json({
+      success: false,
+      message: "A resource with these details already exists.",
+      code: "RESOURCE_ALREADY_EXISTS",
+      errors: (error.errors || []).map((err) => ({
+        field: err.path,
+        message: err.message,
+      })),
+    });
+  }
+
+  const statusCode = error.statusCode || error.status || 500;
 
   /*
    * Never expose raw internal error messages in production for 5xx errors.
@@ -55,11 +91,17 @@ const errorHandler = (error, req, res, next) => {
       ? "An unexpected server error occurred."
       : error.message || "An unexpected server error occurred.";
 
-  return res.status(statusCode).json({
+  const responsePayload = {
     success: false,
     message: safeMessage,
     code: error.code || "INTERNAL_SERVER_ERROR",
-  });
+  };
+
+  if (error.errors) {
+    responsePayload.errors = error.errors;
+  }
+
+  return res.status(statusCode).json(responsePayload);
 };
 
 module.exports = {
