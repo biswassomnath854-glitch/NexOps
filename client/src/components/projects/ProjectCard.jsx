@@ -120,13 +120,13 @@ export function ProjectCard({
   const hasDates = project.startDate || project.endDate
 
   return (
-    <Card className="hover:shadow-md hover:border-indigo-200 transition-all duration-150 flex flex-col justify-between group">
+    <Card className="hover:shadow-md hover:border-[#635BFF]/30 transition-all duration-150 flex flex-col justify-between group">
       <CardContent className="p-5 flex flex-col h-full justify-between">
         <div>
           {/* Top Row: Code & Status & Menu */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">
+              <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-md bg-[#635BFF]/10 text-[#5148E5] border border-[#635BFF]/20">
                 {project.code}
               </span>
               <ProjectStatusBadge status={project.status} />
@@ -146,7 +146,7 @@ export function ProjectCard({
           <div className="mt-3">
             <h3
               onClick={() => onView(project)}
-              className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors cursor-pointer truncate"
+              className="text-base font-bold text-slate-900 group-hover:text-[#635BFF] transition-colors cursor-pointer truncate"
               title={project.name}
             >
               {project.name}
@@ -180,7 +180,7 @@ export function ProjectCard({
             variant="ghost"
             size="sm"
             onClick={() => onManageMembers(project)}
-            className="text-xs text-slate-600 hover:text-indigo-600 p-1.5 h-8 flex items-center gap-1.5"
+            className="text-xs text-slate-600 hover:text-[#635BFF] p-1.5 h-8 flex items-center gap-1.5"
           >
             <Users className="w-3.5 h-3.5" />
             <span>Team</span>
@@ -190,7 +190,7 @@ export function ProjectCard({
             variant="outline"
             size="sm"
             onClick={() => onView(project)}
-            className="text-xs text-slate-700 hover:text-indigo-600 h-8 flex items-center gap-1.5"
+            className="text-xs text-slate-700 hover:text-[#635BFF] h-8 flex items-center gap-1.5"
           >
             <FolderKanban className="w-3.5 h-3.5" />
             <span>Details</span>

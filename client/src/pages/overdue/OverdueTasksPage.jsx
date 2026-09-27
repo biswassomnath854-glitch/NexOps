@@ -287,7 +287,7 @@ export function OverdueTasksPage() {
                       onClick={() => navigate(ROUTES.TASK_DETAILS(task.id))}
                     >
                       <td className="px-6 py-3 max-w-[240px]">
-                        <p className="font-medium text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
+                        <p className="font-medium text-slate-900 truncate group-hover:text-[#635BFF] transition-colors">
                           {task.title}
                         </p>
                         {task.description && (
@@ -321,7 +321,7 @@ export function OverdueTasksPage() {
                       <td className="px-6 py-3">
                         {task.assignee ? (
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                            <div className="w-6 h-6 rounded-full bg-[#635BFF]/10 text-[#635BFF] flex items-center justify-center text-[10px] font-bold shrink-0 border border-[#635BFF]/20">
                               {(task.assignee.firstName?.[0] || '').toUpperCase()}
                             </div>
                             <span className="text-xs text-slate-700">
@@ -342,7 +342,7 @@ export function OverdueTasksPage() {
                         </span>
                       </td>
                       <td className="px-6 py-3 text-right">
-                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 transition-colors" />
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#635BFF] transition-colors" />
                       </td>
                     </tr>
                   )

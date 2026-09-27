@@ -162,7 +162,7 @@ export function ProjectTable({
                 {/* Code & Name */}
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-[#635BFF]/10 border border-[#635BFF]/20 text-[#635BFF] flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-[#635BFF] group-hover:text-white transition-colors">
                       <FolderKanban className="w-4 h-4" />
                     </div>
                     <div>
@@ -172,7 +172,7 @@ export function ProjectTable({
                         </span>
                         <span
                           onClick={() => onView(proj)}
-                          className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors cursor-pointer"
+                          className="font-semibold text-slate-900 group-hover:text-[#635BFF] transition-colors cursor-pointer"
                         >
                           {proj.name}
                         </span>
