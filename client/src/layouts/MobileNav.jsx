@@ -28,25 +28,25 @@ import { cn } from '@/utils/cn'
 
 const navigationSections = [
   {
-    title: 'Operations',
+    title: 'WORKSPACE',
     items: [
-      { name: 'Dashboard', to: ROUTES.DASHBOARD, icon: LayoutDashboard, end: true },
+      { name: 'Overview', to: ROUTES.DASHBOARD, icon: LayoutDashboard, end: true },
       { name: 'Tasks', to: ROUTES.TASKS, icon: CheckSquare },
+      { name: 'Projects', to: ROUTES.PROJECTS, icon: FolderKanban },
       {
-        name: 'Overdue Tasks',
+        name: 'Overdue',
         to: ROUTES.OVERDUE_TASKS,
         icon: AlertOctagon,
-        badge: 'Alert',
+        badge: 'Attention',
         badgeVariant: 'danger',
       },
-      { name: 'Project Hubs', to: ROUTES.PROJECTS, icon: FolderKanban },
     ],
   },
   {
-    title: 'Intelligence',
+    title: 'INSIGHTS',
     items: [
       {
-        name: 'Team Workload',
+        name: 'Workload',
         to: ROUTES.WORKLOAD,
         icon: Users2,
         allowedRoles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.TEAM_LEAD],
@@ -61,11 +61,10 @@ const navigationSections = [
     ],
   },
   {
-    title: 'Administration',
-    allowedRoles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+    title: 'ADMINISTRATION',
     items: [
       {
-        name: 'Users Directory',
+        name: 'Users',
         to: ROUTES.USERS,
         icon: Users,
         allowedRoles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
@@ -77,24 +76,12 @@ const navigationSections = [
         allowedRoles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
       },
       {
-        name: 'Organization',
+        name: 'Organizations',
         to: ROUTES.ORGANIZATIONS,
         icon: Landmark,
         allowedRoles: [ROLES.SUPER_ADMIN, ROLES.ADMIN],
       },
-    ],
-  },
-  {
-    title: 'Platform',
-    items: [
-      { name: 'Workspace Settings', to: ROUTES.SETTINGS, icon: Settings },
-      {
-        name: 'UI Showcase',
-        to: ROUTES.SHOWCASE,
-        icon: Sparkles,
-        badge: 'Div 01',
-        badgeVariant: 'primary',
-      },
+      { name: 'Settings', to: ROUTES.SETTINGS, icon: Settings },
     ],
   },
 ]
@@ -199,8 +186,8 @@ export function MobileNav({ isOpen, onClose }) {
                         cn(
                           'flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors',
                           isActive
-                            ? 'bg-indigo-600 text-white font-semibold shadow-xs'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
+                            ? 'bg-[#635BFF] text-white font-medium shadow-xs'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
                         )
                       }
                     >
