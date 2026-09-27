@@ -229,7 +229,7 @@ export function WorkloadPage() {
 
       {/* Overview KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users} label="Total Users" value={overview.totalUsers ?? 0} color="#6366f1" />
+        <StatCard icon={Users} label="Total Users" value={overview.totalUsers ?? 0} color="#635BFF" />
         <StatCard
           icon={Layers}
           label="Active Tasks"
@@ -258,7 +258,7 @@ export function WorkloadPage() {
           <CardHeader>
             <CardTitle>
               <span className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-indigo-500" />
+                <BarChart3 className="w-4 h-4 text-[#635BFF]" />
                 Workload Distribution
               </span>
             </CardTitle>
@@ -282,7 +282,7 @@ export function WorkloadPage() {
                 />
                 <Tooltip content={<ChartTooltip />} />
                 <Legend verticalAlign="top" iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="active" name="Active" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="active" name="Active" fill="#635BFF" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="completed" name="Completed" fill="#10b981" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="overdue" name="Overdue" fill="#ef4444" radius={[4, 4, 0, 0]} />
               </BarChart>

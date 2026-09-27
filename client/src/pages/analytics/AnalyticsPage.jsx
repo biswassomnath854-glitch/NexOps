@@ -41,24 +41,24 @@ import {
 
 /* ─── colour constants ─── */
 const STATUS_COLORS = {
-  TODO: '#6366f1',
-  IN_PROGRESS: '#f59e0b',
-  BLOCKED: '#ef4444',
-  COMPLETED: '#10b981',
-  CANCELLED: '#94a3b8',
+  TODO: '#94a3b8',
+  IN_PROGRESS: '#635BFF',
+  BLOCKED: '#dc2626',
+  COMPLETED: '#16a34a',
+  CANCELLED: '#cbd5e1',
 }
 
 const PRIORITY_COLORS = {
-  LOW: '#6ee7b7',
-  MEDIUM: '#fbbf24',
-  HIGH: '#f97316',
-  URGENT: '#ef4444',
+  LOW: '#38bdf8',
+  MEDIUM: '#64748b',
+  HIGH: '#d97706',
+  URGENT: '#dc2626',
 }
 
 const DEADLINE_COLORS = {
-  overdue: '#ef4444',
-  dueToday: '#f59e0b',
-  dueSoon: '#6366f1',
+  overdue: '#dc2626',
+  dueToday: '#d97706',
+  dueSoon: '#635BFF',
   withoutDeadline: '#94a3b8',
 }
 
