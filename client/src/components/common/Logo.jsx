@@ -22,8 +22,14 @@ export function Logo({ size = 'md', showText = true, className }) {
       </div>
 
       {showText && (
-        <span className={cn('text-slate-900 font-extrabold flex items-center', currentSize.text)}>
-          Nex<span className="text-indigo-600">Ops</span>
+        <span
+          className={cn(
+            'font-extrabold flex items-center',
+            className?.includes('text-white') ? 'text-white' : 'text-slate-900',
+            currentSize.text
+          )}
+        >
+          Nex<span className="text-[#635BFF]">Ops</span>
         </span>
       )}
     </div>

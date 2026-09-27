@@ -158,16 +158,6 @@ export function UserMenu() {
               <Settings className="w-4 h-4 text-slate-400 shrink-0" />
               <span>Workspace Settings</span>
             </Link>
-
-            <Link
-              to={ROUTES.SHOWCASE}
-              onClick={() => setIsOpen(false)}
-              role="menuitem"
-              className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors"
-            >
-              <Sparkles className="w-4 h-4 text-indigo-500 shrink-0" />
-              <span>Component Showcase</span>
-            </Link>
           </div>
 
           {/* Sign Out Action */}
