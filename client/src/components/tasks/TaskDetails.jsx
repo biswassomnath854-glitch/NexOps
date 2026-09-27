@@ -80,9 +80,9 @@ export function TaskDetails({
               {/* Project context */}
               {task.project && (
                 <div className="flex items-center gap-1.5 mb-2">
-                  <FolderKanban className="w-3.5 h-3.5 text-indigo-400" />
-                  <span className="text-xs text-indigo-600 font-semibold">{task.project.name}</span>
-                  <span className="font-mono text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 rounded px-1.5 py-0.5">
+                  <FolderKanban className="w-3.5 h-3.5 text-[#635BFF]" />
+                  <span className="text-xs text-[#5148E5] font-semibold">{task.project.name}</span>
+                  <span className="font-mono text-[10px] font-bold bg-[#635BFF]/10 text-[#5148E5] border border-[#635BFF]/20 rounded px-1.5 py-0.5">
                     {task.project.code}
                   </span>
                 </div>
@@ -167,11 +167,11 @@ export function TaskDetails({
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 isActive
-                  ? 'bg-white text-indigo-700 shadow-xs'
+                  ? 'bg-white text-[#5148E5] shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
               }`}
             >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#635BFF]' : 'text-slate-400'}`} />
               <span>{tab.label}</span>
             </button>
           )

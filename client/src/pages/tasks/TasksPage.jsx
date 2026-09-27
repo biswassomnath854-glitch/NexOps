@@ -399,8 +399,8 @@ export function TasksPage() {
         <CardContent className="p-4">
           <div className="flex flex-wrap items-end gap-4">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0">
-                <FolderKanban className="w-4 h-4 text-indigo-600" />
+              <div className="w-8 h-8 rounded-lg bg-[#635BFF]/10 border border-[#635BFF]/20 flex items-center justify-center shrink-0">
+                <FolderKanban className="w-4 h-4 text-[#635BFF]" />
               </div>
 
               <div className="min-w-[220px]">

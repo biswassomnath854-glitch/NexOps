@@ -195,15 +195,15 @@ export function TaskTable({
               <TableCell>
                 <div className="flex items-start gap-2.5 min-w-0">
                   <div
-                    className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 transition-colors"
+                    className="w-8 h-8 rounded-lg bg-[#635BFF]/10 border border-[#635BFF]/20 flex items-center justify-center shrink-0 group-hover:bg-[#635BFF] transition-colors"
                   >
-                    <ClipboardList className="w-3.5 h-3.5 text-indigo-500 group-hover:text-white transition-colors" />
+                    <ClipboardList className="w-3.5 h-3.5 text-[#635BFF] group-hover:text-white transition-colors" />
                   </div>
                   <div className="min-w-0">
                     <button
                       type="button"
                       onClick={() => handleView(task)}
-                      className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors text-left text-sm leading-snug truncate block max-w-[280px]"
+                      className="font-semibold text-slate-900 group-hover:text-[#635BFF] transition-colors text-left text-sm leading-snug truncate block max-w-[280px]"
                     >
                       {task.title}
                     </button>
@@ -266,7 +266,7 @@ export function TaskTable({
                       variant="ghost"
                       size="sm"
                       onClick={() => onEdit(task)}
-                      className="hidden sm:inline-flex p-1.5 h-8 text-slate-500 hover:text-indigo-600"
+                      className="hidden sm:inline-flex p-1.5 h-8 text-slate-500 hover:text-[#635BFF]"
                       title="Edit task"
                     >
                       <Edit2 className="w-3.5 h-3.5" />

@@ -8,8 +8,8 @@ const STATUS_CONFIG = {
   },
   IN_PROGRESS: {
     label: 'In Progress',
-    className: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    dotClass: 'bg-indigo-500',
+    className: 'bg-[#635BFF]/10 text-[#5148E5] border-[#635BFF]/20',
+    dotClass: 'bg-[#635BFF]',
   },
   BLOCKED: {
     label: 'Blocked',

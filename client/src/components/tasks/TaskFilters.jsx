@@ -57,7 +57,7 @@ function MultiSelectPills({ label, options, selected, onChange }) {
         onClick={() => setIsOpen((v) => !v)}
         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
           selected.length > 0
-            ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+            ? 'bg-[#635BFF]/10 border-[#635BFF]/30 text-[#5148E5]'
             : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
         }`}
       >
@@ -76,7 +76,7 @@ function MultiSelectPills({ label, options, selected, onChange }) {
                 type="checkbox"
                 checked={selected.includes(opt.value)}
                 onChange={() => toggle(opt.value)}
-                className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                className="w-3.5 h-3.5 rounded border-slate-300 text-[#635BFF] focus:ring-[#635BFF]/20"
               />
               <span className="text-xs text-slate-700 font-medium">{opt.label}</span>
             </label>
