@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "seed:development": "node src/seed/developmentSeed.js"
+    "seed:development": "node src/seed/developmentSeed.js",
+    "test": "node --test scripts/testStage*.js"
   },
   "keywords": [
     "nexops",

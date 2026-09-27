@@ -21,23 +21,25 @@ const createRateLimiter = ({
   });
 };
 
+const isDev = process.env.NODE_ENV === "development";
+
 const loginRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 10,
+  limit: isDev ? 200 : 10,
   message: "Too many login attempts. Please try again later.",
   code: "LOGIN_RATE_LIMIT_EXCEEDED",
 });
 
 const registerRateLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
-  limit: 5,
+  limit: isDev ? 100 : 5,
   message: "Too many registration attempts. Please try again later.",
   code: "REGISTRATION_RATE_LIMIT_EXCEEDED",
 });
 
 const refreshRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 20,
+  limit: isDev ? 300 : 20,
   message: "Too many token refresh attempts. Please try again later.",
   code: "REFRESH_RATE_LIMIT_EXCEEDED",
 });
