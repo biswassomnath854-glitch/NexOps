@@ -119,7 +119,7 @@ export function Sidebar({ className }) {
     navigate(ROUTES.LOGIN)
   }
 
-  const userRole = user?.role || ROLES.MEMBER
+  const userRole = user?.role || ROLES.EMPLOYEE
 
   return (
     <aside
@@ -251,7 +251,7 @@ export function Sidebar({ className }) {
               <div className="flex items-center gap-1 mt-0.5">
                 <Shield className="w-3 h-3 text-indigo-400 shrink-0" />
                 <span className="text-[10px] text-slate-400 truncate">
-                  {formatRole(user?.role || ROLES.MEMBER)}
+                  {formatRole(user?.role || ROLES.EMPLOYEE)}
                 </span>
               </div>
             </div>

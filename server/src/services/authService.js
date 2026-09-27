@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 
-const { User, RefreshToken } = require("../models");
+const { User, RefreshToken, Organization } = require("../models");
 const { hashPassword, comparePassword } = require("../utils/password");
 const {
   generateAccessToken,
@@ -63,6 +63,8 @@ const register = async ({
   password,
   organizationId = null,
   departmentId = null,
+  organizationName = null,
+  role = "ADMIN",
 }) => {
   const existingUser = await User.findOne({
     where: {
@@ -82,12 +84,36 @@ const register = async ({
 
   const hashedPassword = await hashPassword(password);
 
+  let finalOrgId = organizationId;
+
+  // Auto-create or link organization if organizationName is provided
+  if (!finalOrgId && organizationName && organizationName.trim()) {
+    const trimmedOrgName = organizationName.trim();
+    const baseSlug = trimmedOrgName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+    const slug = baseSlug || `org-${Date.now()}`;
+
+    let org = await Organization.findOne({ where: { slug } });
+    if (!org) {
+      org = await Organization.create({
+        name: trimmedOrgName,
+        slug,
+        status: "ACTIVE",
+      });
+    }
+    finalOrgId = org.id;
+  }
+
+  // Public registration always assigns standard EMPLOYEE role.
+  // Administrative privileges must be granted by an existing Admin in the workspace.
   const user = await User.create({
     firstName,
     lastName,
     email,
     password: hashedPassword,
-    organizationId,
+    organizationId: finalOrgId,
     departmentId,
     role: "EMPLOYEE",
     status: "ACTIVE",

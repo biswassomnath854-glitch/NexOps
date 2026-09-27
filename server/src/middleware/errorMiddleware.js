@@ -1,7 +1,20 @@
-const multer = require("multer");
+﻿const multer = require("multer");
+
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 const errorHandler = (error, req, res, next) => {
-  console.error(error);
+  /*
+   * Structured logging:
+   * - Development: log full error including stack trace
+   * - Production:  log message only to avoid leaking internal paths / SQL
+   */
+  if (IS_PRODUCTION) {
+    console.error(
+      `[ERROR] ${req.method} ${req.originalUrl} — ${error.message}`
+    );
+  } else {
+    console.error(error);
+  }
 
   if (error instanceof multer.MulterError) {
     let message = "File upload failed.";
@@ -31,10 +44,20 @@ const errorHandler = (error, req, res, next) => {
 
   const statusCode = error.statusCode || 500;
 
+  /*
+   * Never expose raw internal error messages in production for 5xx errors.
+   * Application-level errors (with explicit statusCode < 500) always return
+   * their own message because they are intentionally user-facing.
+   */
+  const isServerError = statusCode >= 500;
+  const safeMessage =
+    IS_PRODUCTION && isServerError
+      ? "An unexpected server error occurred."
+      : error.message || "An unexpected server error occurred.";
+
   return res.status(statusCode).json({
     success: false,
-    message:
-      error.message || "An unexpected server error occurred.",
+    message: safeMessage,
     code: error.code || "INTERNAL_SERVER_ERROR",
   });
 };

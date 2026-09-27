@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Mail, Lock, User, Building2, AlertCircle } from 'lucide-react'
+import {
+  Mail,
+  Lock,
+  User,
+  Building2,
+  AlertCircle,
+  ShieldAlert,
+} from 'lucide-react'
 import { Input } from '@/components/forms/Input'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
@@ -32,6 +39,26 @@ export function RegisterPage() {
     setFormError('')
     setFieldErrors({})
 
+    // Client-side quick validation
+    const errors = {}
+    if (!formData.firstName?.trim()) {
+      errors.firstName = 'First name is required.'
+    }
+    if (!formData.lastName?.trim()) {
+      errors.lastName = 'Last name is required.'
+    }
+    if (!formData.email?.trim()) {
+      errors.email = 'Work email is required.'
+    }
+    if (!formData.password || formData.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters long.'
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      return
+    }
+
     setIsLoading(true)
     try {
       await register(formData)
@@ -47,11 +74,11 @@ export function RegisterPage() {
   }
 
   return (
-    <Card className="shadow-lg border-slate-200/90">
-      <CardHeader className="text-left pb-4">
+    <Card className="shadow-lg border-slate-200/90 max-w-lg mx-auto">
+      <CardHeader className="text-left pb-3">
         <CardTitle className="text-xl font-bold">Create NexOps Account</CardTitle>
         <CardDescription>
-          Set up your organization workspace and team administrator account.
+          Register your user account to collaborate on tasks, sprints, and project hubs.
         </CardDescription>
       </CardHeader>
 
@@ -59,7 +86,7 @@ export function RegisterPage() {
         {formError && (
           <div
             role="alert"
-            className="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-xs"
+            className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-xs"
           >
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <p>{formError}</p>
@@ -104,14 +131,14 @@ export function RegisterPage() {
           />
 
           <Input
-            label="Organization / Company"
+            label="Organization / Company (Optional)"
             name="organizationName"
-            placeholder="Acme Technologies"
+            placeholder="e.g. Acme Technologies"
             value={formData.organizationName}
             onChange={handleChange}
             error={fieldErrors.organizationName}
             leftIcon={Building2}
-            required
+            helperText="Enter your company name if applicable"
           />
 
           <Input
@@ -135,11 +162,19 @@ export function RegisterPage() {
             isLoading={isLoading}
             className="mt-3"
           >
-            Create Workspace
+            Create Account
           </Button>
         </form>
 
-        <div className="mt-6 pt-5 border-t border-slate-100 text-center text-xs text-slate-500">
+        {/* Security & Role Policy Notice */}
+        <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200/80 text-[11px] text-slate-600 flex items-start gap-2">
+          <ShieldAlert className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+          <p>
+            <strong>Role & Security Policy:</strong> New registrations create standard user accounts. Administrative and managerial privileges are granted and managed exclusively by current Workspace Admins within the internal management portal.
+          </p>
+        </div>
+
+        <div className="mt-5 pt-4 border-t border-slate-100 text-center text-xs text-slate-500">
           Already have an account?{' '}
           <Link
             to={ROUTES.LOGIN}

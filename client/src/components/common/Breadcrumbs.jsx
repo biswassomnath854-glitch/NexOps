@@ -27,7 +27,7 @@ export function Breadcrumbs({ items, className }) {
     (() => {
       const pathSegments = location.pathname.split('/').filter(Boolean)
 
-      if (pathSegments.length === 0) {
+      if (pathSegments.length === 0 || (pathSegments.length === 1 && pathSegments[0] === 'dashboard')) {
         return [{ label: 'Workspace Overview', href: ROUTES.DASHBOARD }]
       }
 

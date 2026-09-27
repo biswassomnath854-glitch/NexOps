@@ -1,5 +1,5 @@
 import { Outlet, Link } from 'react-router-dom'
-import { CheckCircle2, ShieldCheck, Zap } from 'lucide-react'
+import { CheckCircle2, ShieldCheck, Zap, ArrowLeft } from 'lucide-react'
 import { Logo } from '@/components/common/Logo'
 import { ROUTES } from '@/constants/routes'
 
@@ -14,7 +14,7 @@ export function AuthLayout() {
 
         {/* Top Logo */}
         <div className="relative z-10">
-          <Link to={ROUTES.LOGIN} className="inline-block">
+          <Link to={ROUTES.HOME} className="inline-block hover:opacity-95 transition-opacity" title="Back to Home">
             <Logo size="lg" className="text-white" />
           </Link>
           <div className="mt-8">
@@ -74,8 +74,21 @@ export function AuthLayout() {
       {/* Right Form Outlet */}
       <div className="flex-1 flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-16 xl:px-24 bg-slate-50/50">
         <div className="mx-auto w-full max-w-md">
-          <div className="lg:hidden mb-8 text-center">
-            <Logo size="lg" />
+          {/* Back to Home Link */}
+          <div className="mb-4 flex items-center justify-between">
+            <Link
+              to={ROUTES.HOME}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors group"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+              <span>Back to Home</span>
+            </Link>
+          </div>
+
+          <div className="lg:hidden mb-6 text-center">
+            <Link to={ROUTES.HOME} className="inline-block">
+              <Logo size="lg" />
+            </Link>
           </div>
           <Outlet />
         </div>

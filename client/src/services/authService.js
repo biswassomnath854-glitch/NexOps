@@ -98,9 +98,11 @@ export const authService = {
   },
 
   async getCurrentUser() {
+    // apiClient interceptor returns the full JSON body (response.data from axios).
+    // Backend shape: { success: true, message: '...', data: { user: {...} } }
     const response = await authApi.getCurrentUser()
-    const user = response.data?.user || response.data || response
-    if (user) {
+    const user = response?.data?.user || response?.user || response
+    if (user && typeof user === 'object' && user.id) {
       storage.set(API_CONFIG.USER_STORAGE_KEY, user)
     }
     return user

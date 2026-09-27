@@ -45,7 +45,9 @@ export const tasksApi = {
       `${API_ENDPOINTS.TASKS.ATTACHMENTS(taskId)}/${attachmentId}/download`,
       { responseType: 'blob' }
     )
-    const blob = new Blob([response])
+    // The apiClient interceptor returns response.data for success responses.
+    // For responseType:'blob', response.data is the Blob object itself.
+    const blob = response instanceof Blob ? response : new Blob([response])
     const downloadUrl = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = downloadUrl

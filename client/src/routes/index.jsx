@@ -4,6 +4,7 @@ import { ProtectedRoute } from './ProtectedRoute'
 import { PublicRoute } from './PublicRoute'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
+import { LandingPage } from '@/pages/landing'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { ComponentShowcasePage } from '@/pages/showcase/ComponentShowcasePage'
 import { UsersPage, DepartmentsPage, OrganizationsPage } from '@/pages/admin'
@@ -19,6 +20,12 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 import { ROUTES } from '@/constants/routes'
 
 export const router = createBrowserRouter([
+  // Public Marketing Landing Page at '/'
+  {
+    path: ROUTES.HOME,
+    element: <LandingPage />,
+  },
+
   // Public Authentication Routes
   {
     element: <PublicRoute />,
