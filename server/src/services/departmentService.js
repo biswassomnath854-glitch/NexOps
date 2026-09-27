@@ -67,8 +67,14 @@ const verifyOrganizationExists = async (organizationId) => {
   return organization;
 };
 
-const findAllDepartments = async () => {
+const findAllDepartments = async (currentUser) => {
+  const where = {};
+  if (currentUser && currentUser.role !== "SUPER_ADMIN" && currentUser.organizationId) {
+    where.organizationId = currentUser.organizationId;
+  }
+
   const departments = await Department.findAll({
+    where,
     include: buildDepartmentIncludes(),
     order: [["createdAt", "DESC"]],
   });
@@ -76,7 +82,7 @@ const findAllDepartments = async () => {
   return departments;
 };
 
-const findDepartmentById = async (departmentId) => {
+const findDepartmentById = async (departmentId, currentUser) => {
   const department = await Department.findByPk(
     departmentId,
     {
@@ -92,18 +98,37 @@ const findDepartmentById = async (departmentId) => {
     );
   }
 
+  if (
+    currentUser &&
+    currentUser.role !== "SUPER_ADMIN" &&
+    currentUser.organizationId &&
+    department.organizationId !== currentUser.organizationId
+  ) {
+    throw createServiceError(
+      "You do not have access to this department.",
+      403,
+      "CROSS_ORGANIZATION_ACCESS"
+    );
+  }
+
   return department;
 };
 
-const createDepartment = async (departmentData) => {
+const createDepartment = async (departmentData, currentUser) => {
+  const finalData = { ...departmentData };
+
+  if (currentUser && currentUser.role !== "SUPER_ADMIN" && currentUser.organizationId) {
+    finalData.organizationId = currentUser.organizationId;
+  }
+
   await verifyOrganizationExists(
-    departmentData.organizationId
+    finalData.organizationId
   );
 
   const existingDepartment = await Department.findOne({
     where: {
-      organizationId: departmentData.organizationId,
-      code: departmentData.code,
+      organizationId: finalData.organizationId,
+      code: finalData.code,
     },
   });
 
@@ -116,27 +141,21 @@ const createDepartment = async (departmentData) => {
   }
 
   const department = await Department.create(
-    departmentData
+    finalData
   );
 
-  return findDepartmentById(department.id);
+  return findDepartmentById(department.id, currentUser);
 };
 
 const updateDepartment = async (
   departmentId,
-  departmentData
+  departmentData,
+  currentUser
 ) => {
-  const department = await Department.findByPk(
-    departmentId
+  const department = await findDepartmentById(
+    departmentId,
+    currentUser
   );
-
-  if (!department) {
-    throw createServiceError(
-      "Department not found.",
-      404,
-      "DEPARTMENT_NOT_FOUND"
-    );
-  }
 
   if (
     departmentData.organizationId &&
@@ -178,44 +197,31 @@ const updateDepartment = async (
 
   await department.update(departmentData);
 
-  return findDepartmentById(departmentId);
+  return findDepartmentById(departmentId, currentUser);
 };
 
 const updateDepartmentStatus = async (
   departmentId,
-  status
+  status,
+  currentUser
 ) => {
-  const department = await Department.findByPk(
-    departmentId
+  const department = await findDepartmentById(
+    departmentId,
+    currentUser
   );
-
-  if (!department) {
-    throw createServiceError(
-      "Department not found.",
-      404,
-      "DEPARTMENT_NOT_FOUND"
-    );
-  }
 
   await department.update({
     status,
   });
 
-  return findDepartmentById(departmentId);
+  return findDepartmentById(departmentId, currentUser);
 };
 
-const deleteDepartment = async (departmentId) => {
-  const department = await Department.findByPk(
-    departmentId
+const deleteDepartment = async (departmentId, currentUser) => {
+  const department = await findDepartmentById(
+    departmentId,
+    currentUser
   );
-
-  if (!department) {
-    throw createServiceError(
-      "Department not found.",
-      404,
-      "DEPARTMENT_NOT_FOUND"
-    );
-  }
 
   await department.destroy();
 

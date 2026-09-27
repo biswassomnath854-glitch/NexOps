@@ -3,7 +3,7 @@ const organizationService = require("../services/organizationService");
 const getOrganizations = async (req, res, next) => {
   try {
     const organizations =
-      await organizationService.findAllOrganizations();
+      await organizationService.findAllOrganizations(req.user);
 
     return res.status(200).json({
       success: true,
@@ -21,7 +21,8 @@ const getOrganizationById = async (req, res, next) => {
   try {
     const organization =
       await organizationService.findOrganizationById(
-        req.params.organizationId
+        req.params.organizationId,
+        req.user
       );
 
     return res.status(200).json({
@@ -39,7 +40,10 @@ const getOrganizationById = async (req, res, next) => {
 const createOrganization = async (req, res, next) => {
   try {
     const organization =
-      await organizationService.createOrganization(req.body);
+      await organizationService.createOrganization(
+        req.body,
+        req.user
+      );
 
     return res.status(201).json({
       success: true,
@@ -58,7 +62,8 @@ const updateOrganization = async (req, res, next) => {
     const organization =
       await organizationService.updateOrganization(
         req.params.organizationId,
-        req.body
+        req.body,
+        req.user
       );
 
     return res.status(200).json({
@@ -78,7 +83,8 @@ const updateOrganizationStatus = async (req, res, next) => {
     const organization =
       await organizationService.updateOrganizationStatus(
         req.params.organizationId,
-        req.body.status
+        req.body.status,
+        req.user
       );
 
     return res.status(200).json({
@@ -97,7 +103,8 @@ const deleteOrganization = async (req, res, next) => {
   try {
     const result =
       await organizationService.deleteOrganization(
-        req.params.organizationId
+        req.params.organizationId,
+        req.user
       );
 
     return res.status(200).json({

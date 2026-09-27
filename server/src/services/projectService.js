@@ -67,8 +67,14 @@ const verifyOrganizationExists = async (
   return organization;
 };
 
-const findAllProjects = async () => {
+const findAllProjects = async (user) => {
+  const where = {};
+  if (user && user.role !== "SUPER_ADMIN" && user.organizationId) {
+    where.organizationId = user.organizationId;
+  }
+
   const projects = await Project.findAll({
+    where,
     include: buildProjectIncludes(),
     order: [["createdAt", "DESC"]],
   });
@@ -126,7 +132,8 @@ const findAccessibleProjects = async (
 };
 
 const findProjectById = async (
-  projectId
+  projectId,
+  user
 ) => {
   const project = await Project.findByPk(
     projectId,
@@ -140,6 +147,19 @@ const findProjectById = async (
       "Project not found.",
       404,
       "PROJECT_NOT_FOUND"
+    );
+  }
+
+  if (
+    user &&
+    user.role !== "SUPER_ADMIN" &&
+    user.organizationId &&
+    project.organizationId !== user.organizationId
+  ) {
+    throw createServiceError(
+      "You do not have access to this project.",
+      403,
+      "CROSS_ORGANIZATION_ACCESS"
     );
   }
 
@@ -179,20 +199,13 @@ const createProject = async (
 
 const updateProject = async (
   projectId,
-  projectData
+  projectData,
+  user
 ) => {
-  const project =
-    await Project.findByPk(
-      projectId
-    );
-
-  if (!project) {
-    throw createServiceError(
-      "Project not found.",
-      404,
-      "PROJECT_NOT_FOUND"
-    );
-  }
+  const project = await findProjectById(
+    projectId,
+    user
+  );
 
   if (
     projectData.organizationId &&
@@ -241,51 +254,39 @@ const updateProject = async (
   );
 
   return findProjectById(
-    projectId
+    projectId,
+    user
   );
 };
 
 const updateProjectStatus = async (
   projectId,
-  status
+  status,
+  user
 ) => {
-  const project =
-    await Project.findByPk(
-      projectId
-    );
-
-  if (!project) {
-    throw createServiceError(
-      "Project not found.",
-      404,
-      "PROJECT_NOT_FOUND"
-    );
-  }
+  const project = await findProjectById(
+    projectId,
+    user
+  );
 
   await project.update({
     status,
   });
 
   return findProjectById(
-    projectId
+    projectId,
+    user
   );
 };
 
 const deleteProject = async (
-  projectId
+  projectId,
+  user
 ) => {
-  const project =
-    await Project.findByPk(
-      projectId
-    );
-
-  if (!project) {
-    throw createServiceError(
-      "Project not found.",
-      404,
-      "PROJECT_NOT_FOUND"
-    );
-  }
+  const project = await findProjectById(
+    projectId,
+    user
+  );
 
   await project.destroy();
 

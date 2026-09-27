@@ -7,7 +7,7 @@ const getProjects = async (
 ) => {
   try {
     const projects =
-      await projectService.findAllProjects();
+      await projectService.findAllProjects(req.user);
 
     return res.status(200).json({
       success: true,
@@ -54,7 +54,8 @@ const getProjectById = async (
   try {
     const project =
       await projectService.findProjectById(
-        req.params.projectId
+        req.params.projectId,
+        req.user
       );
 
     return res.status(200).json({
@@ -76,9 +77,17 @@ const createProject = async (
   next
 ) => {
   try {
+    const projectPayload = {
+      ...req.body,
+    };
+
+    if (req.user && req.user.role !== "SUPER_ADMIN" && req.user.organizationId) {
+      projectPayload.organizationId = req.user.organizationId;
+    }
+
     const project =
       await projectService.createProject(
-        req.body
+        projectPayload
       );
 
     return res.status(201).json({
@@ -103,7 +112,8 @@ const updateProject = async (
     const project =
       await projectService.updateProject(
         req.params.projectId,
-        req.body
+        req.body,
+        req.user
       );
 
     return res.status(200).json({
@@ -128,7 +138,8 @@ const updateProjectStatus = async (
     const project =
       await projectService.updateProjectStatus(
         req.params.projectId,
-        req.body.status
+        req.body.status,
+        req.user
       );
 
     return res.status(200).json({
@@ -152,7 +163,8 @@ const deleteProject = async (
   try {
     const result =
       await projectService.deleteProject(
-        req.params.projectId
+        req.params.projectId,
+        req.user
       );
 
     return res.status(200).json({

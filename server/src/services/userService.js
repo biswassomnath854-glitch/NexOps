@@ -31,8 +31,14 @@ const buildUserIncludes = () => {
   ];
 };
 
-const findAllUsers = async () => {
+const findAllUsers = async (currentUser) => {
+  const where = {};
+  if (currentUser && currentUser.role !== "SUPER_ADMIN" && currentUser.organizationId) {
+    where.organizationId = currentUser.organizationId;
+  }
+
   const users = await User.findAll({
+    where,
     attributes: { exclude: ["password"] },
     include: buildUserIncludes(),
     order: [["createdAt", "DESC"]],
@@ -41,7 +47,7 @@ const findAllUsers = async () => {
   return users;
 };
 
-const findUserById = async (userId) => {
+const findUserById = async (userId, currentUser) => {
   const user = await User.findByPk(userId, {
     attributes: { exclude: ["password"] },
     include: buildUserIncludes(),
@@ -55,13 +61,32 @@ const findUserById = async (userId) => {
     );
   }
 
+  if (
+    currentUser &&
+    currentUser.role !== "SUPER_ADMIN" &&
+    currentUser.organizationId &&
+    user.organizationId !== currentUser.organizationId
+  ) {
+    throw createServiceError(
+      "You do not have access to this user.",
+      403,
+      "CROSS_ORGANIZATION_ACCESS"
+    );
+  }
+
   return user;
 };
 
-const createUser = async (userData) => {
+const createUser = async (userData, currentUser) => {
+  const finalUserData = { ...userData };
+
+  if (currentUser && currentUser.role !== "SUPER_ADMIN" && currentUser.organizationId) {
+    finalUserData.organizationId = currentUser.organizationId;
+  }
+
   const existingUser = await User.findOne({
     where: {
-      email: userData.email,
+      email: finalUserData.email,
     },
   });
 
@@ -73,9 +98,9 @@ const createUser = async (userData) => {
     );
   }
 
-  if (userData.organizationId) {
+  if (finalUserData.organizationId) {
     const organization = await Organization.findByPk(
-      userData.organizationId
+      finalUserData.organizationId
     );
 
     if (!organization) {
@@ -87,9 +112,9 @@ const createUser = async (userData) => {
     }
   }
 
-  if (userData.departmentId) {
+  if (finalUserData.departmentId) {
     const department = await Department.findByPk(
-      userData.departmentId
+      finalUserData.departmentId
     );
 
     if (!department) {
@@ -101,8 +126,8 @@ const createUser = async (userData) => {
     }
 
     if (
-      userData.organizationId &&
-      department.organizationId !== userData.organizationId
+      finalUserData.organizationId &&
+      department.organizationId !== finalUserData.organizationId
     ) {
       throw createServiceError(
         "Department does not belong to the selected organization.",
@@ -112,26 +137,18 @@ const createUser = async (userData) => {
     }
   }
 
-  const password = await hashPassword(userData.password);
+  const password = await hashPassword(finalUserData.password);
 
   const user = await User.create({
-    ...userData,
+    ...finalUserData,
     password,
   });
 
-  return findUserById(user.id);
+  return findUserById(user.id, currentUser);
 };
 
-const updateUser = async (userId, userData) => {
-  const user = await User.findByPk(userId);
-
-  if (!user) {
-    throw createServiceError(
-      "User not found.",
-      404,
-      "USER_NOT_FOUND"
-    );
-  }
+const updateUser = async (userId, userData, currentUser) => {
+  const user = await findUserById(userId, currentUser);
 
   if (userData.email && userData.email !== user.email) {
     const existingUser = await User.findOne({
@@ -195,37 +212,29 @@ const updateUser = async (userId, userData) => {
 
   await user.update(userData);
 
-  return findUserById(userId);
+  return findUserById(userId, currentUser);
 };
 
-const updateUserStatus = async (userId, status) => {
-  const user = await User.findByPk(userId);
-
-  if (!user) {
-    throw createServiceError(
-      "User not found.",
-      404,
-      "USER_NOT_FOUND"
-    );
-  }
+const updateUserStatus = async (userId, status, currentUser) => {
+  const user = await findUserById(userId, currentUser);
 
   await user.update({
     status,
   });
 
-  return findUserById(userId);
+  return findUserById(userId, currentUser);
 };
 
-const deleteUser = async (userId) => {
-  const user = await User.findByPk(userId);
-
-  if (!user) {
+const deleteUser = async (userId, currentUser) => {
+  if (currentUser && currentUser.id === userId) {
     throw createServiceError(
-      "User not found.",
-      404,
-      "USER_NOT_FOUND"
+      "You cannot delete your own account.",
+      400,
+      "CANNOT_DELETE_SELF"
     );
   }
+
+  const user = await findUserById(userId, currentUser);
 
   await user.destroy();
 

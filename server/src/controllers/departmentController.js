@@ -3,7 +3,7 @@ const departmentService = require("../services/departmentService");
 const getDepartments = async (req, res, next) => {
   try {
     const departments =
-      await departmentService.findAllDepartments();
+      await departmentService.findAllDepartments(req.user);
 
     return res.status(200).json({
       success: true,
@@ -21,7 +21,8 @@ const getDepartmentById = async (req, res, next) => {
   try {
     const department =
       await departmentService.findDepartmentById(
-        req.params.departmentId
+        req.params.departmentId,
+        req.user
       );
 
     return res.status(200).json({
@@ -39,7 +40,10 @@ const getDepartmentById = async (req, res, next) => {
 const createDepartment = async (req, res, next) => {
   try {
     const department =
-      await departmentService.createDepartment(req.body);
+      await departmentService.createDepartment(
+        req.body,
+        req.user
+      );
 
     return res.status(201).json({
       success: true,
@@ -58,7 +62,8 @@ const updateDepartment = async (req, res, next) => {
     const department =
       await departmentService.updateDepartment(
         req.params.departmentId,
-        req.body
+        req.body,
+        req.user
       );
 
     return res.status(200).json({
@@ -78,7 +83,8 @@ const updateDepartmentStatus = async (req, res, next) => {
     const department =
       await departmentService.updateDepartmentStatus(
         req.params.departmentId,
-        req.body.status
+        req.body.status,
+        req.user
       );
 
     return res.status(200).json({
@@ -97,7 +103,8 @@ const deleteDepartment = async (req, res, next) => {
   try {
     const result =
       await departmentService.deleteDepartment(
-        req.params.departmentId
+        req.params.departmentId,
+        req.user
       );
 
     return res.status(200).json({

@@ -21,7 +21,10 @@ const validateBody = (schema) => {
         success: false,
         message: "Validation failed.",
         code: "VALIDATION_ERROR",
-        errors: error.details.map((detail) => detail.message),
+        errors: error.details.map((detail) => ({
+          field: detail.path.join(".") || "body",
+          message: detail.message,
+        })),
       });
     }
 
@@ -39,7 +42,10 @@ const validateQuery = (schema) => {
         success: false,
         message: "Validation failed.",
         code: "VALIDATION_ERROR",
-        errors: error.details.map((detail) => detail.message),
+        errors: error.details.map((detail) => ({
+          field: detail.path.join(".") || "query",
+          message: detail.message,
+        })),
       });
     }
 

@@ -2,7 +2,7 @@ const userService = require("../services/userService");
 
 const getUsers = async (req, res, next) => {
   try {
-    const users = await userService.findAllUsers();
+    const users = await userService.findAllUsers(req.user);
 
     return res.status(200).json({
       success: true,
@@ -18,7 +18,10 @@ const getUsers = async (req, res, next) => {
 
 const getUserById = async (req, res, next) => {
   try {
-    const user = await userService.findUserById(req.params.userId);
+    const user = await userService.findUserById(
+      req.params.userId,
+      req.user
+    );
 
     return res.status(200).json({
       success: true,
@@ -34,7 +37,10 @@ const getUserById = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    const user = await userService.createUser(req.body);
+    const user = await userService.createUser(
+      req.body,
+      req.user
+    );
 
     return res.status(201).json({
       success: true,
@@ -52,7 +58,8 @@ const updateUser = async (req, res, next) => {
   try {
     const user = await userService.updateUser(
       req.params.userId,
-      req.body
+      req.body,
+      req.user
     );
 
     return res.status(200).json({
@@ -71,7 +78,8 @@ const updateUserStatus = async (req, res, next) => {
   try {
     const user = await userService.updateUserStatus(
       req.params.userId,
-      req.body.status
+      req.body.status,
+      req.user
     );
 
     return res.status(200).json({
@@ -89,7 +97,8 @@ const updateUserStatus = async (req, res, next) => {
 const deleteUser = async (req, res, next) => {
   try {
     const result = await userService.deleteUser(
-      req.params.userId
+      req.params.userId,
+      req.user
     );
 
     return res.status(200).json({

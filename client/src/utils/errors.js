@@ -35,9 +35,11 @@ export function parseApiError(error) {
     // Format field-level validation errors into a key-value dictionary { [fieldName]: string }
     const fieldErrors = {}
     if (Array.isArray(data.errors)) {
-      data.errors.forEach((item) => {
-        if (item.field && item.message) {
+      data.errors.forEach((item, index) => {
+        if (typeof item === 'object' && item !== null && item.field && item.message) {
           fieldErrors[item.field] = item.message
+        } else if (typeof item === 'string') {
+          fieldErrors[`error_${index}`] = item
         }
       })
     }

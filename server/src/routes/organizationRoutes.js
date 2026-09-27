@@ -30,7 +30,10 @@ const validateBody = (schema) => {
         success: false,
         message: "Validation failed.",
         code: "VALIDATION_ERROR",
-        errors: error.details.map((detail) => detail.message),
+        errors: error.details.map((detail) => ({
+          field: detail.path.join(".") || "body",
+          message: detail.message,
+        })),
       });
     }
 
@@ -49,7 +52,10 @@ const validateOrganizationId = (req, res, next) => {
       success: false,
       message: "Invalid organization ID.",
       code: "INVALID_ORGANIZATION_ID",
-      errors: error.details.map((detail) => detail.message),
+      errors: error.details.map((detail) => ({
+        field: "organizationId",
+        message: detail.message,
+      })),
     });
   }
 
