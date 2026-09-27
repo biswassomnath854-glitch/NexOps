@@ -152,11 +152,11 @@ export function DepartmentTable({
                 {/* Department Name */}
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/70 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/70 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 group-hover:bg-[#635BFF]/10 group-hover:text-[#635BFF] transition-colors">
                       <Building2 className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                      <div className="font-semibold text-slate-900 group-hover:text-[#635BFF] transition-colors">
                         {dept.name}
                       </div>
                       {dept.description && (

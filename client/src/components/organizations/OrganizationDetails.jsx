@@ -24,11 +24,11 @@ export function OrganizationDetails({ organization, onEdit, onChangeStatus }) {
   return (
     <div className="space-y-6">
       {/* 1. Primary Organization Hero Card */}
-      <Card className="border-indigo-100/60 bg-gradient-to-br from-white via-slate-50/40 to-indigo-50/20">
+      <Card className="border-slate-200/80 bg-white">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-2xl shadow-md shrink-0">
+              <div className="w-16 h-16 rounded-2xl bg-[#635BFF] text-white flex items-center justify-center font-black text-2xl shadow-sm shrink-0">
                 <Landmark className="w-8 h-8" />
               </div>
               <div>
@@ -36,7 +36,7 @@ export function OrganizationDetails({ organization, onEdit, onChangeStatus }) {
                   <h1 className="text-xl font-bold text-slate-900 tracking-tight">
                     {organization.name}
                   </h1>
-                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
+                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-[#635BFF]/10 text-[#5148E5] font-semibold border border-[#635BFF]/20">
                     /{organization.slug}
                   </span>
                   <StatusBadge status={organization.status} />

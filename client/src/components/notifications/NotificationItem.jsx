@@ -132,7 +132,7 @@ export function NotificationItem({
       className={cn(
         'group relative flex items-start gap-3 transition-colors cursor-pointer select-none',
         compact ? 'px-3.5 py-3 hover:bg-slate-50' : 'px-5 py-4 hover:bg-slate-50/70',
-        isUnread && 'bg-indigo-50/40 hover:bg-indigo-50/60'
+        isUnread && 'bg-[#635BFF]/5 hover:bg-[#635BFF]/10'
       )}
       onClick={handleClick}
       tabIndex={0}

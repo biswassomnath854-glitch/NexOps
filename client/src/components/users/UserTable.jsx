@@ -155,11 +155,11 @@ export function UserTable({
                 {/* User avatar + name */}
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                    <div className="w-8 h-8 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/20 text-[#635BFF] flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
                       {initials}
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                      <div className="font-semibold text-slate-900 group-hover:text-[#635BFF] transition-colors">
                         {fullName}
                       </div>
                       <div className="text-xs text-slate-400 font-mono">{user.email}</div>

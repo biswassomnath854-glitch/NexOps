@@ -30,7 +30,7 @@ function ToggleSwitch({ id, checked, onChange, disabled }) {
         'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2',
         'disabled:opacity-50 disabled:cursor-not-allowed',
-        checked ? 'bg-indigo-600' : 'bg-slate-200'
+        checked ? 'bg-[#635BFF]' : 'bg-slate-200'
       )}
     >
       <span
