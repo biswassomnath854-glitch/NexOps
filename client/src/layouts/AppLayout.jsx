@@ -23,7 +23,7 @@ export function AppLayout() {
   }, [])
 
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900 overflow-x-hidden">
+    <div className="h-screen flex bg-slate-50 text-slate-900 overflow-hidden">
       {/* Skip-to-content link (visually hidden until focused) */}
       <a
         href="#main-content"
@@ -33,7 +33,7 @@ export function AppLayout() {
       </a>
 
       {/* Desktop Sidebar (Collapsible & Persistent) */}
-      <div className="hidden lg:block sticky top-0 h-screen shrink-0">
+      <div className="hidden lg:flex h-full shrink-0">
         <Sidebar />
       </div>
 
@@ -50,7 +50,7 @@ export function AppLayout() {
       />
 
       {/* Main Workspace Area */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Top Navigation Header */}
         <Navbar
           onOpenMobileSidebar={() => setIsMobileMenuOpen(true)}
@@ -58,8 +58,10 @@ export function AppLayout() {
         />
 
         {/* Page Content Container */}
-        <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto transition-all">
-          <Outlet />
+        <main id="main-content" className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl w-full mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

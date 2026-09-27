@@ -124,7 +124,7 @@ export function Sidebar({ className }) {
   return (
     <aside
       className={cn(
-        'h-screen bg-slate-900 text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-all duration-200 z-30 select-none',
+        'h-full bg-slate-900 text-slate-300 flex flex-col shrink-0 border-r border-slate-800 transition-all duration-200 z-30 select-none',
         isCollapsed ? 'w-20' : 'w-64',
         className
       )}
@@ -172,7 +172,7 @@ export function Sidebar({ className }) {
       )}
 
       {/* Navigation Sections */}
-      <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto" aria-label="Main navigation">
+      <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto dark-scrollbar" aria-label="Main navigation">
         {navigationSections.map((section) => {
           if (section.allowedRoles && !section.allowedRoles.includes(userRole)) {
             return null

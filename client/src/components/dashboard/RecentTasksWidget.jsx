@@ -102,7 +102,7 @@ export function RecentTasksWidget({ tasks = [], title = 'High Priority & Overdue
                       </div>
                     </TableCell>
                     <TableCell align="right">
-                      <Link to={ROUTES.TASKS}>
+                      <Link to={task.id ? ROUTES.TASK_DETAILS(task.id) : ROUTES.TASKS}>
                         <Button variant="ghost" size="xs">
                           Open
                         </Button>
