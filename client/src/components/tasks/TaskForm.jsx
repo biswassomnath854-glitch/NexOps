@@ -109,16 +109,14 @@ function TaskFormModal({
       await onSubmit(payload)
       onClose()
     } catch (err) {
-      const serverErrs = err?.errors || err?.response?.data?.errors
-      if (Array.isArray(serverErrs) && serverErrs.length > 0) {
-        setServerError(serverErrs.join(' '))
-      } else {
-        setServerError(
-          err?.message ||
-            err?.response?.data?.message ||
-            'Failed to save task. Please check your inputs.'
-        )
+      if (err?.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
+        setErrors((prev) => ({ ...prev, ...err.fieldErrors }))
       }
+      setServerError(
+        err?.message ||
+          err?.response?.data?.message ||
+          'Failed to save task. Please check your inputs.'
+      )
     }
   }
 

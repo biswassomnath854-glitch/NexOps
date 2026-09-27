@@ -95,10 +95,12 @@ function OrganizationFormModal({
       onClose()
     } catch (err) {
       console.error('Organization update error:', err)
+      if (err?.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
+        setErrors((prev) => ({ ...prev, ...err.fieldErrors }))
+      }
       setServerError(
-        err.response?.data?.message ||
-          err.response?.data?.errors?.join(', ') ||
-          err.message ||
+        err.message ||
+          err.response?.data?.message ||
           'Failed to update organization profile.'
       )
     }

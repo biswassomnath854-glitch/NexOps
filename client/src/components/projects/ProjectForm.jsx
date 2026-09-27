@@ -111,14 +111,16 @@ function ProjectFormModal({
       onClose()
     } catch (err) {
       console.error('Project form submission error:', err)
-      const errCode = err.response?.data?.code
+      if (err?.fieldErrors && Object.keys(err.fieldErrors).length > 0) {
+        setErrors((prev) => ({ ...prev, ...err.fieldErrors }))
+      }
+      const errCode = err.code || err.response?.data?.code
       if (errCode === 'PROJECT_CODE_ALREADY_EXISTS') {
         setServerError('A project with this code already exists in this organization.')
       } else {
         setServerError(
-          err.response?.data?.message ||
-            err.response?.data?.errors?.map((e) => e.message || e).join(', ') ||
-            err.message ||
+          err.message ||
+            err.response?.data?.message ||
             'Failed to save project. Please check inputs and role permissions.'
         )
       }

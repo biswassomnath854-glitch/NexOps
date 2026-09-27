@@ -50,6 +50,7 @@ export function parseApiError(error) {
       status,
       fieldErrors,
       raw: data,
+      response: error.response,
     }
   }
 
@@ -60,6 +61,7 @@ export function parseApiError(error) {
       code: 'NETWORK_ERROR',
       status: 0,
       fieldErrors: {},
+      request: error.request,
     }
   }
 
