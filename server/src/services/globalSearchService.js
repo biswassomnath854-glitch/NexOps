@@ -137,7 +137,8 @@ const buildPagination = ({
 const buildLikeSearch = (
   searchQuery
 ) => {
-  return `%${searchQuery}%`;
+  const sanitized = String(searchQuery || "").replace(/[%_\\]/g, "\\$&");
+  return `%${sanitized}%`;
 };
 
 const getSearchUsers = async ({
