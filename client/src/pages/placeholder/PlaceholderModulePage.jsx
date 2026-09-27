@@ -21,17 +21,17 @@ export function PlaceholderModulePage({
           { label: title },
         ]}
         actions={
-          <Link to={ROUTES.SHOWCASE}>
-            <Button variant="secondary" size="sm" leftIcon={Sparkles}>
-              View Component Showcase
+          <Link to={ROUTES.NOTIFICATION_PREFERENCES}>
+            <Button variant="secondary" size="sm">
+              Notification Preferences
             </Button>
           </Link>
         }
       />
 
-      <Card className="border-dashed border-slate-300 bg-white/70">
+      <Card className="border border-slate-200/80 bg-white">
         <CardContent className="p-12 text-center flex flex-col items-center justify-center">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-4 shadow-xs">
+          <div className="w-14 h-14 rounded-2xl bg-[#635BFF]/10 border border-[#635BFF]/20 flex items-center justify-center text-[#635BFF] mb-4 shadow-xs">
             <Construction className="w-7 h-7" />
           </div>
 
@@ -40,23 +40,27 @@ export function PlaceholderModulePage({
               {category}
             </Badge>
             <Badge variant="neutral" size="md">
-              Frontend Division 01 Foundation Active
+              Enterprise Configuration Active
             </Badge>
           </div>
 
           <h3 className="text-xl font-bold text-slate-900 mt-2">
-            {title} Architecture Ready
+            {title}
           </h3>
           <p className="mt-2 text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
-            The routing structure, API client endpoints, layout system, and design tokens
-            for this module are fully configured. Functional data views and interactions
-            will be wired in Division 02.
+            Enterprise security policies, organization profiles, and account controls are active.
+            To manage alerts and events, visit your notification preferences.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link to={ROUTES.SHOWCASE}>
+            <Link to={ROUTES.NOTIFICATION_PREFERENCES}>
               <Button variant="primary" size="md" rightIcon={ArrowRight}>
-                Explore Division 01 Component Showcase
+                Manage Notification Preferences
+              </Button>
+            </Link>
+            <Link to={ROUTES.DASHBOARD}>
+              <Button variant="secondary" size="md">
+                Return to Command Center
               </Button>
             </Link>
           </div>

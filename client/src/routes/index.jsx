@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppLayout, AuthLayout } from '@/layouts'
 import { ProtectedRoute } from './ProtectedRoute'
 import { PublicRoute } from './PublicRoute'
@@ -117,7 +117,7 @@ export const router = createBrowserRouter([
           },
           {
             path: ROUTES.SHOWCASE,
-            element: <ComponentShowcasePage />,
+            element: <Navigate to={ROUTES.DASHBOARD} replace />,
           },
         ],
       },
