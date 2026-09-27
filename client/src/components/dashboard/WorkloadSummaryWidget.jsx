@@ -10,7 +10,9 @@ export function WorkloadSummaryWidget({ overview, workloadData }) {
   const activeUsers = overview?.users?.active ?? 0
   const totalTasks = overview?.tasks?.total ?? 0
 
-  const items = workloadData?.workload || workloadData || []
+  const items = Array.isArray(workloadData)
+    ? workloadData
+    : (workloadData?.users || workloadData?.workload || [])
 
   return (
     <Card>
@@ -52,22 +54,28 @@ export function WorkloadSummaryWidget({ overview, workloadData }) {
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               Member Allocation
             </p>
-            {items.slice(0, 4).map((member, idx) => (
-              <div
-                key={member.id || idx}
-                className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-slate-50"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-[10px]">
-                    {member.name ? member.name.charAt(0) : 'M'}
+            {items.slice(0, 4).map((member, idx) => {
+              const displayName = member.name || (member.firstName ? `${member.firstName} ${member.lastName || ''}`.trim() : `Member ${idx + 1}`)
+              const initial = displayName.charAt(0) || 'M'
+              const taskCount = member.taskCount ?? member.activeTasks ?? member.totalTasks ?? 0
+
+              return (
+                <div
+                  key={member.id || member.userId || idx}
+                  className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-slate-50"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-[10px]">
+                      {initial}
+                    </div>
+                    <span className="font-medium text-slate-700">{displayName}</span>
                   </div>
-                  <span className="font-medium text-slate-700">{member.name || `Member ${idx + 1}`}</span>
+                  <Badge variant="primary" size="sm">
+                    {taskCount} tasks
+                  </Badge>
                 </div>
-                <Badge variant="primary" size="sm">
-                  {member.taskCount || 0} tasks
-                </Badge>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <p className="text-xs text-slate-500 text-center py-2">

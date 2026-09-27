@@ -9,9 +9,15 @@ export const tasksApi = {
     apiClient.post(`/projects/${projectId}/tasks`, data),
 
   // Individual task operations
-  getTasks: (params) => apiClient.get(API_ENDPOINTS.TASKS.BASE, { params }),
+  getTasks: (params) =>
+    params?.projectId
+      ? apiClient.get(`/projects/${params.projectId}/tasks`, { params })
+      : apiClient.get(API_ENDPOINTS.TASKS.BASE, { params }),
   getTaskById: (taskId) => apiClient.get(API_ENDPOINTS.TASKS.BY_ID(taskId)),
-  createTask: (data) => apiClient.post(API_ENDPOINTS.TASKS.BASE, data),
+  createTask: (data) =>
+    data?.projectId
+      ? apiClient.post(`/projects/${data.projectId}/tasks`, data)
+      : apiClient.post(API_ENDPOINTS.TASKS.BASE, data),
   updateTask: (taskId, data) => apiClient.patch(API_ENDPOINTS.TASKS.BY_ID(taskId), data),
   updateTaskStatus: (taskId, data) =>
     apiClient.patch(`${API_ENDPOINTS.TASKS.BY_ID(taskId)}/status`, data),
