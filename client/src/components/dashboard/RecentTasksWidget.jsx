@@ -43,7 +43,7 @@ export function RecentTasksWidget({ tasks = [], title = 'High Priority & Overdue
         }
       >
         <CardTitle className="flex items-center gap-2">
-          <CheckSquare className="w-4 h-4 text-indigo-600" />
+          <CheckSquare className="w-4 h-4 text-[#635BFF]" />
           {title}
         </CardTitle>
         <CardDescription>

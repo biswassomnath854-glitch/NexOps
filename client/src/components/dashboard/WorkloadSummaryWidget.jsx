@@ -26,7 +26,7 @@ export function WorkloadSummaryWidget({ overview, workloadData }) {
         }
       >
         <CardTitle className="flex items-center gap-2">
-          <Users2 className="w-4 h-4 text-indigo-600" />
+          <Users2 className="w-4 h-4 text-[#635BFF]" />
           Team Workload Capacity
         </CardTitle>
         <CardDescription>
@@ -45,7 +45,7 @@ export function WorkloadSummaryWidget({ overview, workloadData }) {
           </div>
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assigned Tasks</p>
-            <p className="text-xl font-bold text-indigo-600 mt-1">{totalTasks}</p>
+            <p className="text-xl font-bold text-[#635BFF] mt-1">{totalTasks}</p>
           </div>
         </div>
 
@@ -65,7 +65,7 @@ export function WorkloadSummaryWidget({ overview, workloadData }) {
                   className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-slate-50"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-[10px]">
+                    <div className="w-5 h-5 rounded-full bg-[#635BFF]/10 text-[#635BFF] flex items-center justify-center font-bold text-[10px]">
                       {initial}
                     </div>
                     <span className="font-medium text-slate-700">{displayName}</span>

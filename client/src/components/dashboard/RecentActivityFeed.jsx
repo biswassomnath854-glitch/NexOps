@@ -38,7 +38,7 @@ export function RecentActivityFeed({ activities = [] }) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Activity className="w-4 h-4 text-indigo-600" />
+          <Activity className="w-4 h-4 text-[#635BFF]" />
           Recent Activity Audit
         </CardTitle>
         <CardDescription>

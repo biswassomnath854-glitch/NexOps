@@ -19,7 +19,7 @@ export function TaskStatusBreakdown({ taskStatistics, projectStatistics }) {
 
   const statusConfig = [
     { key: 'TODO', label: 'To Do', count: byStatus.TODO || 0, color: 'bg-slate-400', badge: 'neutral' },
-    { key: 'IN_PROGRESS', label: 'In Progress', count: byStatus.IN_PROGRESS || 0, color: 'bg-indigo-600', badge: 'primary' },
+    { key: 'IN_PROGRESS', label: 'In Progress', count: byStatus.IN_PROGRESS || 0, color: 'bg-[#635BFF]', badge: 'primary' },
     { key: 'BLOCKED', label: 'Blocked', count: byStatus.BLOCKED || 0, color: 'bg-rose-600', badge: 'danger' },
     { key: 'COMPLETED', label: 'Completed', count: byStatus.COMPLETED || 0, color: 'bg-emerald-600', badge: 'success' },
     { key: 'CANCELLED', label: 'Cancelled', count: byStatus.CANCELLED || 0, color: 'bg-slate-300', badge: 'neutral' },
@@ -35,7 +35,7 @@ export function TaskStatusBreakdown({ taskStatistics, projectStatistics }) {
   const deadlineConfig = [
     { key: 'overdue', label: 'Overdue', count: deadlines.overdue || 0, icon: AlertOctagon, color: 'text-rose-600 bg-rose-50 border-rose-200' },
     { key: 'dueToday', label: 'Due Today', count: deadlines.dueToday || 0, icon: Clock, color: 'text-amber-700 bg-amber-50 border-amber-200' },
-    { key: 'dueSoon', label: 'Due in 3 Days', count: deadlines.dueSoon || 0, icon: Calendar, color: 'text-indigo-700 bg-indigo-50 border-indigo-200' },
+    { key: 'dueSoon', label: 'Due in 3 Days', count: deadlines.dueSoon || 0, icon: Calendar, color: 'text-[#5148E5] bg-[#635BFF]/10 border-[#635BFF]/20' },
     { key: 'withoutDeadline', label: 'No Deadline', count: deadlines.withoutDeadline || 0, icon: Circle, color: 'text-slate-600 bg-slate-50 border-slate-200' },
   ]
 
@@ -45,7 +45,7 @@ export function TaskStatusBreakdown({ taskStatistics, projectStatistics }) {
       <Card className="lg:col-span-1">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-indigo-600" />
+            <Layers className="w-4 h-4 text-[#635BFF]" />
             Task Status Pipelines
           </CardTitle>
           <CardDescription>
@@ -82,7 +82,7 @@ export function TaskStatusBreakdown({ taskStatistics, projectStatistics }) {
       <Card className="lg:col-span-1">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-indigo-600" />
+            <ShieldAlert className="w-4 h-4 text-[#635BFF]" />
             Priority Distribution
           </CardTitle>
           <CardDescription>
@@ -116,7 +116,7 @@ export function TaskStatusBreakdown({ taskStatistics, projectStatistics }) {
               <span className="text-xs px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
                 Active: {projectsByStatus.ACTIVE || 0}
               </span>
-              <span className="text-xs px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200">
+              <span className="text-xs px-2.5 py-1 rounded-lg bg-[#635BFF]/10 text-[#5148E5] border border-[#635BFF]/20">
                 Planning: {projectsByStatus.PLANNING || 0}
               </span>
               <span className="text-xs px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200">
@@ -134,7 +134,7 @@ export function TaskStatusBreakdown({ taskStatistics, projectStatistics }) {
       <Card className="lg:col-span-1">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-indigo-600" />
+            <Clock className="w-4 h-4 text-[#635BFF]" />
             Deadline Urgency Monitors
           </CardTitle>
           <CardDescription>

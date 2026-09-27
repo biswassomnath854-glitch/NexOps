@@ -4,28 +4,28 @@ import { cn } from '@/utils/cn'
 
 const colorStyles = {
   indigo: {
-    iconBg: 'bg-indigo-50 text-indigo-600',
-    border: 'border-slate-200/80 hover:border-indigo-200',
-    progress: 'bg-indigo-600',
+    iconBg: 'bg-[#635BFF]/10 text-[#635BFF]',
+    border: 'border-slate-200/80 hover:border-[#635BFF]/40',
+    progress: 'bg-[#635BFF]',
   },
   emerald: {
     iconBg: 'bg-emerald-50 text-emerald-600',
-    border: 'border-slate-200/80 hover:border-emerald-200',
+    border: 'border-slate-200/80 hover:border-emerald-300',
     progress: 'bg-emerald-600',
   },
   amber: {
     iconBg: 'bg-amber-50 text-amber-600',
-    border: 'border-slate-200/80 hover:border-amber-200',
+    border: 'border-slate-200/80 hover:border-amber-300',
     progress: 'bg-amber-500',
   },
   rose: {
     iconBg: 'bg-rose-50 text-rose-600',
-    border: 'border-slate-200/80 hover:border-rose-200',
+    border: 'border-rose-200/80 hover:border-rose-300',
     progress: 'bg-rose-600',
   },
   sky: {
     iconBg: 'bg-sky-50 text-sky-600',
-    border: 'border-slate-200/80 hover:border-sky-200',
+    border: 'border-slate-200/80 hover:border-sky-300',
     progress: 'bg-sky-500',
   },
 }

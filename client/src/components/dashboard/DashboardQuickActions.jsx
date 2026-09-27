@@ -15,7 +15,7 @@ const actions = [
     desc: 'Organize backlog, assign teammates, and update sprint pipelines.',
     href: ROUTES.TASKS,
     icon: CheckSquare,
-    color: 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100',
+    color: 'text-[#635BFF] bg-[#635BFF]/10 hover:bg-[#635BFF]/15',
   },
   {
     title: 'Project Hubs',
@@ -47,7 +47,7 @@ export function DashboardQuickActions() {
         const Icon = act.icon
         return (
           <Link key={act.title} to={act.href} className="group block">
-            <Card className="h-full border-slate-200/80 hover:border-indigo-300 hover:shadow-md transition-all">
+            <Card className="h-full border-slate-200/80 hover:border-[#635BFF]/40 hover:shadow-md transition-all">
               <CardContent className="p-4 flex flex-col justify-between h-full">
                 <div className="space-y-2">
                   <div
@@ -56,7 +56,7 @@ export function DashboardQuickActions() {
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#635BFF] transition-colors">
                       {act.title}
                     </h4>
                     <p className="text-xs text-slate-500 mt-0.5 leading-relaxed line-clamp-2">
@@ -65,7 +65,7 @@ export function DashboardQuickActions() {
                   </div>
                 </div>
 
-                <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-indigo-600">
+                <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-[#635BFF]">
                   <span>Open workspace</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
