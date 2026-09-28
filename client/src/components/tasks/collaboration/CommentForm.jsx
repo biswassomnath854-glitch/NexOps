@@ -65,7 +65,7 @@ export function CommentForm({
           }}
           disabled={isLoading}
           placeholder={placeholder}
-          className={`w-full text-sm rounded-xl border p-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none shadow-sm disabled:bg-slate-50 disabled:cursor-not-allowed ${
+          className={`w-full text-sm rounded-xl border p-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#635BFF]/20 focus:border-[#635BFF] transition-all resize-none shadow-2xs disabled:bg-slate-50 disabled:cursor-not-allowed ${
             isOverLimit || validationError ? 'border-rose-300' : 'border-slate-200 hover:border-slate-300'
           }`}
         />
@@ -104,8 +104,9 @@ export function CommentForm({
           <Button
             type="submit"
             size="sm"
+            variant="primary"
             disabled={isLoading || !content.trim() || isOverLimit}
-            className="text-xs h-8 px-3 gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="text-xs h-8 px-3 gap-1.5 shadow-2xs"
           >
             {isLoading ? (
               <>

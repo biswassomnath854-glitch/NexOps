@@ -86,8 +86,8 @@ export function TaskStatusChangeModal({
                 key={status}
                 className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
                   selectedStatus === status
-                    ? 'border-indigo-400 bg-indigo-50'
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                    ? 'border-[#635BFF] bg-[#635BFF]/5 ring-1 ring-[#635BFF]/20 shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/70'
                 }`}
               >
                 <input
@@ -96,10 +96,10 @@ export function TaskStatusChangeModal({
                   value={status}
                   checked={selectedStatus === status}
                   onChange={() => setSelectedStatus(status)}
-                  className="text-indigo-600 focus:ring-indigo-500"
+                  className="text-[#635BFF] focus:ring-[#635BFF]"
                 />
                 <TaskStatusBadge status={status} size="sm" />
-                <span className="text-xs text-slate-600 font-medium flex-1">
+                <span className="text-xs text-slate-700 font-medium flex-1">
                   {STATUS_LABELS[status]}
                 </span>
               </label>

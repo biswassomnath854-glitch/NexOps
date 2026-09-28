@@ -7,7 +7,6 @@ import {
   X,
   AlertCircle,
   Loader2,
-  CheckCircle2,
 } from 'lucide-react'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB

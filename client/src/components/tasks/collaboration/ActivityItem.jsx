@@ -1,4 +1,3 @@
-import { TaskAssignee } from '../TaskAssignee'
 import { formatDateTime } from '@/utils/formatters'
 import {
   PlusCircle,

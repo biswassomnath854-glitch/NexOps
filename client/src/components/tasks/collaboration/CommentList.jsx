@@ -71,11 +71,11 @@ export function CommentList({
   return (
     <div className="space-y-5">
       {/* New Comment Box */}
-      <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+      <div className="bg-slate-50/60 border border-slate-200/90 rounded-xl p-4 shadow-2xs">
         <div className="flex items-center gap-2 mb-3">
-          <MessageSquare className="w-4 h-4 text-indigo-600" />
+          <MessageSquare className="w-4 h-4 text-[#635BFF]" />
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-            Add Comment
+            Post an Update or Comment
           </h4>
         </div>
         <CommentForm

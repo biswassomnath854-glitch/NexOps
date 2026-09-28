@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { formatDateTime } from '@/utils/formatters'
-import { TaskAssignee } from '../TaskAssignee'
 import { Button } from '@/components/ui/Button'
 import { ConfirmationModal } from '@/components/common/ConfirmationModal'
 import {
@@ -11,7 +10,6 @@ import {
   File,
   Download,
   Trash2,
-  ExternalLink,
   Loader2,
 } from 'lucide-react'
 

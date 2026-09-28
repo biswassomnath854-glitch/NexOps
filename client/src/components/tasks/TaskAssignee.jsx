@@ -8,12 +8,12 @@ function getInitials(firstName, lastName) {
 }
 
 const AVATAR_COLORS = [
-  'bg-violet-100 text-violet-700',
-  'bg-indigo-100 text-indigo-700',
-  'bg-sky-100 text-sky-700',
-  'bg-teal-100 text-teal-700',
-  'bg-emerald-100 text-emerald-700',
-  'bg-amber-100 text-amber-700',
+  'bg-violet-50 text-violet-700 border-violet-200/80',
+  'bg-indigo-50 text-indigo-700 border-indigo-200/80',
+  'bg-sky-50 text-sky-700 border-sky-200/80',
+  'bg-teal-50 text-teal-700 border-teal-200/80',
+  'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+  'bg-amber-50 text-amber-700 border-amber-200/80',
 ]
 
 function colorForName(name = '') {
@@ -29,8 +29,8 @@ function colorForName(name = '') {
  * Falls back to "Unassigned" when no assignee is set.
  */
 export function TaskAssignee({ assignee, size = 'md', showName = true, className }) {
-  const avatarSize = size === 'sm' ? 'w-5 h-5 text-[10px]' : 'w-7 h-7 text-xs'
-  const textSize = size === 'sm' ? 'text-xs' : 'text-xs'
+  const avatarSize = size === 'sm' ? 'w-5 h-5 text-[10px]' : 'w-6 h-6 text-[11px]'
+  const textSize = 'text-xs'
 
   if (!assignee) {
     return (
@@ -38,13 +38,13 @@ export function TaskAssignee({ assignee, size = 'md', showName = true, className
         className={cn(
           'inline-flex items-center gap-1.5',
           textSize,
-          'text-slate-400 font-medium',
+          'text-slate-400 font-normal select-none',
           className
         )}
       >
         <span
           className={cn(
-            'rounded-full flex items-center justify-center bg-slate-100 border border-slate-200 shrink-0',
+            'rounded-full flex items-center justify-center bg-slate-100 border border-slate-200 shrink-0 shadow-2xs',
             avatarSize
           )}
         >
@@ -55,25 +55,25 @@ export function TaskAssignee({ assignee, size = 'md', showName = true, className
     )
   }
 
-  const fullName = `${assignee.firstName} ${assignee.lastName}`.trim()
+  const fullName = `${assignee.firstName || ''} ${assignee.lastName || ''}`.trim() || 'Team Member'
   const initials = getInitials(assignee.firstName, assignee.lastName)
   const colorClass = colorForName(fullName)
 
   return (
     <span
-      className={cn('inline-flex items-center gap-1.5', textSize, 'text-slate-700 font-medium', className)}
+      className={cn('inline-flex items-center gap-2', textSize, 'text-slate-800 font-medium', className)}
       title={fullName}
     >
       <span
         className={cn(
-          'rounded-full flex items-center justify-center font-semibold border border-white shadow-sm shrink-0',
+          'rounded-full flex items-center justify-center font-bold border shrink-0 shadow-2xs select-none',
           avatarSize,
           colorClass
         )}
       >
         {initials}
       </span>
-      {showName && <span className="truncate max-w-[140px]">{fullName}</span>}
+      {showName && <span className="truncate max-w-[150px] leading-tight">{fullName}</span>}
     </span>
   )
 }

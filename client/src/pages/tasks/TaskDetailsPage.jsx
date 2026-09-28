@@ -174,34 +174,56 @@ export function TaskDetailsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top back button & refresh bar */}
-      <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(-1)}
-          className="gap-2 text-slate-600 hover:text-slate-900 border-slate-200"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </Button>
+      {/* Top breadcrumb & action bar */}
+      <div className="flex items-center justify-between gap-4 pb-1 border-b border-slate-200/80">
+        <div className="flex items-center gap-2 text-xs min-w-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="gap-1.5 text-slate-600 hover:text-slate-900 border-slate-200 h-8 px-2.5"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back</span>
+          </Button>
+
+          <span className="text-slate-300 hidden sm:inline">/</span>
+
+          <span className="text-slate-500 font-medium hidden sm:inline">
+            Tasks
+          </span>
+
+          {task?.project && (
+            <>
+              <span className="text-slate-300 hidden sm:inline">/</span>
+              <span className="font-mono text-xs font-semibold text-slate-700 hidden sm:inline">
+                {task.project.code}
+              </span>
+            </>
+          )}
+
+          <span className="text-slate-300 hidden md:inline">/</span>
+          <span className="text-slate-900 font-semibold truncate hidden md:inline max-w-xs">
+            {task?.title}
+          </span>
+        </div>
 
         <Button
           variant="outline"
           size="sm"
           onClick={handleRefresh}
           disabled={isRefreshing}
-          className="gap-2 border-slate-200"
+          className="gap-1.5 border-slate-200 h-8 px-2.5 text-xs text-slate-600 hover:text-slate-900"
         >
-          <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-600' : 'text-slate-500'}`} />
-          Refresh
+          <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#635BFF]' : 'text-slate-400'}`} />
+          <span>Refresh</span>
         </Button>
       </div>
 
       {/* Toast Feedback */}
       {feedback && (
         <div
-          className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-150 ${
+          className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-150 ${
             feedback.type === 'error'
               ? 'bg-rose-50 border-rose-200 text-rose-800'
               : 'bg-emerald-50 border-emerald-200 text-emerald-800'

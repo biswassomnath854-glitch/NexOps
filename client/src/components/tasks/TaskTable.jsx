@@ -25,7 +25,9 @@ function TaskActionMenu({ task, canEdit, canDelete, onView, onEdit, onChangeStat
 
   useEffect(() => {
     const handler = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setIsOpen(false)
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsOpen(false)
+      }
     }
     if (isOpen) document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -36,40 +38,49 @@ function TaskActionMenu({ task, canEdit, canDelete, onView, onEdit, onChangeStat
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
-        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-        aria-label="Task actions"
+        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+        aria-label="Task actions menu"
       >
         <MoreVertical className="w-4 h-4" />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-1 w-48 rounded-xl bg-white shadow-xl border border-slate-200/80 py-1.5 z-20 animate-in fade-in zoom-in-95">
+        <div className="absolute right-0 mt-1 w-44 rounded-xl bg-white shadow-xl border border-slate-200/90 py-1 z-30 animate-in fade-in zoom-in-95">
           <button
             type="button"
-            onClick={() => { setIsOpen(false); onView(task) }}
-            className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+            onClick={() => {
+              setIsOpen(false)
+              onView(task)
+            }}
+            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
           >
             <Eye className="w-3.5 h-3.5 text-slate-400" />
-            View Details
+            <span>View Details</span>
           </button>
 
           {canEdit && (
             <>
               <button
                 type="button"
-                onClick={() => { setIsOpen(false); onEdit(task) }}
-                className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                onClick={() => {
+                  setIsOpen(false)
+                  onEdit(task)
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 <Edit2 className="w-3.5 h-3.5 text-slate-400" />
-                Edit Task
+                <span>Edit Task</span>
               </button>
               <button
                 type="button"
-                onClick={() => { setIsOpen(false); onChangeStatus(task) }}
-                className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                onClick={() => {
+                  setIsOpen(false)
+                  onChangeStatus(task)
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-                Change Status
+                <span>Change Status</span>
               </button>
             </>
           )}
@@ -79,11 +90,14 @@ function TaskActionMenu({ task, canEdit, canDelete, onView, onEdit, onChangeStat
               <div className="my-1 border-t border-slate-100" />
               <button
                 type="button"
-                onClick={() => { setIsOpen(false); onDelete(task) }}
-                className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors"
+                onClick={() => {
+                  setIsOpen(false)
+                  onDelete(task)
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                Delete Task
+                <span>Delete Task</span>
               </button>
             </>
           )}
@@ -97,22 +111,24 @@ function TaskActionMenu({ task, canEdit, canDelete, onView, onEdit, onChangeStat
 function TaskSkeletonRow() {
   return (
     <TableRow>
-      <TableCell><div className="h-4 w-3/4 bg-slate-200 rounded animate-pulse" /></TableCell>
-      <TableCell><div className="h-5 w-20 bg-slate-100 rounded-full animate-pulse" /></TableCell>
-      <TableCell><div className="h-5 w-16 bg-slate-100 rounded-full animate-pulse" /></TableCell>
-      <TableCell><div className="h-4 w-28 bg-slate-100 rounded animate-pulse" /></TableCell>
-      <TableCell><div className="h-4 w-24 bg-slate-100 rounded animate-pulse" /></TableCell>
-      <TableCell><div className="h-4 w-16 bg-slate-100 rounded animate-pulse" /></TableCell>
-      <TableCell align="right"><div className="h-8 w-8 bg-slate-100 rounded-lg animate-pulse ml-auto" /></TableCell>
+      <TableCell className="py-3 px-4">
+        <div className="space-y-1.5">
+          <div className="h-4 w-48 bg-slate-200 rounded animate-pulse" />
+          <div className="h-3 w-28 bg-slate-100 rounded animate-pulse" />
+        </div>
+      </TableCell>
+      <TableCell className="py-3 px-4"><div className="h-5 w-20 bg-slate-100 rounded-full animate-pulse" /></TableCell>
+      <TableCell className="py-3 px-4"><div className="h-5 w-16 bg-slate-100 rounded-full animate-pulse" /></TableCell>
+      <TableCell className="py-3 px-4"><div className="h-5 w-28 bg-slate-100 rounded animate-pulse" /></TableCell>
+      <TableCell className="py-3 px-4"><div className="h-4 w-24 bg-slate-100 rounded animate-pulse" /></TableCell>
+      <TableCell className="py-3 px-4"><div className="h-4 w-16 bg-slate-100 rounded animate-pulse" /></TableCell>
+      <TableCell align="right" className="py-3 px-4"><div className="h-7 w-7 bg-slate-100 rounded-lg animate-pulse ml-auto" /></TableCell>
     </TableRow>
   )
 }
 
 /**
- * TaskTable — Full task list with pagination and action menus.
- *
- * canEdit   — true if current user can edit tasks (management or creator/assignee, non-viewer)
- * canDelete — true if current user is management
+ * TaskTable — Professional operational table with pagination, hierarchy, and actions.
  */
 export function TaskTable({
   tasks = [],
@@ -139,23 +155,46 @@ export function TaskTable({
     }
   }
 
+  const resolveCanEdit = (task) => {
+    if (typeof canEdit === 'function') {
+      return canEdit(task)
+    }
+    return Boolean(canEdit)
+  }
+
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+      <div className="rounded-xl border border-slate-200/90 bg-white shadow-2xs overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Task</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Assignee</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead align="right">Actions</TableHead>
+              <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Task
+              </TableHead>
+              <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Status
+              </TableHead>
+              <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Priority
+              </TableHead>
+              <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Assignee
+              </TableHead>
+              <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Target Deadline
+              </TableHead>
+              <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Created
+              </TableHead>
+              <TableHead align="right" className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {[1, 2, 3, 4, 5].map((i) => <TaskSkeletonRow key={i} />)}
+            {[1, 2, 3, 4, 5].map((i) => (
+              <TaskSkeletonRow key={i} />
+            ))}
           </TableBody>
         </Table>
       </div>
@@ -164,127 +203,150 @@ export function TaskTable({
 
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-8">
+      <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-2xs">
         <EmptyState
           icon={ClipboardList}
           title="No Tasks Found"
-          description="No tasks match your current filters. Try adjusting search criteria or create a new task."
+          description="No tasks match your current criteria. Try adjusting filters or create a new task."
         />
       </div>
     )
   }
 
   return (
-    <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+    <div className="rounded-xl border border-slate-200/90 bg-white shadow-2xs overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Task</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Assignee</TableHead>
-            <TableHead>Due Date</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead align="right">Actions</TableHead>
+            <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              Task
+            </TableHead>
+            <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              Status
+            </TableHead>
+            <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              Priority
+            </TableHead>
+            <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              Assignee
+            </TableHead>
+            <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              Target Deadline
+            </TableHead>
+            <TableHead className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              Created
+            </TableHead>
+            <TableHead align="right" className="py-2.5 px-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.map((task) => (
-            <TableRow key={task.id} className="group">
-              {/* Title + description */}
-              <TableCell>
-                <div className="flex items-start gap-2.5 min-w-0">
-                  <div
-                    className="w-8 h-8 rounded-lg bg-[#635BFF]/10 border border-[#635BFF]/20 flex items-center justify-center shrink-0 group-hover:bg-[#635BFF] transition-colors"
-                  >
-                    <ClipboardList className="w-3.5 h-3.5 text-[#635BFF] group-hover:text-white transition-colors" />
-                  </div>
-                  <div className="min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => handleView(task)}
-                      className="font-semibold text-slate-900 group-hover:text-[#635BFF] transition-colors text-left text-sm leading-snug truncate block max-w-[280px]"
-                    >
-                      {task.title}
-                    </button>
+          {tasks.map((task) => {
+            const userCanEdit = resolveCanEdit(task)
+
+            return (
+              <TableRow
+                key={task.id}
+                className="group hover:bg-slate-50/70 transition-colors"
+              >
+                {/* Task Title & Project Code */}
+                <TableCell className="py-3 px-4">
+                  <div className="min-w-0 max-w-xs sm:max-w-md">
+                    <div className="flex items-center gap-2">
+                      {task.project && (
+                        <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                          {task.project.code}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleView(task)}
+                        className="font-semibold text-slate-900 group-hover:text-[#635BFF] transition-colors text-left text-xs sm:text-sm leading-snug truncate block cursor-pointer"
+                        title={task.title}
+                      >
+                        {task.title}
+                      </button>
+                    </div>
+
                     {task.description && (
-                      <p className="text-xs text-slate-400 truncate max-w-[280px] mt-0.5">
+                      <p className="text-[11px] text-slate-400 truncate max-w-sm mt-0.5 font-normal">
                         {task.description}
                       </p>
                     )}
-                    {task.project && (
-                      <span className="inline-block mt-1 text-[10px] font-mono font-bold bg-slate-100 text-slate-600 border border-slate-200 rounded px-1.5 py-0.5">
-                        {task.project.code}
-                      </span>
-                    )}
                   </div>
-                </div>
-              </TableCell>
+                </TableCell>
 
-              {/* Status */}
-              <TableCell>
-                <TaskStatusBadge status={task.status} />
-              </TableCell>
+                {/* Status */}
+                <TableCell className="py-3 px-4">
+                  <TaskStatusBadge status={task.status} size="sm" />
+                </TableCell>
 
-              {/* Priority */}
-              <TableCell>
-                <TaskPriorityBadge priority={task.priority} />
-              </TableCell>
+                {/* Priority */}
+                <TableCell className="py-3 px-4">
+                  <TaskPriorityBadge priority={task.priority} size="sm" showIcon />
+                </TableCell>
 
-              {/* Assignee */}
-              <TableCell>
-                <TaskAssignee assignee={task.assignee} size="sm" />
-              </TableCell>
+                {/* Assignee */}
+                <TableCell className="py-3 px-4">
+                  <TaskAssignee assignee={task.assignee} size="sm" />
+                </TableCell>
 
-              {/* Due Date */}
-              <TableCell>
-                <DueDateIndicator
-                  dueDate={task.dueDate}
-                  deadline={task.deadline}
-                />
-              </TableCell>
+                {/* Due Date */}
+                <TableCell className="py-3 px-4">
+                  <DueDateIndicator
+                    dueDate={task.dueDate}
+                    deadline={task.deadline}
+                  />
+                </TableCell>
 
-              {/* Created */}
-              <TableCell>
-                <span className="text-xs text-slate-400 font-mono">{formatDate(task.createdAt)}</span>
-              </TableCell>
+                {/* Created */}
+                <TableCell className="py-3 px-4">
+                  <span className="text-xs text-slate-500 font-mono">
+                    {formatDate(task.createdAt)}
+                  </span>
+                </TableCell>
 
-              {/* Actions */}
-              <TableCell align="right">
-                <div className="flex items-center justify-end gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleView(task)}
-                    className="hidden sm:inline-flex p-1.5 h-8 text-slate-500 hover:text-slate-800"
-                    title="View task"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                  </Button>
-                  {canEdit && (
+                {/* Actions */}
+                <TableCell align="right" className="py-3 px-4">
+                  <div className="flex items-center justify-end gap-1">
                     <Button
                       variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(task)}
-                      className="hidden sm:inline-flex p-1.5 h-8 text-slate-500 hover:text-[#635BFF]"
-                      title="Edit task"
+                      size="xs"
+                      onClick={() => handleView(task)}
+                      className="hidden sm:inline-flex h-7 px-2 text-slate-500 hover:text-slate-900 text-xs"
+                      title="View task details"
                     >
-                      <Edit2 className="w-3.5 h-3.5" />
+                      <Eye className="w-3.5 h-3.5 mr-1" />
+                      <span>View</span>
                     </Button>
-                  )}
-                  <TaskActionMenu
-                    task={task}
-                    canEdit={canEdit}
-                    canDelete={canDelete}
-                    onView={handleView}
-                    onEdit={onEdit}
-                    onChangeStatus={onChangeStatus}
-                    onDelete={onDelete}
-                  />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+
+                    {userCanEdit && (
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => onEdit(task)}
+                        className="hidden sm:inline-flex h-7 px-2 text-slate-500 hover:text-[#635BFF] text-xs"
+                        title="Edit task"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+
+                    <TaskActionMenu
+                      task={task}
+                      canEdit={userCanEdit}
+                      canDelete={canDelete}
+                      onView={handleView}
+                      onEdit={onEdit}
+                      onChangeStatus={onChangeStatus}
+                      onDelete={onDelete}
+                    />
+                  </div>
+                </TableCell>
+              </TableRow>
+            )
+          })}
         </TableBody>
       </Table>
 

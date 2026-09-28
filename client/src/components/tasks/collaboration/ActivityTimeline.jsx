@@ -5,7 +5,7 @@ import { Pagination } from '@/components/common/Pagination'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { Select } from '@/components/forms/Select'
 import { Button } from '@/components/ui/Button'
-import { History, RefreshCw, Filter } from 'lucide-react'
+import { History, RefreshCw } from 'lucide-react'
 
 const ACTION_OPTIONS = [
   { value: '', label: 'All Activities' },
@@ -63,7 +63,7 @@ export function ActivityTimeline({ taskId }) {
       {/* Header & Filter Controls */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <History className="w-4 h-4 text-indigo-600" />
+          <History className="w-4 h-4 text-[#635BFF]" />
           <span className="text-sm font-bold text-slate-900">Activity History</span>
           <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
             {pagination.totalItems}

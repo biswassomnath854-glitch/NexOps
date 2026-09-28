@@ -9,8 +9,8 @@ import { Paperclip, Plus, RefreshCw, X } from 'lucide-react'
 
 export function AttachmentList({
   taskId,
-  currentUser,
-  isManagement = false,
+  currentUser: _currentUser,
+  isManagement: _isManagement,
   isViewer = false,
   canUpdate = true,
 }) {
@@ -53,16 +53,12 @@ export function AttachmentList({
   }
 
   const handleUpload = async (formData, onProgress) => {
-    try {
-      await tasksApi.uploadAttachment(taskId, formData, {
-        onUploadProgress: onProgress,
-      })
-      showSuccess('File uploaded successfully.')
-      setShowUploader(false)
-      await loadAttachments(1)
-    } catch (err) {
-      throw err
-    }
+    await tasksApi.uploadAttachment(taskId, formData, {
+      onUploadProgress: onProgress,
+    })
+    showSuccess('File uploaded successfully.')
+    setShowUploader(false)
+    await loadAttachments(1)
   }
 
   const handleDownload = async (attachment) => {
@@ -91,7 +87,7 @@ export function AttachmentList({
       {/* Header with count, upload button, and refresh */}
       <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
         <div className="flex items-center gap-2">
-          <Paperclip className="w-4 h-4 text-indigo-600" />
+          <Paperclip className="w-4 h-4 text-[#635BFF]" />
           <span className="text-sm font-bold text-slate-900">Attachments</span>
           <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
             {pagination.totalItems}

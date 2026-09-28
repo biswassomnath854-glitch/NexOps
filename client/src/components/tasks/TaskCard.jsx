@@ -20,7 +20,7 @@ export function TaskCard({ task, canEdit = false, canDelete = false, onEdit, onD
   }
 
   return (
-    <div className="group bg-white border border-slate-200/80 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all duration-200 flex flex-col gap-3">
+    <div className="group bg-white border border-slate-200/90 rounded-xl p-4 hover:border-[#635BFF]/40 hover:shadow-sm transition-all duration-150 flex flex-col gap-3">
       {/* Header row */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
@@ -38,7 +38,7 @@ export function TaskCard({ task, canEdit = false, canDelete = false, onEdit, onD
       <button
         type="button"
         onClick={handleView}
-        className="text-left font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors leading-snug line-clamp-2 text-sm"
+        className="text-left font-semibold text-slate-900 group-hover:text-[#635BFF] transition-colors leading-snug line-clamp-2 text-sm"
       >
         {task.title}
       </button>
@@ -53,16 +53,16 @@ export function TaskCard({ task, canEdit = false, canDelete = false, onEdit, onD
       {/* Project */}
       {task.project && (
         <div className="flex items-center gap-1.5">
-          <FolderKanban className="w-3 h-3 text-slate-400" />
-          <span className="text-xs text-slate-500 font-medium">{task.project.name}</span>
-          <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 rounded px-1 py-0.5">
+          <FolderKanban className="w-3.5 h-3.5 text-slate-400" />
+          <span className="text-xs text-slate-600 font-medium truncate">{task.project.name}</span>
+          <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200/80 rounded px-1.5 py-0.5 shrink-0">
             {task.project.code}
           </span>
         </div>
       )}
 
       {/* Assignee + Due date */}
-      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
         <TaskAssignee assignee={task.assignee} size="sm" />
         <DueDateIndicator dueDate={task.dueDate} deadline={task.deadline} compact />
       </div>
@@ -73,7 +73,7 @@ export function TaskCard({ task, canEdit = false, canDelete = false, onEdit, onD
           variant="ghost"
           size="sm"
           onClick={handleView}
-          className="text-xs h-7 px-2.5 text-slate-500 hover:text-indigo-600"
+          className="text-xs h-7 px-2.5 text-slate-600 hover:text-[#635BFF] hover:bg-[#635BFF]/5"
         >
           <Eye className="w-3.5 h-3.5 mr-1" />
           View
@@ -83,7 +83,7 @@ export function TaskCard({ task, canEdit = false, canDelete = false, onEdit, onD
             variant="ghost"
             size="sm"
             onClick={() => onEdit?.(task)}
-            className="text-xs h-7 px-2.5 text-slate-500 hover:text-indigo-600"
+            className="text-xs h-7 px-2.5 text-slate-600 hover:text-[#635BFF] hover:bg-[#635BFF]/5"
           >
             <Edit2 className="w-3.5 h-3.5 mr-1" />
             Edit

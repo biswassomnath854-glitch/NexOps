@@ -22,7 +22,6 @@ import {
   RotateCw,
   CheckCircle2,
   FolderKanban,
-  ClipboardList,
 } from 'lucide-react'
 
 const MANAGEMENT_ROLES = [
@@ -278,8 +277,6 @@ export function TasksPage() {
       setStatusTarget(null)
 
       await loadTasks(selectedProjectId, filters)
-    } catch (err) {
-      throw err
     } finally {
       setIsActionLoading(false)
     }
@@ -394,18 +391,18 @@ export function TasksPage() {
         </div>
       )}
 
-      {/* Project selector */}
-      <Card className="border-slate-200/80">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-[#635BFF]/10 border border-[#635BFF]/20 flex items-center justify-center shrink-0">
-                <FolderKanban className="w-4 h-4 text-[#635BFF]" />
+      {/* Project context bar */}
+      <Card className="border-slate-200/90 shadow-2xs">
+        <CardContent className="p-4 sm:p-4.5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-[#635BFF]/10 border border-[#635BFF]/20 flex items-center justify-center shrink-0 shadow-2xs">
+                <FolderKanban className="w-4.5 h-4.5 text-[#635BFF]" />
               </div>
 
-              <div className="min-w-[220px]">
-                <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                  Project Context
+              <div className="min-w-0">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                  Active Project Workspace
                 </label>
 
                 {isProjectsLoading ? (
@@ -419,46 +416,37 @@ export function TasksPage() {
                     value={selectedProjectId}
                     onChange={handleProjectChange}
                     options={projectOptions}
-                    className="min-w-[220px]"
+                    className="min-w-[220px] sm:min-w-[260px] text-xs font-semibold"
                   />
                 )}
               </div>
             </div>
 
             {selectedProject && (
-              <div className="flex items-center gap-3 text-xs text-slate-500 border-l border-slate-200 pl-4">
-                <span>
-                  Status:{' '}
-                  <span className="font-semibold text-slate-700">
+              <div className="flex items-center gap-2.5 sm:gap-4 text-xs text-slate-500 pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l border-slate-200 sm:pl-4">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 font-medium">Status:</span>
+                  <span className="font-semibold text-slate-800 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-[11px]">
                     {selectedProject.status}
                   </span>
-                </span>
+                </div>
 
-                <span>
-                  Total:{' '}
-                  <span className="font-semibold text-slate-700">
-                    {pagination.totalItems} task
-                    {pagination.totalItems !== 1 ? 's' : ''}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 font-medium">Sprint Total:</span>
+                  <span className="font-bold text-[#635BFF] bg-[#635BFF]/10 border border-[#635BFF]/20 px-2 py-0.5 rounded-md text-[11px] font-mono">
+                    {pagination.totalItems} {pagination.totalItems === 1 ? 'task' : 'tasks'}
                   </span>
-                </span>
+                </div>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Filters */}
+      {/* Filters Toolbar Card */}
       {selectedProjectId && (
-        <Card className="border-slate-200/80">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <ClipboardList className="w-4 h-4 text-slate-400" />
-
-              <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                Filters
-              </span>
-            </div>
-
+        <Card className="border-slate-200/90 shadow-2xs">
+          <CardContent className="p-3.5 sm:p-4">
             <TaskFilters
               filters={filters}
               onChange={handleFiltersChange}
@@ -483,21 +471,21 @@ export function TasksPage() {
           onEdit={(task) => setEditTarget(task)}
           onChangeStatus={(task) => setStatusTarget(task)}
           onDelete={(task) => setDeleteTarget(task)}
-          canEdit={true}
+          canEdit={canEditTask}
           canDelete={canDeleteTask()}
         />
       ) : (
         !isProjectsLoading && (
-          <Card className="border-slate-200/80">
+          <Card className="border-slate-200/90 shadow-2xs">
             <CardContent className="py-16 text-center">
-              <FolderKanban className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+              <FolderKanban className="w-10 h-10 text-slate-300 mx-auto mb-3" />
 
-              <p className="text-sm font-semibold text-slate-600">
-                Select a Project
+              <p className="text-sm font-bold text-slate-700">
+                Select a Project Workspace
               </p>
 
-              <p className="text-xs text-slate-400 mt-1">
-                Choose a project above to view and manage its tasks.
+              <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                Choose a project context from the selector above to monitor sprint deliverables and task status.
               </p>
             </CardContent>
           </Card>
