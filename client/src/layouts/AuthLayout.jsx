@@ -1,6 +1,6 @@
 import { Outlet, Link } from 'react-router-dom'
 import { CheckCircle2, ShieldCheck, Zap, ArrowLeft } from 'lucide-react'
-import { Logo } from '@/components/common/Logo'
+import { SBLogo, SBLightLogo } from '@/components/common/SBLogo'
 import { ROUTES } from '@/constants/routes'
 
 export function AuthLayout() {
@@ -15,7 +15,7 @@ export function AuthLayout() {
         {/* Top Logo */}
         <div className="relative z-10">
           <Link to={ROUTES.HOME} className="inline-block hover:opacity-95 transition-opacity" title="Back to Home">
-            <Logo size="lg" className="text-white" />
+            <SBLightLogo size="lg" showTagline />
           </Link>
           <div className="mt-8">
             <span className="px-3 py-1 text-xs font-semibold tracking-wide uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-full">
@@ -62,7 +62,7 @@ export function AuthLayout() {
 
         {/* Footer info */}
         <div className="relative z-10 pt-6 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-          <p>© {new Date().getFullYear()} NexOps Inc. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} SB Pvt. Ltd. All rights reserved.</p>
           <div className="flex gap-4">
             <span>Privacy</span>
             <span>Terms</span>
@@ -87,7 +87,7 @@ export function AuthLayout() {
 
           <div className="lg:hidden mb-6 text-center">
             <Link to={ROUTES.HOME} className="inline-block">
-              <Logo size="lg" />
+              <SBLogo size="lg" />
             </Link>
           </div>
           <Outlet />

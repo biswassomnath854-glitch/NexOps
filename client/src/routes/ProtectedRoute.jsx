@@ -8,7 +8,7 @@ export function ProtectedRoute({ allowedRoles }) {
   const location = useLocation()
 
   if (isLoading) {
-    return <FullPageLoader message="Authenticating NexOps session..." />
+    return <FullPageLoader message="Authenticating SB Pvt. Ltd. session..." />
   }
 
   if (!isAuthenticated) {

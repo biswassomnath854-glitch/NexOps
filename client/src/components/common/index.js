@@ -1,3 +1,4 @@
+export * from './SBLogo'
 export * from './Logo'
 export * from './PageHeader'
 export * from './ErrorBoundary'

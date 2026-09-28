@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { SBLogo } from '@/components/common/SBLogo'
 import {
   Layers,
   ArrowRight,
@@ -16,12 +17,10 @@ import {
   Eye,
   Calendar,
   Sparkles,
-  ChevronRight,
   Menu,
   X,
   Lock,
   Building2,
-  Terminal,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ROUTES } from '@/constants/routes'
@@ -30,7 +29,6 @@ import { Badge } from '@/components/ui/Badge'
 
 export function LandingPage() {
   const { user, isAuthenticated, logout } = useAuth()
-  const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [previewTab, setPreviewTab] = useState('overview')
 
@@ -51,12 +49,7 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo (Clean & Distinct) */}
           <Link to={ROUTES.HOME} className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-[#635BFF] text-white flex items-center justify-center shadow-xs group-hover:bg-[#5148E5] transition-colors">
-              <Layers className="w-4 h-4" />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-slate-900">
-              Nex<span className="text-[#635BFF]">Ops</span>
-            </span>
+            <SBLogo size="md" />
           </Link>
 
           {/* Desktop Navigation Links — Short, Professional SaaS style */}
@@ -209,7 +202,7 @@ export function LandingPage() {
 
           {/* Supporting Text */}
           <p className="mt-6 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            NexOps gives teams one operational view of projects, tasks, workload,
+            SB Pvt. Ltd. gives teams one operational view of projects, tasks, workload,
             deadlines, and activity — so important work doesn't disappear between
             people, tools, and deadlines.
           </p>
@@ -231,7 +224,7 @@ export function LandingPage() {
                 </Link>
                 <a href="#preview">
                   <Button variant="secondary" size="lg">
-                    Explore NexOps
+                    Explore SB Pvt. Ltd.
                   </Button>
                 </a>
               </>
@@ -279,7 +272,7 @@ export function LandingPage() {
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
                 <span className="ml-2 text-[11px] font-mono text-slate-400">
-                  nexops.corp/overview
+                  sbpvtltd.corp/overview
                 </span>
               </div>
 
@@ -508,7 +501,7 @@ export function LandingPage() {
             {/* Left: Punchy Product Statement */}
             <div className="lg:col-span-6 space-y-6">
               <span className="text-xs font-bold uppercase tracking-wider text-[#635BFF]">
-                The NexOps Philosophy
+                The SB Pvt. Ltd. Philosophy
               </span>
 
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
@@ -524,7 +517,7 @@ export function LandingPage() {
               </p>
 
               <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
-                NexOps unifies tasks, owners, deadlines, and real capacity into one single operational
+                SB Pvt. Ltd. unifies tasks, owners, deadlines, and real capacity into one single operational
                 surface — giving leadership and individual contributors identical ground truth.
               </p>
             </div>
@@ -702,7 +695,7 @@ export function LandingPage() {
             Ready to bring operational clarity to your team?
           </h2>
           <p className="text-slate-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-            Deploy NexOps across your squads, track deliverables, balance team workload,
+            Deploy SB Pvt. Ltd. across your squads, track deliverables, balance team workload,
             and keep execution moving forward.
           </p>
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
@@ -736,14 +729,11 @@ export function LandingPage() {
       <footer className="bg-slate-950 text-slate-500 text-xs py-8 border-t border-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-[#635BFF] text-white flex items-center justify-center text-[10px] font-bold">
-              <Layers className="w-3.5 h-3.5" />
-            </div>
-            <span className="font-semibold text-slate-400">NexOps Enterprise</span>
+            <SBLogo size="sm" variant="light" />
           </div>
 
           <p className="text-slate-500">
-            © {new Date().getFullYear()} NexOps Inc. All rights reserved. Built for modern operational teams.
+            © {new Date().getFullYear()} SB Pvt. Ltd. All rights reserved. Built for modern operational teams.
           </p>
 
           <div className="flex items-center gap-4 text-slate-400 font-medium">

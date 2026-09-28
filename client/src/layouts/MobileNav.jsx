@@ -18,7 +18,7 @@ import {
   Shield,
   Briefcase,
 } from 'lucide-react'
-import { Logo } from '@/components/common/Logo'
+import { SBLogo } from '@/components/common/SBLogo'
 import { Badge } from '@/components/ui/Badge'
 import { useAuth } from '@/hooks/useAuth'
 import { ROUTES } from '@/constants/routes'
@@ -129,7 +129,7 @@ export function MobileNav({ isOpen, onClose }) {
       >
         {/* Drawer Header */}
         <div className="h-16 px-5 flex items-center justify-between border-b border-slate-800">
-          <Logo size="md" className="text-white" />
+          <SBLogo size="md" variant="light" className="text-white" />
           <button
             type="button"
             onClick={onClose}

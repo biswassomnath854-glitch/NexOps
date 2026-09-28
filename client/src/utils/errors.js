@@ -57,7 +57,7 @@ export function parseApiError(error) {
   // Network or timeout errors
   if (error.request) {
     return {
-      message: 'Unable to connect to NexOps server. Please check your network connection.',
+      message: 'Unable to connect to SB Pvt. Ltd. server. Please check your network connection.',
       code: 'NETWORK_ERROR',
       status: 0,
       fieldErrors: {},

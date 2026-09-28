@@ -1,5 +1,5 @@
 /**
- * Safe LocalStorage abstraction for NexOps tokens and user preferences.
+ * Safe LocalStorage abstraction for SB Pvt. Ltd. tokens and user preferences.
  */
 
 const PREFIX = 'nexops_'

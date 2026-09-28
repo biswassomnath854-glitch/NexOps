@@ -35,7 +35,7 @@ export function Skeleton({ className, ...props }) {
 /**
  * Full page or full container centered loading overlay.
  */
-export function FullPageLoader({ message = 'Loading NexOps workspace...' }) {
+export function FullPageLoader({ message = 'Loading SB Pvt. Ltd. workspace...' }) {
   return (
     <div className="min-h-[50vh] flex flex-col items-center justify-center p-8 gap-4">
       <Spinner size="lg" />

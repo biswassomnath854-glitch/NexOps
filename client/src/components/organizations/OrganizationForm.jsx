@@ -49,7 +49,7 @@ function OrganizationFormModal({
     } else if (trimmedSlug.length > 160) {
       errs.slug = 'Slug must not exceed 160 characters.'
     } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(trimmedSlug)) {
-      errs.slug = 'Slug can contain only lowercase letters, numbers, and hyphens (e.g. nexops-corp).'
+      errs.slug = 'Slug can contain only lowercase letters, numbers, and hyphens (e.g. sb-corp).'
     }
 
     if (formData.industry && formData.industry.length > 100) {
@@ -130,7 +130,7 @@ function OrganizationFormModal({
           onChange={handleChange}
           error={errors.name}
           required
-          placeholder="e.g. NexOps Technologies Inc."
+          placeholder="e.g. SB Pvt. Ltd."
         />
 
         {/* Slug & Industry Row */}
@@ -142,7 +142,7 @@ function OrganizationFormModal({
             onChange={handleChange}
             error={errors.slug}
             required
-            placeholder="nexops-corp"
+            placeholder="sb-corp"
           />
 
           <Input

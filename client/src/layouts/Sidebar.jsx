@@ -19,7 +19,7 @@ import {
   Briefcase,
   LogOut,
 } from 'lucide-react'
-import { Logo } from '@/components/common/Logo'
+import { SBLogo } from '@/components/common/SBLogo'
 import { Badge } from '@/components/ui/Badge'
 import { useAuth } from '@/hooks/useAuth'
 import { ROUTES } from '@/constants/routes'
@@ -121,9 +121,9 @@ export function Sidebar({ className }) {
         <NavLink
           to={ROUTES.DASHBOARD}
           className="flex items-center gap-2 overflow-hidden"
-          title="NexOps Enterprise"
+          title="SB Pvt. Ltd."
         >
-          <Logo size="md" showText={!isCollapsed} className="text-white" />
+          <SBLogo size="md" showText={!isCollapsed} variant="light" className="text-white" />
         </NavLink>
 
         <button

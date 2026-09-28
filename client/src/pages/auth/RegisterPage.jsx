@@ -76,7 +76,7 @@ export function RegisterPage() {
   return (
     <Card className="shadow-lg border-slate-200/90 max-w-lg mx-auto">
       <CardHeader className="text-left pb-3">
-        <CardTitle className="text-xl font-bold">Create NexOps Account</CardTitle>
+        <CardTitle className="text-xl font-bold">Create SB Pvt. Ltd. Account</CardTitle>
         <CardDescription>
           Register your user account to collaborate on tasks, sprints, and project hubs.
         </CardDescription>

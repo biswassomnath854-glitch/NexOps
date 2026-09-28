@@ -107,7 +107,7 @@ export function LoginPage() {
     <Card className="shadow-lg border-slate-200/90 bg-white">
       <CardHeader className="text-left pb-4">
         <CardTitle className="text-xl font-bold tracking-tight text-slate-900">
-          Sign In to NexOps
+          Sign In to SB Pvt. Ltd.
         </CardTitle>
         <CardDescription>
           Enter your authorized enterprise credentials to access your workspace.

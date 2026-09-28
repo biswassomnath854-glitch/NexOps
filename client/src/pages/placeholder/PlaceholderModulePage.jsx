@@ -8,7 +8,7 @@ import { ROUTES } from '@/constants/routes'
 
 export function PlaceholderModulePage({
   title = 'Module Overview',
-  description = 'Corporate operations module for NexOps workspace.',
+  description = 'Corporate operations module for SB Pvt. Ltd. workspace.',
   category = 'Division 02 Module',
 }) {
   return (

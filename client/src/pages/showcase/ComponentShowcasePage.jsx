@@ -126,7 +126,7 @@ export function ComponentShowcasePage() {
               </div>
               <div>
                 <h2 className="text-sm font-bold text-slate-900">
-                  NexOps API Client Foundation Active
+                  SB Pvt. Ltd. API Client Foundation Active
                 </h2>
                 <p className="text-xs text-slate-600 mt-0.5">
                   Base URL:{' '}
@@ -463,7 +463,7 @@ export function ComponentShowcasePage() {
               {showErrorState ? (
                 <ErrorState
                   title="Failed to Synchronize Task Board"
-                  message="The NexOps server returned a 503 Service Unavailable response while attempting to query the task stream."
+                  message="The SB Pvt. Ltd. server returned a 503 Service Unavailable response while attempting to query the task stream."
                   onRetry={() => setShowErrorState(false)}
                   retryLabel="Retry Synchronization"
                 />

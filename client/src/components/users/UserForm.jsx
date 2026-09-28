@@ -189,7 +189,7 @@ function UserFormModal({
             onChange={handleChange}
             error={errors.email}
             required
-            placeholder="sarah.jenkins@nexops.internal"
+            placeholder="sarah.jenkins@sbpvtltd.internal"
           />
           {!isEditing ? (
             <Input

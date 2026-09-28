@@ -97,7 +97,7 @@ export function DashboardPage() {
 
       setError(
         err.message ||
-          'Unable to connect to NexOps dashboard service.'
+          'Unable to connect to SB Pvt. Ltd. dashboard service.'
       )
     }
   }, [isManagement])

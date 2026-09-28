@@ -92,7 +92,7 @@ export function MemberSelector({
           <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2">
             <Info className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
             <div className="leading-relaxed">
-              <strong>Project is not Active:</strong> Under NexOps governance rules, members can
+              <strong>Project is not Active:</strong> Under SB Pvt. Ltd. governance rules, members can
               only be assigned while the project status is set to <strong>ACTIVE</strong>.
             </div>
           </div>

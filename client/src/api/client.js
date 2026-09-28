@@ -4,7 +4,7 @@ import { storage } from '@/utils/storage'
 import { parseApiError } from '@/utils/errors'
 
 /**
- * Main Axios instance for NexOps API.
+ * Main Axios instance for SB Pvt. Ltd. API.
  * Handles automatic JWT injection, 401 token refresh queue, and standardized error parsing.
  */
 const apiClient = axios.create({

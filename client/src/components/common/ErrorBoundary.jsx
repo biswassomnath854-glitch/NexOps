@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component {
                 'A critical interface error occurred. Please reload the page to continue.'
               }
               onRetry={this.handleReset}
-              retryLabel="Reload NexOps"
+              retryLabel="Reload SB Pvt. Ltd."
             />
           </div>
         </div>

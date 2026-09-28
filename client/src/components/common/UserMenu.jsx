@@ -115,7 +115,7 @@ export function UserMenu() {
                   {fullName}
                 </p>
                 <p className="text-xs text-slate-500 truncate">
-                  {user?.email || 'user@nexops.internal'}
+                  {user?.email || 'user@sbpvtltd.internal'}
                 </p>
               </div>
             </div>
