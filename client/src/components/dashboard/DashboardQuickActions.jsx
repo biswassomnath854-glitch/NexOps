@@ -11,63 +11,63 @@ import { ROUTES } from '@/constants/routes'
 
 const actions = [
   {
-    title: 'Task Management',
-    desc: 'Organize backlog, assign teammates, and update sprint pipelines.',
+    title: 'Task Pipelines',
+    desc: 'Sprint backlogs, owner assignments, and status boards.',
     href: ROUTES.TASKS,
     icon: CheckSquare,
-    color: 'text-[#635BFF] bg-[#635BFF]/10 hover:bg-[#635BFF]/15',
+    color: 'text-[#635BFF] bg-[#635BFF]/10 border border-[#635BFF]/15',
   },
   {
     title: 'Project Hubs',
-    desc: 'Review milestones, resource rosters, and delivery dates.',
+    desc: 'Milestones, deliverable schedules, and squad rosters.',
     href: ROUTES.PROJECTS,
     icon: FolderKanban,
-    color: 'text-sky-600 bg-sky-50 hover:bg-sky-100',
+    color: 'text-sky-600 bg-sky-50 border border-sky-100',
   },
   {
     title: 'Overdue Escalations',
-    desc: 'Monitor SLA breaches and automated task alerts.',
+    desc: 'Monitor SLA breaches and automated alert notifications.',
     href: ROUTES.OVERDUE_TASKS,
     icon: AlertOctagon,
-    color: 'text-rose-600 bg-rose-50 hover:bg-rose-100',
+    color: 'text-rose-600 bg-rose-50 border border-rose-100',
   },
   {
     title: 'Workload & Analytics',
-    desc: 'Analyze team capacity distribution and velocity charts.',
+    desc: 'Team capacity distribution, allocations, and velocity.',
     href: ROUTES.WORKLOAD,
     icon: Users2,
-    color: 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100',
+    color: 'text-emerald-600 bg-emerald-50 border border-emerald-100',
   },
 ]
 
 export function DashboardQuickActions() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
       {actions.map((act) => {
         const Icon = act.icon
         return (
           <Link key={act.title} to={act.href} className="group block">
-            <Card className="h-full border-slate-200/80 hover:border-[#635BFF]/40 hover:shadow-md transition-all">
-              <CardContent className="p-4 flex flex-col justify-between h-full">
+            <Card className="h-full border-slate-200/90 hover:border-slate-300 hover:shadow-xs transition-all shadow-2xs">
+              <CardContent className="p-3.5 flex flex-col justify-between h-full space-y-3">
                 <div className="space-y-2">
                   <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${act.color}`}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 shadow-2xs ${act.color}`}
                   >
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#635BFF] transition-colors">
+                    <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#635BFF] transition-colors">
                       {act.title}
                     </h4>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed line-clamp-2">
+                    <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed line-clamp-2">
                       {act.desc}
                     </p>
                   </div>
                 </div>
 
-                <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-[#635BFF]">
+                <div className="pt-2 border-t border-slate-100/90 flex items-center justify-between text-[11px] font-semibold text-[#635BFF]">
                   <span>Open workspace</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </CardContent>
             </Card>

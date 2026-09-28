@@ -23,7 +23,7 @@ export function OverviewKpiGrid({ overview, taskStatistics }) {
   const overdueTasks = taskStatistics?.deadlines?.overdue ?? 0
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* 1. Projects KPI */}
       <KpiCard
         title="Total Projects"
@@ -40,7 +40,7 @@ export function OverviewKpiGrid({ overview, taskStatistics }) {
       <KpiCard
         title="Task Completion"
         value={`${completionPercentage}%`}
-        subtitle={`${completedTasks} of ${totalTasks} tasks resolved`}
+        subtitle={`${completedTasks} of ${totalTasks} tasks completed`}
         progress={completionPercentage}
         icon={CheckCircle2}
         color="emerald"
@@ -51,7 +51,7 @@ export function OverviewKpiGrid({ overview, taskStatistics }) {
       <KpiCard
         title="In-Progress Tasks"
         value={inProgressTasks}
-        subtitle={`${completedTasks} completed to date`}
+        subtitle={`${completedTasks} resolved to date`}
         badgeText="Active Sprint"
         badgeVariant="primary"
         icon={Clock}
@@ -63,7 +63,13 @@ export function OverviewKpiGrid({ overview, taskStatistics }) {
       <KpiCard
         title="Overdue Tasks"
         value={overdueTasks}
-        subtitle={`${blockedTasks} blocked items requiring attention`}
+        subtitle={
+          overdueTasks > 0
+            ? `${blockedTasks} blocked items requiring intervention`
+            : blockedTasks > 0
+            ? `${blockedTasks} blocked items requiring review`
+            : 'All tasks within SLA boundaries'
+        }
         badgeText={overdueTasks > 0 ? 'Action Required' : 'On Track'}
         badgeVariant={overdueTasks > 0 ? 'danger' : 'success'}
         icon={AlertOctagon}

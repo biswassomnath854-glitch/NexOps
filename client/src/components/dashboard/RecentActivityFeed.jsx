@@ -15,10 +15,10 @@ const ACTION_ICONS = {
 export function RecentActivityFeed({ activities = [] }) {
   if (!activities || activities.length === 0) {
     return (
-      <Card>
+      <Card className="shadow-2xs">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-indigo-600" />
+            <Activity className="w-4 h-4 text-[#635BFF]" />
             Recent Activity Audit
           </CardTitle>
           <CardDescription>Real-time audit log of team task interactions.</CardDescription>
@@ -35,7 +35,7 @@ export function RecentActivityFeed({ activities = [] }) {
   }
 
   return (
-    <Card>
+    <Card className="shadow-2xs">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="w-4 h-4 text-[#635BFF]" />
@@ -59,10 +59,10 @@ export function RecentActivityFeed({ activities = [] }) {
             return (
               <div
                 key={item.id}
-                className="p-4 sm:px-6 hover:bg-slate-50/60 transition-colors flex items-start gap-3.5"
+                className="p-3.5 sm:px-5 hover:bg-slate-50/60 transition-colors flex items-start gap-3"
               >
                 {/* Avatar */}
-                <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 shadow-2xs">
+                <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 shadow-2xs">
                   {userInitials}
                 </div>
 

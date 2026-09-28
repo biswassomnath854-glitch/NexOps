@@ -24,19 +24,19 @@ export function RecentTasksWidget({ tasks = [], title = 'High Priority & Overdue
   }
 
   const statusBadges = {
-    TODO: <Badge variant="neutral">To Do</Badge>,
-    IN_PROGRESS: <Badge variant="primary">In Progress</Badge>,
-    COMPLETED: <Badge variant="success">Completed</Badge>,
-    BLOCKED: <Badge variant="danger">Blocked</Badge>,
-    CANCELLED: <Badge variant="neutral">Cancelled</Badge>,
+    TODO: <Badge variant="neutral" size="sm">To Do</Badge>,
+    IN_PROGRESS: <Badge variant="primary" size="sm">In Progress</Badge>,
+    COMPLETED: <Badge variant="success" size="sm">Completed</Badge>,
+    BLOCKED: <Badge variant="danger" size="sm">Blocked</Badge>,
+    CANCELLED: <Badge variant="neutral" size="sm">Cancelled</Badge>,
   }
 
   return (
-    <Card>
+    <Card className="shadow-2xs">
       <CardHeader
         action={
           <Link to={ROUTES.TASKS}>
-            <Button variant="ghost" size="xs" rightIcon={ArrowRight}>
+            <Button variant="ghost" size="xs" rightIcon={ArrowRight} className="text-xs">
               View All Tasks
             </Button>
           </Link>
@@ -55,12 +55,24 @@ export function RecentTasksWidget({ tasks = [], title = 'High Priority & Overdue
         <Table containerClassName="border-0 shadow-none rounded-none">
           <TableHeader>
             <TableRow>
-              <TableHead>Task Title</TableHead>
-              <TableHead>Assignee</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead align="right">Actions</TableHead>
+              <TableHead className="py-2.5 px-3.5 sm:px-4 text-[11px] font-semibold text-slate-500">
+                Task Title
+              </TableHead>
+              <TableHead className="py-2.5 px-3 sm:px-4 text-[11px] font-semibold text-slate-500">
+                Assignee
+              </TableHead>
+              <TableHead className="py-2.5 px-3 sm:px-4 text-[11px] font-semibold text-slate-500">
+                Priority
+              </TableHead>
+              <TableHead className="py-2.5 px-3 sm:px-4 text-[11px] font-semibold text-slate-500">
+                Status
+              </TableHead>
+              <TableHead className="py-2.5 px-3 sm:px-4 text-[11px] font-semibold text-slate-500">
+                Target Deadline
+              </TableHead>
+              <TableHead align="right" className="py-2.5 px-3 sm:px-4 text-[11px] font-semibold text-slate-500">
+                Action
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -77,33 +89,57 @@ export function RecentTasksWidget({ tasks = [], title = 'High Priority & Overdue
                   ? 'Assigned Member'
                   : 'Unassigned'
 
-                const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED'
+                const isOverdue =
+                  task.dueDate &&
+                  new Date(task.dueDate) < new Date() &&
+                  task.status !== 'COMPLETED'
 
                 return (
-                  <TableRow key={task.id} isClickable>
-                    <TableCell className="font-semibold text-slate-900 max-w-xs truncate">
-                      {task.title}
+                  <TableRow
+                    key={task.id}
+                    isClickable
+                    className="hover:bg-slate-50/70 transition-colors"
+                  >
+                    <TableCell className="py-2.5 px-3.5 sm:px-4 font-medium text-slate-900 max-w-[200px] sm:max-w-xs truncate text-xs">
+                      <span title={task.title}>{task.title}</span>
                     </TableCell>
-                    <TableCell className="text-xs text-slate-600">
-                      {assigneeName}
+                    <TableCell className="py-2.5 px-3 sm:px-4 text-xs text-slate-600">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-bold text-[10px] shrink-0">
+                          {assigneeName.charAt(0) || 'U'}
+                        </span>
+                        <span className="truncate">{assigneeName}</span>
+                      </div>
                     </TableCell>
-                    <TableCell>
-                      {priorityBadges[task.priority] || <Badge variant="neutral">{task.priority}</Badge>}
+                    <TableCell className="py-2.5 px-3 sm:px-4">
+                      {priorityBadges[task.priority] || (
+                        <Badge variant="neutral" size="sm">{task.priority}</Badge>
+                      )}
                     </TableCell>
-                    <TableCell>
-                      {statusBadges[task.status] || <Badge variant="neutral">{task.status}</Badge>}
+                    <TableCell className="py-2.5 px-3 sm:px-4">
+                      {statusBadges[task.status] || (
+                        <Badge variant="neutral" size="sm">{task.status}</Badge>
+                      )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2.5 px-3 sm:px-4">
                       <div className="flex items-center gap-1.5 text-xs">
-                        {isOverdue && <AlertOctagon className="w-3.5 h-3.5 text-rose-600 shrink-0" />}
-                        <span className={isOverdue ? 'text-rose-600 font-semibold' : 'text-slate-500'}>
+                        {isOverdue && (
+                          <AlertOctagon className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                        )}
+                        <span
+                          className={
+                            isOverdue
+                              ? 'text-rose-700 font-semibold'
+                              : 'text-slate-500 font-medium'
+                          }
+                        >
                           {formatDate(task.dueDate)}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell align="right">
+                    <TableCell align="right" className="py-2.5 px-3 sm:px-4">
                       <Link to={task.id ? ROUTES.TASK_DETAILS(task.id) : ROUTES.TASKS}>
-                        <Button variant="ghost" size="xs">
+                        <Button variant="ghost" size="xs" className="h-7 px-2.5 text-xs">
                           Open
                         </Button>
                       </Link>

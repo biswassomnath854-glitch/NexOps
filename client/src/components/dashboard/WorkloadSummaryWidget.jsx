@@ -15,12 +15,12 @@ export function WorkloadSummaryWidget({ overview, workloadData }) {
     : (workloadData?.users || workloadData?.workload || [])
 
   return (
-    <Card>
+    <Card className="shadow-2xs">
       <CardHeader
         action={
           <Link to={ROUTES.WORKLOAD}>
-            <Button variant="ghost" size="xs" rightIcon={ArrowRight}>
-              Full Workload Map
+            <Button variant="ghost" size="xs" rightIcon={ArrowRight} className="text-xs">
+              Workload Map
             </Button>
           </Link>
         }
@@ -34,44 +34,51 @@ export function WorkloadSummaryWidget({ overview, workloadData }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+        {/* Metric tiles */}
+        <div className="grid grid-cols-3 gap-2.5 text-center">
+          <div className="p-2.5 rounded-xl bg-slate-50/70 border border-slate-100">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Team</p>
-            <p className="text-xl font-bold text-slate-900 mt-1">{totalUsers}</p>
+            <p className="text-lg font-bold text-slate-900 mt-0.5 font-mono">{totalUsers}</p>
           </div>
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Active Members</p>
-            <p className="text-xl font-bold text-emerald-600 mt-1">{activeUsers}</p>
+          <div className="p-2.5 rounded-xl bg-emerald-50/40 border border-emerald-100/70">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Active</p>
+            <p className="text-lg font-bold text-emerald-600 mt-0.5 font-mono">{activeUsers}</p>
           </div>
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assigned Tasks</p>
-            <p className="text-xl font-bold text-[#635BFF] mt-1">{totalTasks}</p>
+          <div className="p-2.5 rounded-xl bg-[#635BFF]/5 border border-[#635BFF]/15">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5148E5]">Assigned</p>
+            <p className="text-lg font-bold text-[#635BFF] mt-0.5 font-mono">{totalTasks}</p>
           </div>
         </div>
 
+        {/* Member allocation list */}
         {items.length > 0 ? (
-          <div className="space-y-2 pt-2 border-t border-slate-100">
-            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <div className="space-y-1.5 pt-2 border-t border-slate-100">
+            <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
               Member Allocation
             </p>
             {items.slice(0, 4).map((member, idx) => {
-              const displayName = member.name || (member.firstName ? `${member.firstName} ${member.lastName || ''}`.trim() : `Member ${idx + 1}`)
+              const displayName =
+                member.name ||
+                (member.firstName
+                  ? `${member.firstName} ${member.lastName || ''}`.trim()
+                  : `Member ${idx + 1}`)
               const initial = displayName.charAt(0) || 'M'
-              const taskCount = member.taskCount ?? member.activeTasks ?? member.totalTasks ?? 0
+              const taskCount =
+                member.taskCount ?? member.activeTasks ?? member.totalTasks ?? 0
 
               return (
                 <div
                   key={member.id || member.userId || idx}
-                  className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-slate-50"
+                  className="flex items-center justify-between text-xs py-1.5 px-2 rounded-lg hover:bg-slate-50/80 transition-colors"
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-[#635BFF]/10 text-[#635BFF] flex items-center justify-center font-bold text-[10px]">
+                  <div className="flex items-center gap-2 truncate">
+                    <div className="w-5 h-5 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/20 text-[#635BFF] flex items-center justify-center font-bold text-[10px] shrink-0">
                       {initial}
                     </div>
-                    <span className="font-medium text-slate-700">{displayName}</span>
+                    <span className="font-medium text-slate-700 truncate">{displayName}</span>
                   </div>
                   <Badge variant="primary" size="sm">
-                    {taskCount} tasks
+                    {taskCount} {taskCount === 1 ? 'task' : 'tasks'}
                   </Badge>
                 </div>
               )
