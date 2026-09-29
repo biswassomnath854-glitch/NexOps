@@ -16,7 +16,15 @@ import { ConfirmationModal } from '@/components/common/ConfirmationModal'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
-import { ArrowLeft, RotateCw, CheckCircle2, ShieldAlert } from 'lucide-react'
+import {
+  ArrowLeft,
+  RotateCw,
+  CheckCircle2,
+  ShieldAlert,
+  XCircle,
+  X,
+  FolderKanban,
+} from 'lucide-react'
 
 export function ProjectDetailsPage() {
   const { projectId } = useParams()
@@ -191,23 +199,25 @@ export function ProjectDetailsPage() {
   // Graceful 403 Forbidden Screen
   if (!isAuthorized) {
     return (
-      <div className="py-12 max-w-lg mx-auto">
-        <Card className="border-rose-200">
+      <div className="py-16 max-w-lg mx-auto animate-in fade-in duration-200">
+        <Card className="border-rose-200/80 shadow-sm bg-white">
           <CardContent className="p-8 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
-              <ShieldAlert className="w-6 h-6" />
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100 shadow-2xs">
+              <ShieldAlert className="w-7 h-7" />
             </div>
-            <h2 className="text-lg font-bold text-slate-900">Administrator Access Required</h2>
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+              Administrator Access Required
+            </h2>
             <p className="text-xs text-slate-500 mt-2 leading-relaxed">
               Viewing project administration and milestone controls requires an Administrator
-              account. Your current role is{' '}
+              account. Your authenticated role is{' '}
               <strong className="text-slate-800 font-semibold">
                 {formatRole(currentUser?.role)}
               </strong>
               .
             </p>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => navigate(ROUTES.DASHBOARD)}
               className="mt-6 text-xs"
@@ -222,7 +232,7 @@ export function ProjectDetailsPage() {
 
   if (error && !project) {
     return (
-      <div className="py-12">
+      <div className="py-12 animate-in fade-in duration-200">
         <ErrorState
           title="Project Workspace Unavailable"
           message={error}
@@ -241,44 +251,57 @@ export function ProjectDetailsPage() {
           variant="ghost"
           size="sm"
           onClick={() => navigate(ROUTES.PROJECTS)}
-          className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 p-0"
+          className="flex items-center gap-2 text-xs text-slate-600 hover:text-slate-900 px-2 py-1 -ml-2"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Projects Directory</span>
         </Button>
 
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           onClick={handleRefresh}
           isLoading={isRefreshing}
-          className="flex items-center gap-1.5 text-xs text-slate-600"
+          className="flex items-center gap-1.5 text-xs text-slate-700"
         >
-          <RotateCw className="w-3.5 h-3.5" />
-          Refresh
+          <RotateCw className="w-3.5 h-3.5 text-slate-400" />
+          <span>Refresh</span>
         </Button>
       </div>
 
       {/* Feedback Toast */}
       {feedback && (
         <div
-          className={`p-3.5 rounded-xl border text-xs flex items-center gap-2.5 animate-in slide-in-from-top-2 ${
+          className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-2.5 animate-in slide-in-from-top-2 duration-150 ${
             feedback.type === 'error'
               ? 'bg-rose-50 border-rose-200 text-rose-700'
               : 'bg-emerald-50 border-emerald-200 text-emerald-800 font-medium'
           }`}
         >
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>{feedback.message}</span>
+          <div className="flex items-center gap-2">
+            {feedback.type === 'error' ? (
+              <XCircle className="w-4 h-4 shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            )}
+            <span>{feedback.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            className="p-1 rounded hover:bg-black/5 text-current"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
       {/* Main Details Presentation */}
       {isLoading ? (
         <div className="space-y-4 animate-pulse">
-          <div className="h-44 bg-slate-100 rounded-2xl" />
-          <div className="h-32 bg-slate-100 rounded-2xl" />
-          <div className="h-48 bg-slate-100 rounded-2xl" />
+          <div className="h-44 bg-slate-100/80 rounded-xl border border-slate-200/80" />
+          <div className="h-32 bg-slate-100/80 rounded-xl border border-slate-200/80" />
+          <div className="h-48 bg-slate-100/80 rounded-xl border border-slate-200/80" />
         </div>
       ) : project ? (
         <ProjectDetails
@@ -291,11 +314,22 @@ export function ProjectDetailsPage() {
           onRemoveMember={(m) => setRemoveMemberTarget(m)}
         />
       ) : (
-        <Card className="p-12 text-center">
-          <p className="text-sm font-semibold text-slate-700">Project Not Found</p>
-          <p className="text-xs text-slate-400 mt-1">
-            The requested project identifier does not exist or has been removed.
+        <Card className="p-12 text-center border-slate-200/80 bg-white">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-3">
+            <FolderKanban className="w-6 h-6" />
+          </div>
+          <p className="text-base font-bold text-slate-800">Project Not Found</p>
+          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+            The requested project workspace identifier does not exist or has been permanently removed.
           </p>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate(ROUTES.PROJECTS)}
+            className="mt-5 text-xs"
+          >
+            Return to Projects Directory
+          </Button>
         </Card>
       )}
 
@@ -327,7 +361,7 @@ export function ProjectDetailsPage() {
           onClose={() => setStatusModalOpen(false)}
           onConfirm={handleStatusChange}
           title="Update Project Status"
-          message={`Are you sure you want to change the status of project "${project?.name}"?`}
+          message={`Are you sure you want to change the operational status of project "${project?.name}"?`}
           confirmText="Update Status"
           tone="primary"
           isLoading={isActionLoading}
@@ -343,7 +377,7 @@ export function ProjectDetailsPage() {
           title="Remove Member from Project"
           message={`Are you sure you want to remove ${
             removeMemberTarget.user?.firstName || 'this member'
-          } from this project?`}
+          } from this project workspace?`}
           confirmText="Remove Member"
           tone="danger"
           isLoading={isActionLoading}

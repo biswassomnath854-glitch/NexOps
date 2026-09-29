@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/Badge'
+import { cn } from '@/utils/cn'
 
 const STATUS_CONFIGS = {
   PLANNING: {
@@ -41,7 +42,7 @@ export function ProjectStatusBadge({ status, size = 'sm', className = '' }) {
       variant={config.variant}
       size={size}
       dot={config.dot}
-      className={`font-semibold ${className}`}
+      className={cn('font-semibold shadow-2xs select-none tracking-tight', className)}
     >
       {config.label}
     </Badge>

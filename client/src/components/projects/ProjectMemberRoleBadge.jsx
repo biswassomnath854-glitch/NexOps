@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/Badge'
 import { Crown, Shield, User, Eye } from 'lucide-react'
+import { cn } from '@/utils/cn'
 
 const ROLE_CONFIGS = {
   PROJECT_MANAGER: {
@@ -37,9 +38,9 @@ export function ProjectMemberRoleBadge({ role, size = 'sm', showIcon = true, cla
     <Badge
       variant={config.variant}
       size={size}
-      className={`font-semibold inline-flex items-center gap-1.5 ${className}`}
+      className={cn('font-semibold inline-flex items-center gap-1.5 shadow-2xs select-none tracking-tight', className)}
     >
-      {showIcon && <Icon className="w-3 h-3" />}
+      {showIcon && <Icon className="w-3 h-3 shrink-0" />}
       <span>{config.label}</span>
     </Badge>
   )

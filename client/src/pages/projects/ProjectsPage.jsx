@@ -16,18 +16,25 @@ import {
 import { ConfirmationModal } from '@/components/common/ConfirmationModal'
 import { Pagination } from '@/components/common/Pagination'
 import { ErrorState } from '@/components/feedback/ErrorState'
+import { EmptyState } from '@/components/feedback/EmptyState'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/forms/Input'
 import { Select } from '@/components/forms/Select'
 import { Card, CardContent } from '@/components/ui/Card'
 import {
   FolderPlus,
+  FolderKanban,
   Search,
   RotateCw,
   CheckCircle2,
   ShieldAlert,
   LayoutGrid,
   List,
+  X,
+  XCircle,
+  TrendingUp,
+  Layers,
+  Sparkles,
 } from 'lucide-react'
 
 const STATUS_FILTERS = [
@@ -159,6 +166,15 @@ export function ProjectsPage() {
     return filteredProjects.slice(start, start + pageSize)
   }, [filteredProjects, currentPage, pageSize])
 
+  const hasActiveFilters = searchQuery.trim() !== '' || statusFilter !== 'ALL' || orgFilter !== 'ALL'
+
+  const resetFilters = () => {
+    setSearchQuery('')
+    setStatusFilter('ALL')
+    setOrgFilter('ALL')
+    setCurrentPage(1)
+  }
+
   // CRUD Actions
   const handleCreateOrUpdateProject = async (formData) => {
     setIsActionLoading(true)
@@ -249,21 +265,33 @@ export function ProjectsPage() {
   // Graceful 403 Forbidden Screen for unauthorized roles
   if (!isAuthorized) {
     return (
-      <div className="py-12 max-w-lg mx-auto">
-        <Card className="border-rose-200">
+      <div className="py-16 max-w-lg mx-auto animate-in fade-in duration-200">
+        <Card className="border-rose-200/80 shadow-sm bg-white">
           <CardContent className="p-8 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
-              <ShieldAlert className="w-6 h-6" />
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100 shadow-2xs">
+              <ShieldAlert className="w-7 h-7" />
             </div>
-            <h2 className="text-lg font-bold text-slate-900">Administrator Access Required</h2>
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+              Administrator Access Required
+            </h2>
             <p className="text-xs text-slate-500 mt-2 leading-relaxed">
               Project workspaces, milestone pipelines, and team allocation controls are restricted
-              to organization Administrators. Your current role is{' '}
+              to organization Administrators. Your authenticated role is{' '}
               <strong className="text-slate-800 font-semibold">
                 {formatRole(currentUser?.role)}
               </strong>
               .
             </p>
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate(ROUTES.DASHBOARD)}
+                className="text-xs"
+              >
+                Return to Dashboard
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -272,7 +300,7 @@ export function ProjectsPage() {
 
   if (error && !projects.length) {
     return (
-      <div className="py-12">
+      <div className="py-12 animate-in fade-in duration-200">
         <ErrorState
           title="Unable to Load Projects"
           message={error}
@@ -295,7 +323,7 @@ export function ProjectsPage() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">Project Workspaces</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#635BFF]/10 text-[#5148E5] border border-[#635BFF]/20 select-none">
               {projects.length} {projects.length === 1 ? 'project' : 'projects'}
             </span>
           </div>
@@ -306,13 +334,13 @@ export function ProjectsPage() {
 
         <div className="flex items-center gap-2.5 shrink-0">
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={handleRefresh}
             isLoading={isRefreshing}
-            className="flex items-center gap-1.5 text-xs text-slate-600"
+            className="flex items-center gap-1.5 text-xs text-slate-700"
           >
-            <RotateCw className="w-3.5 h-3.5" />
+            <RotateCw className="w-3.5 h-3.5 text-slate-400" />
             Refresh
           </Button>
 
@@ -331,47 +359,75 @@ export function ProjectsPage() {
         </div>
       </div>
 
-      {/* Metrics Banner */}
+      {/* 2. Executive Metrics Ribbon */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-xl border border-slate-200/80 bg-white">
-          <div className="text-xs font-medium text-slate-500">Total Workspaces</div>
-          <div className="text-xl font-bold text-slate-900 mt-0.5">{projects.length}</div>
+        <div className="p-4 rounded-xl border border-slate-200/80 bg-white shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500">Total Workspaces</span>
+            <Layers className="w-3.5 h-3.5 text-slate-400" />
+          </div>
+          <div className="text-xl font-bold text-slate-900 mt-1">{projects.length}</div>
         </div>
-        <div className="p-3.5 rounded-xl border border-emerald-200/60 bg-emerald-50/30">
-          <div className="text-xs font-medium text-emerald-700">Active Pipelines</div>
-          <div className="text-xl font-bold text-emerald-900 mt-0.5">{activeCount}</div>
+
+        <div className="p-4 rounded-xl border border-emerald-200/60 bg-emerald-50/40 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-emerald-800">Active Pipelines</span>
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+          </div>
+          <div className="text-xl font-bold text-emerald-950 mt-1">{activeCount}</div>
         </div>
-        <div className="p-3.5 rounded-xl border border-sky-200/60 bg-sky-50/30">
-          <div className="text-xs font-medium text-sky-700">Planning Phase</div>
-          <div className="text-xl font-bold text-sky-900 mt-0.5">{planningCount}</div>
+
+        <div className="p-4 rounded-xl border border-sky-200/60 bg-sky-50/40 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-sky-800">Planning Phase</span>
+            <Sparkles className="w-3.5 h-3.5 text-sky-600" />
+          </div>
+          <div className="text-xl font-bold text-sky-950 mt-1">{planningCount}</div>
         </div>
-        <div className="p-3.5 rounded-xl border border-indigo-200/60 bg-indigo-50/30">
-          <div className="text-xs font-medium text-indigo-700">Delivered / Done</div>
-          <div className="text-xl font-bold text-indigo-900 mt-0.5">{completedCount}</div>
+
+        <div className="p-4 rounded-xl border border-[#635BFF]/20 bg-[#635BFF]/5 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-[#5148E5]">Delivered / Done</span>
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#635BFF]" />
+          </div>
+          <div className="text-xl font-bold text-[#37309A] mt-1">{completedCount}</div>
         </div>
       </div>
 
       {/* Feedback Toast */}
       {feedback && (
         <div
-          className={`p-3.5 rounded-xl border text-xs flex items-center gap-2.5 animate-in slide-in-from-top-2 ${
+          className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-2.5 animate-in slide-in-from-top-2 duration-150 ${
             feedback.type === 'error'
               ? 'bg-rose-50 border-rose-200 text-rose-700'
               : 'bg-emerald-50 border-emerald-200 text-emerald-800 font-medium'
           }`}
         >
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
-          <span>{feedback.message}</span>
+          <div className="flex items-center gap-2">
+            {feedback.type === 'error' ? (
+              <XCircle className="w-4 h-4 shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            )}
+            <span>{feedback.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            className="p-1 rounded hover:bg-black/5 text-current"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
-      {/* 2. Filters Toolbar */}
-      <Card className="border-slate-200/80 bg-slate-50/50">
+      {/* 3. Filters Toolbar */}
+      <Card className="border-slate-200/80 bg-white shadow-2xs">
         <CardContent className="p-3.5">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
               {/* Search */}
-              <div>
+              <div className="relative">
                 <Input
                   placeholder="Search project name or code..."
                   value={searchQuery}
@@ -380,8 +436,21 @@ export function ProjectsPage() {
                     setCurrentPage(1)
                   }}
                   leftIcon={Search}
-                  className="py-1.5 text-xs"
+                  className="py-1.5 text-xs pr-8"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setCurrentPage(1)
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                    aria-label="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
               {/* Status */}
@@ -417,61 +486,102 @@ export function ProjectsPage() {
               </div>
             </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 border border-slate-200 rounded-xl p-1 bg-white shrink-0 self-end md:self-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  setViewMode('grid')
-                  setPageSize(9)
-                }}
-                className={`p-1.5 rounded-lg transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-indigo-50 text-indigo-700 shadow-2xs font-semibold'
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}
-                title="Grid View"
-                aria-label="Grid View"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setViewMode('table')
-                  setPageSize(10)
-                }}
-                className={`p-1.5 rounded-lg transition-colors ${
-                  viewMode === 'table'
-                    ? 'bg-indigo-50 text-indigo-700 shadow-2xs font-semibold'
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}
-                title="Table View"
-                aria-label="Table View"
-              >
-                <List className="w-4 h-4" />
-              </button>
+            {/* Filter controls & View Mode Toggle */}
+            <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetFilters}
+                  className="text-xs text-slate-500 hover:text-slate-800 h-8 px-2"
+                >
+                  Reset Filters
+                </Button>
+              )}
+
+              <div className="flex items-center gap-1 border border-slate-200/90 rounded-xl p-1 bg-slate-50 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode('grid')
+                    setPageSize(9)
+                  }}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    viewMode === 'grid'
+                      ? 'bg-white text-[#635BFF] shadow-2xs font-semibold'
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                  title="Grid View"
+                  aria-label="Grid View"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode('table')
+                    setPageSize(10)
+                  }}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    viewMode === 'table'
+                      ? 'bg-white text-[#635BFF] shadow-2xs font-semibold'
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                  title="Table View"
+                  aria-label="Table View"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* 3. Main Project Display: Grid or Table */}
+      {/* 4. Main Project Display: Grid or Table */}
       {viewMode === 'grid' ? (
         <div>
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-pulse">
               {[1, 2, 3, 4, 5, 6].map((idx) => (
-                <div key={idx} className="h-52 bg-slate-100 rounded-2xl border border-slate-200" />
+                <div
+                  key={idx}
+                  className="h-56 bg-slate-100/80 rounded-xl border border-slate-200/80"
+                />
               ))}
             </div>
           ) : paginatedProjects.length === 0 ? (
-            <Card className="p-12 text-center">
-              <p className="text-sm font-semibold text-slate-700">No Projects Found</p>
-              <p className="text-xs text-slate-400 mt-1">
-                No projects matched your active search or status filters.
-              </p>
-            </Card>
+            <div className="rounded-xl border border-slate-200/80 bg-white p-6 shadow-2xs">
+              <EmptyState
+                icon={FolderKanban}
+                title={hasActiveFilters ? 'No Matching Projects' : 'No Projects Found'}
+                description={
+                  hasActiveFilters
+                    ? 'No project workspaces match your active search and status filters.'
+                    : 'Establish your first project workspace to begin tracking deliverables and team velocity.'
+                }
+                action={
+                  hasActiveFilters ? (
+                    <Button variant="secondary" size="sm" onClick={resetFilters} className="text-xs">
+                      Clear Active Filters
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => {
+                        setFormInitialData(null)
+                        setIsFormOpen(true)
+                      }}
+                      className="text-xs"
+                    >
+                      <FolderPlus className="w-4 h-4 mr-1.5" />
+                      Create New Project
+                    </Button>
+                  )
+                }
+              />
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {paginatedProjects.map((project) => (
@@ -491,16 +601,18 @@ export function ProjectsPage() {
             </div>
           )}
 
-          <div className="mt-6">
-            <Pagination
-              totalItems={filteredProjects.length}
-              currentPage={currentPage}
-              pageSize={pageSize}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={setPageSize}
-              pageSizeOptions={[6, 9, 15, 30]}
-            />
-          </div>
+          {filteredProjects.length > 0 && (
+            <div className="mt-6">
+              <Pagination
+                totalItems={filteredProjects.length}
+                currentPage={currentPage}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                pageSizeOptions={[6, 9, 15, 30]}
+              />
+            </div>
+          )}
         </div>
       ) : (
         <ProjectTable
@@ -522,7 +634,7 @@ export function ProjectsPage() {
         />
       )}
 
-      {/* 4. Create / Edit Project Modal */}
+      {/* 5. Create / Edit Project Modal */}
       <ProjectForm
         isOpen={isFormOpen}
         onClose={() => {
@@ -535,7 +647,7 @@ export function ProjectsPage() {
         isLoading={isActionLoading}
       />
 
-      {/* 5. Assign Member Modal */}
+      {/* 6. Assign Member Modal */}
       <MemberSelector
         isOpen={Boolean(memberModalProject)}
         onClose={() => setMemberModalProject(null)}
@@ -546,7 +658,7 @@ export function ProjectsPage() {
         isLoading={isActionLoading}
       />
 
-      {/* 6. Change Status Confirmation Modal */}
+      {/* 7. Change Status Confirmation Modal */}
       {statusModalProject && (
         <ConfirmationModal
           isOpen={Boolean(statusModalProject)}
@@ -560,7 +672,7 @@ export function ProjectsPage() {
         />
       )}
 
-      {/* 7. Delete Confirmation Modal */}
+      {/* 8. Delete Confirmation Modal */}
       {deleteModalProject && (
         <ConfirmationModal
           isOpen={Boolean(deleteModalProject)}

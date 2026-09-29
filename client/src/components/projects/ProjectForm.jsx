@@ -228,7 +228,7 @@ function ProjectFormModal({
             value={formData.description}
             onChange={handleChange}
             rows={3}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-[#635BFF] focus:outline-hidden focus:ring-2 focus:ring-[#635BFF]/20 transition-all resize-none"
             placeholder="High-level objectives, deliverables, and team responsibilities..."
             maxLength={2000}
           />
