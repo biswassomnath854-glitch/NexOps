@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/common/PageHeader'
 import { Pagination } from '@/components/common/Pagination'
 import { RoleBadge } from '@/components/common/RoleBadge'
 import { ErrorState } from '@/components/feedback/ErrorState'
-import { Skeleton } from '@/components/feedback/Loading'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -25,13 +24,10 @@ import {
   Search,
   BarChart3,
   AlertTriangle,
-  CheckCircle2,
-  Clock,
   Layers,
   UserCheck,
   TrendingUp,
   X,
-  Filter,
 } from 'lucide-react'
 import {
   BarChart,
@@ -213,7 +209,6 @@ export function WorkloadPage() {
   /* Assigned active tasks across organization */
   const totalActiveTasks = overview.totalActiveTasks ?? 0
   const unassignedTasks = overview.unassignedActiveTasks ?? 0
-  const assignedActiveTasks = Math.max(0, totalActiveTasks - unassignedTasks)
 
   /* Top 8 members ranked by active tasks for visualization */
   const chartData = [...users]

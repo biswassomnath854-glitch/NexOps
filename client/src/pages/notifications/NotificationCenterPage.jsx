@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Bell, RotateCw, Settings } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { Bell, RotateCw, Settings } from 'lucide-react'
 import { NotificationList } from '@/components/notifications/NotificationList'
 import { PageHeader } from '@/components/common/PageHeader'
+import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { notificationsApi } from '@/api/endpoints/notifications'
 import { ROUTES } from '@/constants/routes'
@@ -15,14 +16,7 @@ const DEFAULT_FILTERS = {
 }
 
 /**
- * NotificationCenterPage — the full notification center page at /notifications.
- *
- * Provides:
- *   - Paginated notification list
- *   - Filter by read/unread and type
- *   - Mark as read / mark all as read
- *   - Delete notification
- *   - Live unread count in page header
+ * NotificationCenterPage — Full Operational Activity Center at /notifications.
  */
 export function NotificationCenterPage() {
   const [notifications, setNotifications] = useState([])
@@ -53,7 +47,6 @@ export function NotificationCenterPage() {
     setIsLoading(true)
     setError(null)
     try {
-      // Strip undefined values before sending as query params
       const params = Object.fromEntries(
         Object.entries(queryFilters).filter(([, v]) => v !== undefined && v !== null && v !== '')
       )
@@ -74,7 +67,6 @@ export function NotificationCenterPage() {
     }
   }, [])
 
-  // Initial load + refetch on filter changes
   useEffect(() => {
     fetchNotifications(filters)
   }, [filters, fetchNotifications])
@@ -131,7 +123,6 @@ export function NotificationCenterPage() {
         }
         return prev.filter((n) => n.id !== id)
       })
-      // Update pagination total
       setPagination((prev) => ({ ...prev, total: Math.max(0, prev.total - 1) }))
       showFeedback('Notification deleted.')
     } catch (err) {
@@ -146,12 +137,26 @@ export function NotificationCenterPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
+      {/* ── Operational Page Header ── */}
       <PageHeader
-        title="Notification Center"
-        description="Stay up to date with task assignments, status changes, comments, and automated alerts."
-        breadcrumbs={[{ label: 'Home', href: ROUTES.DASHBOARD }, { label: 'Notifications' }]}
+        title="Notifications"
+        description="Stay informed about changes, assignments, deadlines, and activity across your workspace."
+        breadcrumbs={[
+          { label: 'Home', href: ROUTES.DASHBOARD },
+          { label: 'Notifications' },
+        ]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {unreadCount > 0 ? (
+              <Badge variant="primary" size="md" dot>
+                {unreadCount} Unread {unreadCount === 1 ? 'Notice' : 'Notices'}
+              </Badge>
+            ) : (
+              <Badge variant="neutral" size="md">
+                Inbox Caught Up
+              </Badge>
+            )}
+
             <Button
               variant="outline"
               size="sm"
@@ -162,8 +167,14 @@ export function NotificationCenterPage() {
             >
               Refresh
             </Button>
+
             <Link to={ROUTES.NOTIFICATION_PREFERENCES}>
-              <Button variant="secondary" size="sm" leftIcon={Settings} className="text-xs">
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={Settings}
+                className="text-xs"
+              >
                 Preferences
               </Button>
             </Link>
@@ -171,10 +182,10 @@ export function NotificationCenterPage() {
         }
       />
 
-      {/* Feedback banner */}
+      {/* ── Feedback Notification Toast ── */}
       {feedback && (
         <div
-          className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border text-xs font-medium animate-in slide-in-from-top-2 ${
+          className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border text-xs font-semibold animate-in slide-in-from-top-2 shadow-2xs ${
             feedback.type === 'error'
               ? 'bg-rose-50 border-rose-200 text-rose-700'
               : 'bg-emerald-50 border-emerald-200 text-emerald-800'
@@ -185,6 +196,7 @@ export function NotificationCenterPage() {
         </div>
       )}
 
+      {/* ── Paginated Activity Feed ── */}
       <NotificationList
         notifications={notifications}
         pagination={pagination}

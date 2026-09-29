@@ -13,6 +13,8 @@ import {
   MessageSquare,
   AtSign,
   Clock,
+  FolderKanban,
+  Check,
 } from 'lucide-react'
 import { notificationsApi } from '@/api/endpoints/notifications'
 import { NOTIFICATION_TYPE_META } from '@/constants/notifications'
@@ -36,11 +38,7 @@ const ICONS = {
 }
 
 /**
- * NotificationDetail — fetches and renders full detail for a single notification.
- *
- * Props:
- *   notificationId — string (UUID)
- *   onDeleted      — () => void  — called after successful delete
+ * NotificationDetail — full view for a single notification record.
  */
 export function NotificationDetail({ notificationId, onDeleted }) {
   const navigate = useNavigate()
@@ -70,7 +68,7 @@ export function NotificationDetail({ notificationId, onDeleted }) {
                 setNotification((prev) => ({ ...prev, isRead: true, readAt: new Date().toISOString() }))
               }
             } catch {
-              // Non-critical
+              // Best-effort
             }
           }
         }
@@ -95,7 +93,7 @@ export function NotificationDetail({ notificationId, onDeleted }) {
     try {
       await notificationsApi.markAsRead(notificationId)
       setNotification((prev) => ({ ...prev, isRead: true, readAt: new Date().toISOString() }))
-    } catch (err) {
+    } catch {
       // Best-effort
     } finally {
       setIsMarkingRead(false)
@@ -129,8 +127,8 @@ export function NotificationDetail({ notificationId, onDeleted }) {
     return (
       <Card className="border-slate-200/80">
         <CardContent className="py-16 flex flex-col items-center justify-center text-center">
-          <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mb-3" />
-          <p className="text-sm text-slate-500">Loading notification…</p>
+          <Loader2 className="w-8 h-8 text-[#635BFF] animate-spin mb-3" />
+          <p className="text-sm text-slate-500">Loading notification details…</p>
         </CardContent>
       </Card>
     )
@@ -142,10 +140,10 @@ export function NotificationDetail({ notificationId, onDeleted }) {
       <Card className="border-slate-200/80">
         <CardContent className="py-16 flex flex-col items-center justify-center text-center">
           <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mb-4">
-            <AlertTriangle className="w-6 h-6 text-rose-400" />
+            <AlertTriangle className="w-6 h-6 text-rose-500" />
           </div>
-          <p className="text-sm font-semibold text-slate-700">Unable to Load</p>
-          <p className="text-xs text-slate-400 mt-1 max-w-xs">{error}</p>
+          <h4 className="text-base font-semibold text-slate-900">Unable to Load Notification</h4>
+          <p className="text-xs text-slate-500 mt-1 max-w-xs">{error}</p>
           <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate(-1)}>
             Go Back
           </Button>
@@ -157,42 +155,39 @@ export function NotificationDetail({ notificationId, onDeleted }) {
   if (!notification) return null
 
   const meta = NOTIFICATION_TYPE_META[notification.type] || NOTIFICATION_TYPE_META.TASK_ASSIGNED
-  const Icon = ICONS[notification.type] || Clock
-  const hasNavTarget = !!(notification.taskId || notification.projectId)
+  const IconComponent = ICONS[notification.type] || Clock
+  const hasNavTarget = Boolean(notification.taskId || notification.projectId)
 
   return (
     <>
       <div className="space-y-4">
-        {/* ── Header card ─────────────────────────────────────────────────── */}
-        <Card className="border-slate-200/80 overflow-hidden">
-          {/* Coloured top strip */}
+        {/* ── Header card ── */}
+        <Card className="border-slate-200/80 shadow-2xs overflow-hidden">
           <div
             className={cn(
-              'h-1 w-full',
-              notification.type === 'TASK_OVERDUE' || notification.type === 'TASK_MENTIONED'
-                ? 'bg-amber-400'
+              'h-1.5 w-full',
+              notification.type === 'TASK_OVERDUE'
+                ? 'bg-rose-500'
                 : notification.type === 'TASK_COMPLETED'
-                ? 'bg-emerald-400'
+                ? 'bg-emerald-500'
                 : notification.type === 'TASK_DUE_SOON'
-                ? 'bg-amber-400'
-                : 'bg-indigo-500'
+                ? 'bg-amber-500'
+                : 'bg-[#635BFF]'
             )}
           />
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
-              {/* Icon */}
               <div
                 className={cn(
                   'w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs',
                   meta.iconBg
                 )}
               >
-                <Icon className="w-6 h-6" />
+                <IconComponent className="w-6 h-6" />
               </div>
 
-              {/* Content */}
               <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
+                <div className="flex flex-wrap items-center gap-2 mb-1.5">
                   <Badge variant={meta.badgeVariant} size="sm">
                     {meta.label}
                   </Badge>
@@ -207,29 +202,27 @@ export function NotificationDetail({ notificationId, onDeleted }) {
                   )}
                 </div>
 
-                <h2 className="text-lg font-bold text-slate-900 leading-snug mt-1">
+                <h2 className="text-lg font-bold text-slate-900 leading-snug">
                   {notification.title}
                 </h2>
                 <p className="text-sm text-slate-600 mt-2 leading-relaxed">
                   {notification.message}
                 </p>
 
-                {/* Timestamps */}
-                <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-400">
+                <div className="mt-3.5 flex flex-wrap gap-4 text-xs text-slate-400 font-mono">
                   <span>
-                    <span className="font-medium text-slate-500">Received:</span>{' '}
+                    <span className="font-sans font-medium text-slate-500">Received:</span>{' '}
                     {formatDateTime(notification.createdAt)}
                   </span>
                   {notification.isRead && notification.readAt && (
                     <span>
-                      <span className="font-medium text-slate-500">Read:</span>{' '}
+                      <span className="font-sans font-medium text-slate-500">Read:</span>{' '}
                       {formatDateTime(notification.readAt)}
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Action buttons */}
               <div className="flex items-center gap-2 shrink-0">
                 {!notification.isRead && (
                   <Button
@@ -237,7 +230,7 @@ export function NotificationDetail({ notificationId, onDeleted }) {
                     size="sm"
                     onClick={handleMarkRead}
                     isLoading={isMarkingRead}
-                    leftIcon={CheckCircle2}
+                    leftIcon={Check}
                     className="text-xs"
                   >
                     Mark Read
@@ -248,6 +241,7 @@ export function NotificationDetail({ notificationId, onDeleted }) {
                   size="sm"
                   onClick={() => setDeleteConfirmOpen(true)}
                   className="text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                  aria-label="Delete notification"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -256,31 +250,35 @@ export function NotificationDetail({ notificationId, onDeleted }) {
           </CardContent>
         </Card>
 
-        {/* ── Actor context ──────────────────────────────────────────────── */}
+        {/* ── Actor Context ── */}
         {notification.actor && (
-          <Card className="border-slate-200/80">
+          <Card className="border-slate-200/80 shadow-2xs">
             <CardContent className="p-5">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Triggered by</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">
+                Triggered By
+              </p>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#635BFF] to-[#5148E5] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
                   {notification.actor.firstName?.charAt(0) || '?'}
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-900">
                     {notification.actor.firstName} {notification.actor.lastName}
                   </p>
-                  <p className="text-xs text-slate-400">{notification.actor.email}</p>
+                  <p className="text-xs text-slate-400 font-mono">{notification.actor.email}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* ── Task / Project context ─────────────────────────────────────── */}
+        {/* ── Related Object Context ── */}
         {(notification.task || notification.project) && (
-          <Card className="border-slate-200/80">
+          <Card className="border-slate-200/80 shadow-2xs">
             <CardContent className="p-5">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Related</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">
+                Related Workspace Object
+              </p>
               <div className="space-y-3">
                 {notification.task && (
                   <div className="flex items-center justify-between gap-3">
@@ -288,10 +286,10 @@ export function NotificationDetail({ notificationId, onDeleted }) {
                       <p className="text-xs text-slate-400 font-medium mb-0.5">Task</p>
                       <p className="text-sm font-semibold text-slate-900">{notification.task.title}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-full capitalize">
+                        <span className="text-[10px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded font-mono uppercase">
                           {notification.task.status?.replace(/_/g, ' ')}
                         </span>
-                        <span className="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-full capitalize">
+                        <span className="text-[10px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded font-mono uppercase">
                           {notification.task.priority}
                         </span>
                       </div>
@@ -309,14 +307,18 @@ export function NotificationDetail({ notificationId, onDeleted }) {
                     )}
                   </div>
                 )}
+
                 {notification.project && (
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-100">
                     <div>
                       <p className="text-xs text-slate-400 font-medium mb-0.5">Project</p>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {notification.project.name}{' '}
+                      <p className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                        <FolderKanban className="w-4 h-4 text-emerald-600" />
+                        <span>{notification.project.name}</span>
                         {notification.project.code && (
-                          <span className="text-xs text-slate-400">({notification.project.code})</span>
+                          <span className="text-xs text-slate-400 font-mono">
+                            [{notification.project.code}]
+                          </span>
                         )}
                       </p>
                     </div>
@@ -338,19 +340,6 @@ export function NotificationDetail({ notificationId, onDeleted }) {
           </Card>
         )}
 
-        {/* ── Raw metadata (dev aid, only if present) ──────────────────────── */}
-        {notification.metadata && Object.keys(notification.metadata).length > 0 && (
-          <Card className="border-slate-200/80">
-            <CardContent className="p-5">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Metadata</p>
-              <pre className="text-[11px] text-slate-500 bg-slate-50 rounded-lg p-3 overflow-x-auto leading-relaxed">
-                {JSON.stringify(notification.metadata, null, 2)}
-              </pre>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ── Back / Navigate ───────────────────────────────────────────── */}
         <div className="flex items-center gap-3 pt-2">
           <Button
             variant="ghost"
@@ -364,7 +353,6 @@ export function NotificationDetail({ notificationId, onDeleted }) {
         </div>
       </div>
 
-      {/* Delete confirmation */}
       <ConfirmationModal
         isOpen={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
