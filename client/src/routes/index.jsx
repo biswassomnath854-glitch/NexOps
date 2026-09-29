@@ -7,7 +7,7 @@ import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { LandingPage } from '@/pages/landing'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { ComponentShowcasePage } from '@/pages/showcase/ComponentShowcasePage'
-import { UsersPage, DepartmentsPage, OrganizationsPage } from '@/pages/admin'
+import { UsersPage, DepartmentsPage, OrganizationsPage, SettingsPage } from '@/pages/admin'
 import { ProjectsPage, ProjectDetailsPage } from '@/pages/projects'
 import { TasksPage, TaskDetailsPage } from '@/pages/tasks'
 import { AnalyticsPage } from '@/pages/analytics'
@@ -107,13 +107,7 @@ export const router = createBrowserRouter([
           },
           {
             path: ROUTES.SETTINGS,
-            element: (
-              <PlaceholderModulePage
-                title="Workspace Settings"
-                description="Enterprise security policies, notification preferences, integration webhooks, and preferences."
-                category="Settings Module"
-              />
-            ),
+            element: <SettingsPage />,
           },
           {
             path: ROUTES.SHOWCASE,

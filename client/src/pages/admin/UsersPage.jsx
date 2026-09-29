@@ -18,6 +18,11 @@ import {
   RotateCw,
   CheckCircle2,
   ShieldAlert,
+  Users,
+  ShieldCheck,
+  UserX,
+  X,
+  Building2,
 } from 'lucide-react'
 
 export function UsersPage() {
@@ -146,6 +151,29 @@ export function UsersPage() {
     return filteredUsers.slice(start, start + pageSize)
   }, [filteredUsers, currentPage, pageSize])
 
+  // Computed Stats for Administrative Header (only from existing data)
+  const stats = useMemo(() => {
+    const total = users.length
+    const active = users.filter((u) => u.status === USER_STATUS.ACTIVE).length
+    const inactive = total - active
+    const admins = users.filter((u) => [ROLES.SUPER_ADMIN, ROLES.ADMIN].includes(u.role)).length
+    return { total, active, inactive, admins }
+  }, [users])
+
+  const hasActiveFilters =
+    searchQuery.trim() !== '' ||
+    roleFilter !== 'ALL' ||
+    statusFilter !== 'ALL' ||
+    departmentFilter !== 'ALL'
+
+  const handleResetFilters = () => {
+    setSearchQuery('')
+    setRoleFilter('ALL')
+    setStatusFilter('ALL')
+    setDepartmentFilter('ALL')
+    setCurrentPage(1)
+  }
+
   // CRUD Handlers
   const handleCreateOrUpdateUser = async (formData) => {
     setIsActionLoading(true)
@@ -210,13 +238,13 @@ export function UsersPage() {
   // Graceful 403 Forbidden Screen for unauthorized roles
   if (!isAuthorized) {
     return (
-      <div className="py-12 max-w-lg mx-auto">
-        <Card className="border-rose-200">
+      <div className="py-16 max-w-lg mx-auto px-4">
+        <Card className="border-rose-200/80 shadow-xs">
           <CardContent className="p-8 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100">
               <ShieldAlert className="w-6 h-6" />
             </div>
-            <h2 className="text-lg font-bold text-slate-900">Administrator Access Required</h2>
+            <h2 className="text-base font-bold text-slate-900">Administrator Access Required</h2>
             <p className="text-xs text-slate-500 mt-2 leading-relaxed">
               The User Directory and Identity Management modules are restricted to
               organization Administrators. Your current role is{' '}
@@ -246,19 +274,19 @@ export function UsersPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
-      {/* 1. Header Banner */}
+      {/* 1. Administrative Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              User Directory & Team Accounts
+              Users
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#635BFF]/10 text-[#5148E5] border border-[#635BFF]/20">
               {users.length} {users.length === 1 ? 'member' : 'members'}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Manage corporate members, role-based access rights, and departmental assignments.
+            Manage people, roles, departments, and workspace access.
           </p>
         </div>
 
@@ -289,6 +317,49 @@ export function UsersPage() {
         </div>
       </div>
 
+      {/* 2. Operational Statistics Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="p-3.5 rounded-xl border border-slate-200/80 bg-white flex items-center gap-3 shadow-2xs">
+          <div className="w-9 h-9 rounded-lg bg-[#635BFF]/10 text-[#635BFF] flex items-center justify-center shrink-0">
+            <Users className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-lg font-bold text-slate-900 leading-tight">{stats.total}</div>
+            <div className="text-[11px] text-slate-500 font-medium">Total Accounts</div>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-xl border border-slate-200/80 bg-white flex items-center gap-3 shadow-2xs">
+          <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-lg font-bold text-slate-900 leading-tight">{stats.active}</div>
+            <div className="text-[11px] text-slate-500 font-medium">Active Members</div>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-xl border border-slate-200/80 bg-white flex items-center gap-3 shadow-2xs">
+          <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <UserX className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-lg font-bold text-slate-900 leading-tight">{stats.inactive}</div>
+            <div className="text-[11px] text-slate-500 font-medium">Inactive / Suspended</div>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-xl border border-slate-200/80 bg-white flex items-center gap-3 shadow-2xs">
+          <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <Building2 className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-lg font-bold text-slate-900 leading-tight">{departments.length}</div>
+            <div className="text-[11px] text-slate-500 font-medium">Departments</div>
+          </div>
+        </div>
+      </div>
+
       {/* Feedback Toast / Banner */}
       {feedback && (
         <div
@@ -303,12 +374,12 @@ export function UsersPage() {
         </div>
       )}
 
-      {/* 2. Filters & Search Bar */}
-      <Card className="border-slate-200/80 bg-slate-50/50">
+      {/* 3. Search & Filter Bar */}
+      <Card className="border-slate-200/80 bg-slate-50/60 shadow-2xs">
         <CardContent className="p-3.5">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Search Input */}
-            <div className="sm:col-span-1 lg:col-span-1">
+            <div className="sm:col-span-1 lg:col-span-1 relative">
               <Input
                 placeholder="Search name or email..."
                 value={searchQuery}
@@ -317,8 +388,18 @@ export function UsersPage() {
                   setCurrentPage(1)
                 }}
                 leftIcon={Search}
-                className="py-1.5 text-xs"
+                className="py-1.5 text-xs bg-white"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
             {/* Role Filter */}
@@ -336,7 +417,7 @@ export function UsersPage() {
                     label: formatRole(r),
                   })),
                 ]}
-                className="py-1.5 text-xs"
+                className="py-1.5 text-xs bg-white"
               />
             </div>
 
@@ -352,10 +433,10 @@ export function UsersPage() {
                   { value: 'ALL', label: 'All Departments' },
                   ...departments.map((d) => ({
                     value: d.id,
-                    label: d.name,
+                    label: d.name + (d.code ? ` (${d.code})` : ''),
                   })),
                 ]}
-                className="py-1.5 text-xs"
+                className="py-1.5 text-xs bg-white"
               />
             </div>
 
@@ -373,14 +454,32 @@ export function UsersPage() {
                   { value: USER_STATUS.INACTIVE, label: 'Inactive Only' },
                   { value: USER_STATUS.SUSPENDED, label: 'Suspended Only' },
                 ]}
-                className="py-1.5 text-xs"
+                className="py-1.5 text-xs bg-white"
               />
             </div>
           </div>
+
+          {/* Active Filter Indicators & Reset Action */}
+          {hasActiveFilters && (
+            <div className="mt-3 pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-xs">
+              <span className="text-slate-500 font-medium">
+                Showing <strong className="text-slate-800">{filteredUsers.length}</strong> of{' '}
+                <strong className="text-slate-800">{users.length}</strong> team members
+              </span>
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="text-[#635BFF] hover:text-[#5148E5] font-semibold flex items-center gap-1 transition-colors"
+              >
+                <X className="w-3 h-3" />
+                Reset filters
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* 3. User Table */}
+      {/* 4. User Table */}
       <UserTable
         users={paginatedUsers}
         isLoading={isLoading}
@@ -396,9 +495,10 @@ export function UsersPage() {
         }}
         onChangeStatus={(u) => setStatusModalUser(u)}
         onDelete={(u) => setDeleteModalUser(u)}
+        onResetFilters={hasActiveFilters ? handleResetFilters : undefined}
       />
 
-      {/* 4. User Create / Edit Form Modal */}
+      {/* 5. User Create / Edit Form Modal */}
       <UserForm
         isOpen={isFormOpen}
         onClose={() => {
@@ -412,7 +512,7 @@ export function UsersPage() {
         isLoading={isActionLoading}
       />
 
-      {/* 5. User Details Modal */}
+      {/* 6. User Details Modal */}
       <UserDetails
         isOpen={Boolean(viewingUser)}
         onClose={() => setViewingUser(null)}
@@ -428,7 +528,7 @@ export function UsersPage() {
         }}
       />
 
-      {/* 6. Change Status Confirmation Modal */}
+      {/* 7. Change Status Confirmation Modal */}
       {statusModalUser && (
         <ConfirmationModal
           isOpen={Boolean(statusModalUser)}
@@ -446,7 +546,7 @@ export function UsersPage() {
         />
       )}
 
-      {/* 7. Delete User Confirmation Modal */}
+      {/* 8. Delete User Confirmation Modal */}
       {deleteModalUser && (
         <ConfirmationModal
           isOpen={Boolean(deleteModalUser)}

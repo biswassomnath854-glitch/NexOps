@@ -41,7 +41,6 @@ export function OrganizationsPage() {
       const res = await organizationsApi.getOrganizations()
       const orgList = res?.data?.organizations || res?.organizations || []
       setOrganizations(orgList)
-      // Pick first or keep currently selected
       if (orgList.length > 0) {
         setSelectedOrg((prev) => {
           if (!prev) return orgList[0]
@@ -115,13 +114,13 @@ export function OrganizationsPage() {
   // Graceful 403 Forbidden Screen
   if (!isAuthorized) {
     return (
-      <div className="py-12 max-w-lg mx-auto">
-        <Card className="border-rose-200">
+      <div className="py-16 max-w-lg mx-auto px-4">
+        <Card className="border-rose-200/80 shadow-xs">
           <CardContent className="p-8 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100">
               <ShieldAlert className="w-6 h-6" />
             </div>
-            <h2 className="text-lg font-bold text-slate-900">Administrator Access Required</h2>
+            <h2 className="text-base font-bold text-slate-900">Administrator Access Required</h2>
             <p className="text-xs text-slate-500 mt-2 leading-relaxed">
               Organization parameters, multi-tenant billing, and workspace status are restricted to
               organization Administrators. Your current role is{' '}
@@ -156,15 +155,14 @@ export function OrganizationsPage() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Organization Management
+              Organizations
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#635BFF]/10 text-[#5148E5] border border-[#635BFF]/20">
               Enterprise Profile
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Corporate identification, custom domain slugs, multi-tenant policies, and operational
-            status.
+            Corporate identification, custom domain slugs, multi-tenant policies, and operational status.
           </p>
         </div>
 
@@ -176,7 +174,7 @@ export function OrganizationsPage() {
                 const found = organizations.find((o) => o.id === e.target.value)
                 if (found) setSelectedOrg(found)
               }}
-              className="text-xs font-semibold border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700"
+              className="text-xs font-semibold border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 shadow-2xs focus:border-[#635BFF] focus:outline-none"
             >
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>
@@ -230,7 +228,7 @@ export function OrganizationsPage() {
           onChangeStatus={(org) => setStatusModalOrg(org)}
         />
       ) : (
-        <Card className="p-12 text-center">
+        <Card className="p-12 text-center border-slate-200/80 shadow-2xs">
           <Landmark className="w-10 h-10 text-slate-300 mx-auto mb-3" />
           <h3 className="text-sm font-semibold text-slate-700">No Organization Record Found</h3>
           <p className="text-xs text-slate-400 mt-1">
@@ -257,7 +255,7 @@ export function OrganizationsPage() {
           title={`${
             statusModalOrg.status === 'ACTIVE' ? 'Suspend / Deactivate' : 'Activate'
           } Workspace`}
-          message={`Are you sure you want to change the operating status of ${statusModalOrg.name} to ${
+          message={`Are you sure you want to change the operating status of "${statusModalOrg.name}" to ${
             statusModalOrg.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
           }?`}
           confirmText={statusModalOrg.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}

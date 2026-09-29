@@ -18,25 +18,34 @@ function UserActionMenu({ user, onView, onEdit, onChangeStatus, onDelete }) {
         setIsOpen(false)
       }
     }
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsOpen(false)
+    }
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleKeyDown)
     }
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [isOpen])
 
   return (
     <div className="relative inline-block text-left" ref={menuRef}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#635BFF]/30"
         aria-label="User actions"
+        aria-haspopup="true"
+        aria-expanded={isOpen}
       >
         <MoreVertical className="w-4 h-4" />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-1 w-44 rounded-xl bg-white shadow-lg border border-slate-200/80 py-1.5 z-20 animate-in fade-in zoom-in-95">
+        <div className="absolute right-0 mt-1 w-44 rounded-xl bg-white shadow-lg border border-slate-200/80 py-1.5 z-30 animate-in fade-in zoom-in-95">
           <button
             type="button"
             onClick={() => {
@@ -100,10 +109,11 @@ export function UserTable({
   onEdit,
   onChangeStatus,
   onDelete,
+  onResetFilters,
 }) {
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white overflow-hidden p-6 space-y-4">
+      <div className="rounded-xl border border-slate-200/80 bg-white overflow-hidden p-6 space-y-4 shadow-2xs">
         {[1, 2, 3, 4, 5].map((idx) => (
           <div key={idx} className="flex items-center gap-4 animate-pulse">
             <div className="w-9 h-9 rounded-full bg-slate-200 shrink-0" />
@@ -121,122 +131,148 @@ export function UserTable({
 
   if (!users || users.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="rounded-xl border border-slate-200/80 bg-white p-8 text-center shadow-2xs">
         <EmptyState
           icon={Users}
           title="No Users Found"
-          description="No users match your criteria. You can invite or create new team members."
+          description="No user records match your current search and filter criteria."
+          action={
+            onResetFilters && (
+              <Button variant="outline" size="sm" onClick={onResetFilters} className="text-xs">
+                Clear Filters
+              </Button>
+            )
+          }
         />
       </div>
     )
   }
 
   return (
-    <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>User / Contact</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Department</TableHead>
-            <TableHead>Organization</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Joined</TableHead>
-            <TableHead align="right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => {
-            const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown'
-            const initials = `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || 'U'
+    <div className="rounded-xl border border-slate-200/80 bg-white shadow-2xs overflow-hidden">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/70 border-b border-slate-200/80">
+              <TableHead className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase py-3">
+                User / Contact
+              </TableHead>
+              <TableHead className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase py-3">
+                Role
+              </TableHead>
+              <TableHead className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase py-3">
+                Department
+              </TableHead>
+              <TableHead className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase py-3">
+                Organization
+              </TableHead>
+              <TableHead className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase py-3">
+                Status
+              </TableHead>
+              <TableHead className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase py-3">
+                Joined
+              </TableHead>
+              <TableHead align="right" className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase py-3">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-slate-100">
+            {users.map((user) => {
+              const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown'
+              const initials = `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || 'U'
 
-            return (
-              <TableRow key={user.id} className="group">
-                {/* User avatar + name */}
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/20 text-[#635BFF] flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-                      {initials}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-slate-900 group-hover:text-[#635BFF] transition-colors">
-                        {fullName}
+              return (
+                <TableRow key={user.id} className="group hover:bg-slate-50/75 transition-colors">
+                  {/* User avatar + name */}
+                  <TableCell className="py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/20 text-[#635BFF] flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                        {initials}
                       </div>
-                      <div className="text-xs text-slate-400 font-mono">{user.email}</div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-slate-900 group-hover:text-[#635BFF] transition-colors truncate">
+                          {fullName}
+                        </div>
+                        <div className="text-xs text-slate-500 font-mono truncate">{user.email}</div>
+                      </div>
                     </div>
-                  </div>
-                </TableCell>
+                  </TableCell>
 
-                {/* Role */}
-                <TableCell>
-                  <RoleBadge role={user.role} showIcon />
-                </TableCell>
+                  {/* Role */}
+                  <TableCell className="py-3">
+                    <RoleBadge role={user.role} showIcon />
+                  </TableCell>
 
-                {/* Department */}
-                <TableCell>
-                  {user.department?.name ? (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                      {user.department.name}
+                  {/* Department */}
+                  <TableCell className="py-3">
+                    {user.department?.name ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100/80 text-slate-700 border border-slate-200/80">
+                        <span>{user.department.name}</span>
+                        {user.department.code && (
+                          <span className="text-[10px] font-mono text-slate-400">({user.department.code})</span>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-400 italic">Unassigned</span>
+                    )}
+                  </TableCell>
+
+                  {/* Organization */}
+                  <TableCell className="py-3">
+                    <span className="text-xs text-slate-600 font-medium">
+                      {user.organization?.name || '—'}
                     </span>
-                  ) : (
-                    <span className="text-xs text-slate-400 italic">Unassigned</span>
-                  )}
-                </TableCell>
+                  </TableCell>
 
-                {/* Organization */}
-                <TableCell>
-                  <span className="text-xs text-slate-600 font-medium">
-                    {user.organization?.name || '—'}
-                  </span>
-                </TableCell>
+                  {/* Status */}
+                  <TableCell className="py-3">
+                    <StatusBadge status={user.status} />
+                  </TableCell>
 
-                {/* Status */}
-                <TableCell>
-                  <StatusBadge status={user.status} />
-                </TableCell>
+                  {/* Joined Date */}
+                  <TableCell className="py-3">
+                    <span className="text-xs text-slate-500 font-mono">
+                      {formatDate(user.createdAt)}
+                    </span>
+                  </TableCell>
 
-                {/* Joined Date */}
-                <TableCell>
-                  <span className="text-xs text-slate-500 font-mono">
-                    {formatDate(user.createdAt)}
-                  </span>
-                </TableCell>
-
-                {/* Actions */}
-                <TableCell align="right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onView(user)}
-                      className="hidden sm:inline-flex p-1.5 h-8 text-slate-500 hover:text-slate-800"
-                      title="View details"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(user)}
-                      className="hidden sm:inline-flex p-1.5 h-8 text-slate-500 hover:text-indigo-600"
-                      title="Edit user"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </Button>
-                    <UserActionMenu
-                      user={user}
-                      onView={onView}
-                      onEdit={onEdit}
-                      onChangeStatus={onChangeStatus}
-                      onDelete={onDelete}
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
+                  {/* Actions */}
+                  <TableCell align="right" className="py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onView(user)}
+                        className="hidden sm:inline-flex p-1.5 h-7 w-7 text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                        title="View details"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit(user)}
+                        className="hidden sm:inline-flex p-1.5 h-7 w-7 text-slate-400 hover:text-[#635BFF] hover:bg-[#635BFF]/10"
+                        title="Edit user"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
+                      <UserActionMenu
+                        user={user}
+                        onView={onView}
+                        onEdit={onEdit}
+                        onChangeStatus={onChangeStatus}
+                        onDelete={onDelete}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
 
       <Pagination
         totalItems={totalItems}

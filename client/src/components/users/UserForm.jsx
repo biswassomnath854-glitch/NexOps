@@ -5,7 +5,7 @@ import { Select } from '@/components/forms/Select'
 import { Button } from '@/components/ui/Button'
 import { ROLES, USER_STATUS } from '@/constants/roles'
 import { formatRole } from '@/utils/formatters'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, User, Shield, Building2 } from 'lucide-react'
 
 export function UserForm(props) {
   if (!props.isOpen) return null
@@ -73,7 +73,6 @@ function UserFormModal({
     const { name, value } = e.target
     setFormData((prev) => {
       const next = { ...prev, [name]: value }
-      // If organization changed, reset departmentId if it doesn't belong to the new org
       if (name === 'organizationId') {
         next.departmentId = ''
       }
@@ -130,7 +129,6 @@ function UserFormModal({
     }
   }
 
-  // Filter available departments by selected organization (if set)
   const availableDepartments = formData.organizationId
     ? departments.filter(
         (dept) => !dept.organizationId || dept.organizationId === formData.organizationId
@@ -144,138 +142,159 @@ function UserFormModal({
       title={isEditing ? 'Edit Team Member' : 'Add New Team Member'}
       description={
         isEditing
-          ? 'Update user contact information, corporate role, and departmental assignment.'
-          : 'Create a new user account with role permissions and organization allocation.'
+          ? 'Update user identity, role privileges, and departmental allocation.'
+          : 'Create a new corporate account with RBAC permissions and organization assignment.'
       }
       size="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {serverError && (
-          <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2 animate-in fade-in">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div className="leading-relaxed">{serverError}</div>
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+            <div className="leading-relaxed font-medium">{serverError}</div>
           </div>
         )}
 
-        {/* Names Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="First Name"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            error={errors.firstName}
-            required
-            placeholder="e.g. Sarah"
-          />
-          <Input
-            label="Last Name"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            error={errors.lastName}
-            required
-            placeholder="e.g. Jenkins"
-          />
-        </div>
-
-        {/* Email & Password Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Corporate Email"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
-            required
-            placeholder="sarah.jenkins@sbpvtltd.internal"
-          />
-          {!isEditing ? (
+        {/* Section 1: Identity & Name */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 tracking-wide uppercase">
+            <User className="w-3.5 h-3.5 text-[#635BFF]" />
+            <span>Identity Details</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Temporary Password"
-              type="password"
-              name="password"
-              value={formData.password}
+              label="First Name"
+              name="firstName"
+              value={formData.firstName}
               onChange={handleChange}
-              error={errors.password}
+              error={errors.firstName}
               required
-              placeholder="Minimum 8 characters"
+              placeholder="e.g. Sarah"
             />
-          ) : (
-            <div className="flex flex-col justify-end">
-              <span className="text-xs text-slate-400 pb-2">
-                Passwords cannot be directly overwritten here for security reasons.
-              </span>
-            </div>
-          )}
+            <Input
+              label="Last Name"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              error={errors.lastName}
+              required
+              placeholder="e.g. Jenkins"
+            />
+          </div>
         </div>
 
-        {/* Role & Status Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Select
-            label="Role & Access Level"
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            options={Object.values(ROLES).map((role) => ({
-              value: role,
-              label: formatRole(role),
-            }))}
-            required
-          />
-
-          <Select
-            label="Account Status"
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            options={[
-              { value: USER_STATUS.ACTIVE, label: 'Active' },
-              { value: USER_STATUS.INACTIVE, label: 'Inactive' },
-              { value: USER_STATUS.SUSPENDED, label: 'Suspended' },
-            ]}
-            required
-          />
+        {/* Section 2: Contact & Credentials */}
+        <div className="space-y-3 pt-2 border-t border-slate-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Corporate Email"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              error={errors.email}
+              required
+              placeholder="sarah.jenkins@sbpvtltd.internal"
+            />
+            {!isEditing ? (
+              <Input
+                label="Temporary Password"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                error={errors.password}
+                required
+                placeholder="Minimum 8 characters"
+                helperText="Must be at least 8 characters."
+              />
+            ) : (
+              <div className="flex flex-col justify-end">
+                <span className="text-xs text-slate-400 pb-2.5">
+                  Passwords cannot be directly modified here for enterprise security policies.
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Organization & Department Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Select
-            label="Organization"
-            name="organizationId"
-            value={formData.organizationId}
-            onChange={handleChange}
-            options={[
-              { value: '', label: 'None / Standalone' },
-              ...organizations.map((org) => ({
-                value: org.id,
-                label: org.name,
-              })),
-            ]}
-          />
+        {/* Section 3: Access & Role */}
+        <div className="space-y-3 pt-2 border-t border-slate-100">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 tracking-wide uppercase">
+            <Shield className="w-3.5 h-3.5 text-[#635BFF]" />
+            <span>Access & Governance</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Select
+              label="Role & Access Level"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              options={Object.values(ROLES).map((role) => ({
+                value: role,
+                label: formatRole(role),
+              }))}
+              required
+            />
 
-          <Select
-            label="Department"
-            name="departmentId"
-            value={formData.departmentId}
-            onChange={handleChange}
-            options={[
-              { value: '', label: 'Unassigned Department' },
-              ...availableDepartments.map((dept) => ({
-                value: dept.id,
-                label: dept.name + (dept.code ? ` (${dept.code})` : ''),
-              })),
-            ]}
-          />
+            <Select
+              label="Account Status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              options={[
+                { value: USER_STATUS.ACTIVE, label: 'Active (Operational)' },
+                { value: USER_STATUS.INACTIVE, label: 'Inactive (Disabled)' },
+                { value: USER_STATUS.SUSPENDED, label: 'Suspended (Restricted)' },
+              ]}
+              required
+            />
+          </div>
+        </div>
+
+        {/* Section 4: Workspace Allocation */}
+        <div className="space-y-3 pt-2 border-t border-slate-100">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 tracking-wide uppercase">
+            <Building2 className="w-3.5 h-3.5 text-[#635BFF]" />
+            <span>Organization & Department</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Select
+              label="Organization"
+              name="organizationId"
+              value={formData.organizationId}
+              onChange={handleChange}
+              options={[
+                { value: '', label: 'None / Standalone' },
+                ...organizations.map((org) => ({
+                  value: org.id,
+                  label: org.name,
+                })),
+              ]}
+            />
+
+            <Select
+              label="Department"
+              name="departmentId"
+              value={formData.departmentId}
+              onChange={handleChange}
+              options={[
+                { value: '', label: 'Unassigned Department' },
+                ...availableDepartments.map((dept) => ({
+                  value: dept.id,
+                  label: dept.name + (dept.code ? ` (${dept.code})` : ''),
+                })),
+              ]}
+            />
+          </div>
         </div>
 
         {/* Footer controls */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-          <Button variant="ghost" type="button" onClick={onClose} disabled={isLoading}>
+          <Button variant="ghost" type="button" onClick={onClose} disabled={isLoading} className="text-xs">
             Cancel
           </Button>
-          <Button variant="primary" type="submit" isLoading={isLoading}>
+          <Button variant="primary" type="submit" isLoading={isLoading} className="text-xs">
             {isEditing ? 'Save Changes' : 'Create User'}
           </Button>
         </div>

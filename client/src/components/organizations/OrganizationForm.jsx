@@ -116,9 +116,9 @@ function OrganizationFormModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {serverError && (
-          <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2 animate-in fade-in">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div className="leading-relaxed">{serverError}</div>
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+            <div className="leading-relaxed font-medium">{serverError}</div>
           </div>
         )}
 
@@ -143,6 +143,7 @@ function OrganizationFormModal({
             error={errors.slug}
             required
             placeholder="sb-corp"
+            helperText="Lowercase alphanumeric & hyphens"
           />
 
           <Input
@@ -162,9 +163,9 @@ function OrganizationFormModal({
           value={formData.status}
           onChange={handleChange}
           options={[
-            { value: 'ACTIVE', label: 'Active' },
-            { value: 'INACTIVE', label: 'Inactive' },
-            { value: 'SUSPENDED', label: 'Suspended' },
+            { value: 'ACTIVE', label: 'Active (Operational)' },
+            { value: 'INACTIVE', label: 'Inactive (Suspended)' },
+            { value: 'SUSPENDED', label: 'Suspended (Restricted)' },
           ]}
           required
         />
@@ -179,7 +180,7 @@ function OrganizationFormModal({
             value={formData.description}
             onChange={handleChange}
             rows={3}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-[#635BFF] focus:outline-none focus:ring-2 focus:ring-[#635BFF]/20 transition-all resize-none"
             placeholder="Brief corporate summary and operational mandates..."
             maxLength={5000}
           />
@@ -190,10 +191,10 @@ function OrganizationFormModal({
 
         {/* Footer controls */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-          <Button variant="ghost" type="button" onClick={onClose} disabled={isLoading}>
+          <Button variant="ghost" type="button" onClick={onClose} disabled={isLoading} className="text-xs">
             Cancel
           </Button>
-          <Button variant="primary" type="submit" isLoading={isLoading}>
+          <Button variant="primary" type="submit" isLoading={isLoading} className="text-xs">
             {isEditing ? 'Save Changes' : 'Create Organization'}
           </Button>
         </div>

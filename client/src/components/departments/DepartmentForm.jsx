@@ -3,7 +3,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/forms/Input'
 import { Select } from '@/components/forms/Select'
 import { Button } from '@/components/ui/Button'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, Building2, Landmark } from 'lucide-react'
 
 export function DepartmentForm(props) {
   if (!props.isOpen) return null
@@ -118,25 +118,27 @@ function DepartmentFormModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {serverError && (
-          <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2 animate-in fade-in">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div className="leading-relaxed">{serverError}</div>
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2.5 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
+            <div className="leading-relaxed font-medium">{serverError}</div>
           </div>
         )}
 
         {/* Organization */}
-        <Select
-          label="Corporate Organization"
-          name="organizationId"
-          value={formData.organizationId}
-          onChange={handleChange}
-          error={errors.organizationId}
-          options={organizations.map((org) => ({
-            value: org.id,
-            label: org.name,
-          }))}
-          required
-        />
+        <div>
+          <Select
+            label="Corporate Organization"
+            name="organizationId"
+            value={formData.organizationId}
+            onChange={handleChange}
+            error={errors.organizationId}
+            options={organizations.map((org) => ({
+              value: org.id,
+              label: org.name,
+            }))}
+            required
+          />
+        </div>
 
         {/* Department Name & Code */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -153,7 +155,7 @@ function DepartmentFormModal({
           </div>
           <div className="sm:col-span-1">
             <Input
-              label="Code (Alphanumeric)"
+              label="Code"
               name="code"
               value={formData.code}
               onChange={handleChange}
@@ -161,6 +163,7 @@ function DepartmentFormModal({
               required
               placeholder="ENG"
               maxLength={30}
+              helperText="Uppercase alphanumeric"
             />
           </div>
         </div>
@@ -188,7 +191,7 @@ function DepartmentFormModal({
             value={formData.description}
             onChange={handleChange}
             rows={3}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-[#635BFF] focus:outline-none focus:ring-2 focus:ring-[#635BFF]/20 transition-all resize-none"
             placeholder="Brief overview of the responsibilities and domain of this department..."
             maxLength={5000}
           />
@@ -199,10 +202,10 @@ function DepartmentFormModal({
 
         {/* Footer controls */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-          <Button variant="ghost" type="button" onClick={onClose} disabled={isLoading}>
+          <Button variant="ghost" type="button" onClick={onClose} disabled={isLoading} className="text-xs">
             Cancel
           </Button>
-          <Button variant="primary" type="submit" isLoading={isLoading}>
+          <Button variant="primary" type="submit" isLoading={isLoading} className="text-xs">
             {isEditing ? 'Save Changes' : 'Create Department'}
           </Button>
         </div>
