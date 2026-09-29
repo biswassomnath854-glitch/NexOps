@@ -133,7 +133,7 @@ export function RegisterPage() {
           <Input
             label="Organization / Company (Optional)"
             name="organizationName"
-            placeholder="e.g. Acme Technologies"
+            placeholder="e.g. SB Pvt. Ltd."
             value={formData.organizationName}
             onChange={handleChange}
             error={fieldErrors.organizationName}

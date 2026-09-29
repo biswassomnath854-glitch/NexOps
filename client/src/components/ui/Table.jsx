@@ -83,7 +83,7 @@ export function TableCell({ children, className, align = 'left', ...props }) {
   return (
     <td
       className={cn(
-        'px-4 py-3.5 whitespace-nowrap text-slate-700',
+        'px-4 py-3 whitespace-nowrap text-slate-700',
         alignments[align] || alignments.left,
         className
       )}

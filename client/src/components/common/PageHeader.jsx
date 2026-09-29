@@ -10,7 +10,7 @@ export function PageHeader({
   className,
 }) {
   return (
-    <div className={cn('mb-8 space-y-3', className)}>
+    <div className={cn('mb-6 space-y-2.5', className)}>
       {/* Breadcrumbs */}
       {breadcrumbs.length > 0 && (
         <nav className="flex items-center text-xs font-medium text-slate-500 space-x-1.5" aria-label="Breadcrumb">
@@ -40,11 +40,11 @@ export function PageHeader({
       {/* Main Title and Action Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
             {title}
           </h1>
           {description && (
-            <p className="mt-1 text-sm text-slate-500 max-w-3xl">
+            <p className="mt-1 text-xs sm:text-sm text-slate-500 max-w-3xl">
               {description}
             </p>
           )}

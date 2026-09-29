@@ -12,7 +12,6 @@ import {
   Building2,
   Landmark,
   Settings,
-  Sparkles,
   ChevronLeft,
   ChevronRight,
   Shield,
@@ -150,7 +149,7 @@ export function Sidebar({ className }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-white truncate">
-                {user?.organization?.name || 'Acme Global Corp'}
+                {user?.organization?.name || 'SB Pvt. Ltd.'}
               </p>
               <p className="text-[10px] text-slate-400 truncate">Enterprise Operations</p>
             </div>

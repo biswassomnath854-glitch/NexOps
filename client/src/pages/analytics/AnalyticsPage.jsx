@@ -1,12 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { analyticsApi } from '@/api/endpoints/analytics'
 import { ROLES } from '@/constants/roles'
 import { ROUTES } from '@/constants/routes'
 import { PageHeader } from '@/components/common/PageHeader'
-import { StatusBadge } from '@/components/common/StatusBadge'
-import { TaskStatusBadge } from '@/components/tasks/TaskStatusBadge'
-import { TaskPriorityBadge } from '@/components/tasks/TaskPriorityBadge'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -28,11 +25,7 @@ import {
   Clock,
   AlertTriangle,
   FolderKanban,
-  Filter,
   X,
-  PieChart as PieChartIcon,
-  Calendar,
-  AlertCircle,
 } from 'lucide-react'
 import {
   BarChart,
@@ -257,7 +250,7 @@ export function AnalyticsPage() {
     }))
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-150">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* ── Page Header ── */}
       <PageHeader
         title="Analytics"

@@ -234,7 +234,7 @@ export function WorkloadPage() {
   const hasActiveFilters = Boolean(search.trim() || priority)
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-150">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* ── Page Header ── */}
       <PageHeader
         title="Workload"
