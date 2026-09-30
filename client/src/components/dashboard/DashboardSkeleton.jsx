@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 
 export function DashboardSkeleton() {
   return (
-    <div className="space-y-8 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* Header Skeleton */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-200/80">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <Skeleton className="h-8 w-64" />
@@ -39,6 +39,18 @@ export function DashboardSkeleton() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Operational Attention Strip Skeleton */}
+      <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200/80 bg-slate-100/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Skeleton className="w-8 h-8 rounded-lg" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-3.5 w-44" />
+            <Skeleton className="h-3 w-64" />
+          </div>
+        </div>
+        <Skeleton className="h-7 w-28 rounded-md" />
       </div>
 
       {/* 3-column breakdown */}

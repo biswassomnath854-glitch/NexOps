@@ -40,9 +40,13 @@ export function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null)
   const [overdueTasks, setOverdueTasks] = useState([])
   const [workloadData, setWorkloadData] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isDashboardLoading, setIsDashboardLoading] = useState(true)
+  const [isOverdueLoading, setIsOverdueLoading] = useState(true)
+  const [isWorkloadLoading, setIsWorkloadLoading] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [error, setError] = useState(null)
+  const [dashboardError, setDashboardError] = useState(null)
+  const [overdueError, setOverdueError] = useState(null)
+  const [workloadError, setWorkloadError] = useState(null)
 
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -57,15 +61,10 @@ export function DashboardPage() {
     user?.role && user.role !== ROLES.VIEWER
 
   const loadData = useCallback(async () => {
-    try {
-      const [dashResult, overdueResult, workloadResult] = await Promise.allSettled([
-        analyticsApi.getDashboard(),
-        tasksApi.getOverdueTasks({ limit: 5 }),
-        isManagement ? analyticsApi.getWorkload({ limit: 5 }) : Promise.resolve(null),
-      ])
-
-      if (dashResult.status === 'fulfilled') {
-        const dashRes = dashResult.value
+    // 1. Core Overview, KPIs, Attention, Breakdown, and Activities
+    const dashPromise = analyticsApi
+      .getDashboard()
+      .then((dashRes) => {
         const data =
           dashRes?.data?.dashboard ||
           dashRes?.dashboard ||
@@ -73,18 +72,23 @@ export function DashboardPage() {
           dashRes
 
         setDashboardData(data)
-        setError(null)
-      } else {
-        const err = dashResult.reason
-        console.error('Failed to load dashboard:', err)
-        setError(
+        setDashboardError(null)
+      })
+      .catch((err) => {
+        console.error('Failed to load dashboard overview:', err)
+        setDashboardError(
           err?.message ||
             'Unable to connect to SB Pvt. Ltd. dashboard service.'
         )
-      }
+      })
+      .finally(() => {
+        setIsDashboardLoading(false)
+      })
 
-      if (overdueResult.status === 'fulfilled') {
-        const overdueRes = overdueResult.value
+    // 2. Overdue & Critical Tasks Widget (Independent)
+    const overduePromise = tasksApi
+      .getOverdueTasks({ limit: 5 })
+      .then((overdueRes) => {
         const overdueList =
           overdueRes?.data?.tasks ||
           overdueRes?.tasks ||
@@ -92,29 +96,47 @@ export function DashboardPage() {
           []
 
         setOverdueTasks(overdueList)
-      } else {
+        setOverdueError(null)
+      })
+      .catch((err) => {
+        console.error('Failed to load overdue tasks widget:', err)
         setOverdueTasks([])
-      }
+        setOverdueError(err?.message || 'Failed to load overdue tasks.')
+      })
+      .finally(() => {
+        setIsOverdueLoading(false)
+      })
 
-      if (isManagement && workloadResult.status === 'fulfilled' && workloadResult.value) {
-        const workloadRes = workloadResult.value
-        const workloadList =
-          workloadRes?.data?.workload ||
-          workloadRes?.workload ||
-          []
+    // 3. Workload Widget (Independent, Management roles only)
+    let workloadPromise
+    if (isManagement) {
+      setIsWorkloadLoading(true)
+      workloadPromise = analyticsApi
+        .getWorkload({ limit: 5 })
+        .then((workloadRes) => {
+          const workloadList =
+            workloadRes?.data?.workload ||
+            workloadRes?.workload ||
+            []
 
-        setWorkloadData(workloadList)
-      } else {
-        setWorkloadData(null)
-      }
-    } catch (err) {
-      console.error('Failed to load dashboard:', err)
-
-      setError(
-        err.message ||
-          'Unable to connect to SB Pvt. Ltd. dashboard service.'
-      )
+          setWorkloadData(workloadList)
+          setWorkloadError(null)
+        })
+        .catch((err) => {
+          console.error('Failed to load workload widget:', err)
+          setWorkloadData(null)
+          setWorkloadError(err?.message || 'Failed to load workload summary.')
+        })
+        .finally(() => {
+          setIsWorkloadLoading(false)
+        })
+    } else {
+      setWorkloadData(null)
+      setIsWorkloadLoading(false)
+      workloadPromise = Promise.resolve()
     }
+
+    await Promise.allSettled([dashPromise, overduePromise, workloadPromise])
   }, [isManagement])
 
   const handleRefresh = async () => {
@@ -126,34 +148,20 @@ export function DashboardPage() {
   }
 
   const handleRetry = async () => {
-    setIsLoading(true)
+    setIsDashboardLoading(true)
+    setIsOverdueLoading(true)
+    if (isManagement) setIsWorkloadLoading(true)
 
     await loadData()
-
-    setIsLoading(false)
   }
 
   useEffect(() => {
-    let ignore = false
-
-    async function init() {
-      await loadData()
-
-      if (!ignore) {
-        setIsLoading(false)
-      }
-    }
-
-    init()
-
-    return () => {
-      ignore = true
-    }
+    loadData()
   }, [loadData])
 
   // Low-priority idle prefetch of the most likely next route (Tasks) once dashboard is ready
   useEffect(() => {
-    if (isLoading || error) return
+    if (isDashboardLoading || dashboardError) return
 
     const idleCallback =
       typeof window !== 'undefined' && 'requestIdleCallback' in window
@@ -172,18 +180,18 @@ export function DashboardPage() {
     return () => {
       cancelIdle(handle)
     }
-  }, [isLoading, error])
+  }, [isDashboardLoading, dashboardError])
 
-  if (isLoading) {
+  if (isDashboardLoading) {
     return <DashboardSkeleton />
   }
 
-  if (error) {
+  if (dashboardError) {
     return (
       <div className="py-12">
         <ErrorState
           title="Dashboard Service Unavailable"
-          message={error}
+          message={dashboardError}
           onRetry={handleRetry}
           retryLabel="Reload Dashboard"
         />
@@ -330,7 +338,11 @@ export function DashboardPage() {
               : 'lg:col-span-3'
           }
         >
-          <RecentTasksWidget tasks={overdueTasks} />
+          <RecentTasksWidget
+            tasks={overdueTasks}
+            isLoading={isOverdueLoading}
+            error={overdueError}
+          />
         </div>
 
         {isManagement && (
@@ -338,6 +350,8 @@ export function DashboardPage() {
             <WorkloadSummaryWidget
               overview={overview}
               workloadData={workloadData}
+              isLoading={isWorkloadLoading}
+              error={workloadError}
             />
           </div>
         )}

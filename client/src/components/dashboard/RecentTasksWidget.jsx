@@ -11,11 +11,17 @@ import {
 } from '@/components/ui/Table'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { Skeleton } from '@/components/feedback/Loading'
 import { CheckSquare, AlertOctagon, ArrowRight } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
 import { formatDate } from '@/utils/formatters'
 
-export function RecentTasksWidget({ tasks = [], title = 'High Priority & Overdue Tasks' }) {
+export function RecentTasksWidget({
+  tasks = [],
+  title = 'High Priority & Overdue Tasks',
+  isLoading = false,
+  error = null,
+}) {
   const priorityBadges = {
     LOW: <Badge variant="neutral" dot size="sm">Low</Badge>,
     MEDIUM: <Badge variant="info" dot size="sm">Medium</Badge>,
@@ -76,7 +82,38 @@ export function RecentTasksWidget({ tasks = [], title = 'High Priority & Overdue
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tasks.length === 0 ? (
+            {isLoading ? (
+              [1, 2, 3, 4].map((i) => (
+                <TableRow key={i}>
+                  <TableCell className="py-2.5 px-3.5 sm:px-4">
+                    <Skeleton className="h-4 w-36" />
+                  </TableCell>
+                  <TableCell className="py-2.5 px-3 sm:px-4">
+                    <div className="flex items-center gap-1.5">
+                      <Skeleton className="w-5 h-5 rounded-full shrink-0" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-2.5 px-3 sm:px-4">
+                    <Skeleton className="h-4 w-14 rounded-full" />
+                  </TableCell>
+                  <TableCell className="py-2.5 px-3 sm:px-4">
+                    <Skeleton className="h-4 w-16 rounded-full" />
+                  </TableCell>
+                  <TableCell className="py-2.5 px-3 sm:px-4">
+                    <Skeleton className="h-3 w-20" />
+                  </TableCell>
+                  <TableCell align="right" className="py-2.5 px-3 sm:px-4">
+                    <Skeleton className="h-6 w-12 ml-auto rounded" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : error ? (
+              <TableEmpty
+                colSpan={6}
+                message={typeof error === 'string' ? error : 'Unable to load tasks at this time. Please refresh.'}
+              />
+            ) : tasks.length === 0 ? (
               <TableEmpty
                 colSpan={6}
                 message="No overdue or pending critical tasks found. Workspace is up to date!"
