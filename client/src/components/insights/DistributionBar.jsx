@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { cn } from '@/utils/cn'
 
 /**
@@ -10,7 +11,7 @@ import { cn } from '@/utils/cn'
  * @param {boolean} showLegend - whether to display the itemized breakdown underneath
  * @param {string} height - height class for the bar (default 'h-3')
  */
-export function DistributionBar({
+export const DistributionBar = memo(function DistributionBar({
   segments = [],
   total,
   showLegend = true,
@@ -86,4 +87,4 @@ export function DistributionBar({
       )}
     </div>
   )
-}
+})

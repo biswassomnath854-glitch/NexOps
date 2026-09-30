@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { analyticsApi } from '@/api/endpoints/analytics'
 import { ROLES } from '@/constants/roles'
 import { ROUTES } from '@/constants/routes'
@@ -55,8 +56,12 @@ const PRIORITY_META = {
   URGENT: { label: 'Urgent', color: '#DC2626' },
 }
 
+const CHART_LEGEND_WRAPPER_STYLE = { fontSize: 12, paddingBottom: 16 }
+const EMPTY_ARRAY = []
+const EMPTY_OBJECT = {}
+
 /* ─── Tooltip matching SB Pvt. Ltd. design language ─── */
-function AnalyticsChartTooltip({ active, payload, label }) {
+const AnalyticsChartTooltip = memo(function AnalyticsChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
     <div className="rounded-xl border border-slate-200/90 bg-white/95 backdrop-blur-xs px-3.5 py-2.5 shadow-lg text-xs">
@@ -74,7 +79,107 @@ function AnalyticsChartTooltip({ active, payload, label }) {
       </div>
     </div>
   )
-}
+})
+
+/* ─── Isolated Memoized Priority Breakdown Chart ─── */
+const PriorityDistributionChart = memo(function PriorityDistributionChart({
+  data,
+  reducedMotion,
+}) {
+  return (
+    <div className="min-h-[175px] min-w-0 pt-1 border-t border-slate-100">
+      <ResponsiveContainer width="100%" height={175}>
+        <BarChart data={data} barCategoryGap="30%">
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+          <XAxis
+            dataKey="name"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
+          />
+          <YAxis
+            allowDecimals={false}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: '#64748b' }}
+          />
+          <Tooltip content={<AnalyticsChartTooltip />} />
+          <Bar
+            dataKey="value"
+            name="Tasks"
+            radius={[4, 4, 0, 0]}
+            isAnimationActive={!reducedMotion}
+            animationDuration={400}
+            animationEasing="ease-out"
+          >
+            {data.map((entry, idx) => (
+              <Cell key={entry.name || idx} fill={entry.fill} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+})
+
+/* ─── Isolated Memoized Project Completion Chart ─── */
+const ProjectCompletionChart = memo(function ProjectCompletionChart({
+  data,
+  reducedMotion,
+}) {
+  return (
+    <div className="min-h-[290px] min-w-0 pt-2">
+      <ResponsiveContainer width="100%" height={290}>
+        <BarChart data={data} barCategoryGap="25%">
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+          <XAxis
+            dataKey="name"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}
+            interval={0}
+            angle={-25}
+            textAnchor="end"
+            height={50}
+          />
+          <YAxis
+            allowDecimals={false}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: '#64748b' }}
+          />
+          <Tooltip content={<AnalyticsChartTooltip />} />
+          <Legend
+            verticalAlign="top"
+            iconType="circle"
+            iconSize={8}
+            wrapperStyle={CHART_LEGEND_WRAPPER_STYLE}
+          />
+          <Bar
+            dataKey="completed"
+            name="Completed Tasks"
+            fill="#16A34A"
+            radius={[4, 4, 0, 0]}
+            stackId="proj"
+            isAnimationActive={!reducedMotion}
+            animationDuration={400}
+            animationEasing="ease-out"
+          />
+          <Bar
+            dataKey="incomplete"
+            name="Incomplete Tasks"
+            fill="#CBD5E1"
+            radius={[4, 4, 0, 0]}
+            stackId="proj"
+            isAnimationActive={!reducedMotion}
+            animationDuration={400}
+            animationEasing="ease-out"
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+})
 
 /* ─── Skeleton Loading State ─── */
 function AnalyticsSkeleton() {
@@ -120,6 +225,7 @@ function AnalyticsSkeleton() {
    ═══════════════════════════════════════════════════════════════ */
 export function AnalyticsPage() {
   const { user } = useAuth()
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [taskAnalytics, setTaskAnalytics] = useState(null)
   const [projectAnalytics, setProjectAnalytics] = useState(null)
   const [selectedProjectId, setSelectedProjectId] = useState('')
@@ -174,6 +280,70 @@ export function AnalyticsPage() {
     return () => { ignore = true }
   }, [loadAnalytics])
 
+  /* ─── Extract Real Data Structures ─── */
+  const overview = taskAnalytics?.overview || EMPTY_OBJECT
+  const byStatus = taskAnalytics?.byStatus || EMPTY_OBJECT
+  const byPriority = taskAnalytics?.byPriority || EMPTY_OBJECT
+  const deadlines = taskAnalytics?.deadlines || EMPTY_OBJECT
+  const scope = taskAnalytics?.scope || (isManagement ? 'ORGANIZATION' : 'PERSONAL')
+
+  const projOverview = projectAnalytics?.overview || EMPTY_OBJECT
+  const projects = projectAnalytics?.projects || EMPTY_ARRAY
+
+  /* Dropdown project filter options */
+  const projectOptions = useMemo(() => [
+    { value: '', label: 'All Organization Projects' },
+    ...projects.map((p) => ({
+      value: p.projectId,
+      label: `${p.name} ${p.code ? `(${p.code})` : ''}`,
+    })),
+  ], [projects])
+
+  const activeProjectObj = useMemo(() => {
+    return projects.find((p) => p.projectId === selectedProjectId)
+  }, [projects, selectedProjectId])
+
+  /* ─── Task Status Segments ─── */
+  const totalTasks = overview.total ?? 0
+  const statusSegments = useMemo(() => [
+    { key: 'TODO', label: 'To Do', value: byStatus.TODO || 0, color: STATUS_META.TODO.color },
+    { key: 'IN_PROGRESS', label: 'In Progress', value: byStatus.IN_PROGRESS || 0, color: STATUS_META.IN_PROGRESS.color },
+    { key: 'BLOCKED', label: 'Blocked', value: byStatus.BLOCKED || 0, color: STATUS_META.BLOCKED.color },
+    { key: 'COMPLETED', label: 'Completed', value: byStatus.COMPLETED || 0, color: STATUS_META.COMPLETED.color },
+    { key: 'CANCELLED', label: 'Cancelled', value: byStatus.CANCELLED || 0, color: STATUS_META.CANCELLED.color },
+  ], [byStatus.TODO, byStatus.IN_PROGRESS, byStatus.BLOCKED, byStatus.COMPLETED, byStatus.CANCELLED])
+
+  /* ─── Priority Segments ─── */
+  const prioritySegments = useMemo(() => [
+    { key: 'LOW', label: 'Low', value: byPriority.LOW || 0, color: PRIORITY_META.LOW.color },
+    { key: 'MEDIUM', label: 'Medium', value: byPriority.MEDIUM || 0, color: PRIORITY_META.MEDIUM.color },
+    { key: 'HIGH', label: 'High', value: byPriority.HIGH || 0, color: PRIORITY_META.HIGH.color },
+    { key: 'URGENT', label: 'Urgent', value: byPriority.URGENT || 0, color: PRIORITY_META.URGENT.color },
+  ], [byPriority.LOW, byPriority.MEDIUM, byPriority.HIGH, byPriority.URGENT])
+
+  /* ─── Priority Chart Data ─── */
+  const priorityChartData = useMemo(() => [
+    { name: 'Low', value: byPriority.LOW || 0, fill: PRIORITY_META.LOW.color },
+    { name: 'Medium', value: byPriority.MEDIUM || 0, fill: PRIORITY_META.MEDIUM.color },
+    { name: 'High', value: byPriority.HIGH || 0, fill: PRIORITY_META.HIGH.color },
+    { name: 'Urgent', value: byPriority.URGENT || 0, fill: PRIORITY_META.URGENT.color },
+  ], [byPriority.LOW, byPriority.MEDIUM, byPriority.HIGH, byPriority.URGENT])
+
+  /* ─── Project Task Completion Chart Data (top 8 by task count) ─── */
+  const projectCompletionData = useMemo(() => {
+    return [...projects]
+      .sort((a, b) => (b.totalTasks || 0) - (a.totalTasks || 0))
+      .slice(0, 8)
+      .map((p) => ({
+        name: p.code || p.name?.substring(0, 14) || 'Project',
+        fullName: p.name,
+        completed: p.completedTasks || 0,
+        incomplete: p.incompleteTasks || 0,
+        total: p.totalTasks || 0,
+        pct: p.completionPercentage || 0,
+      }))
+  }, [projects])
+
   if (isLoading) return <AnalyticsSkeleton />
 
   if (error) {
@@ -188,66 +358,6 @@ export function AnalyticsPage() {
       </div>
     )
   }
-
-  /* ─── Extract Real Data Structures ─── */
-  const overview = taskAnalytics?.overview || {}
-  const byStatus = taskAnalytics?.byStatus || {}
-  const byPriority = taskAnalytics?.byPriority || {}
-  const deadlines = taskAnalytics?.deadlines || {}
-  const scope = taskAnalytics?.scope || (isManagement ? 'ORGANIZATION' : 'PERSONAL')
-
-  const projOverview = projectAnalytics?.overview || {}
-  const projects = projectAnalytics?.projects || []
-
-  /* Dropdown project filter options */
-  const projectOptions = [
-    { value: '', label: 'All Organization Projects' },
-    ...projects.map((p) => ({
-      value: p.projectId,
-      label: `${p.name} ${p.code ? `(${p.code})` : ''}`,
-    })),
-  ]
-
-  const activeProjectObj = projects.find((p) => p.projectId === selectedProjectId)
-
-  /* ─── Task Status Segments ─── */
-  const totalTasks = overview.total ?? 0
-  const statusSegments = [
-    { key: 'TODO', label: 'To Do', value: byStatus.TODO || 0, color: STATUS_META.TODO.color },
-    { key: 'IN_PROGRESS', label: 'In Progress', value: byStatus.IN_PROGRESS || 0, color: STATUS_META.IN_PROGRESS.color },
-    { key: 'BLOCKED', label: 'Blocked', value: byStatus.BLOCKED || 0, color: STATUS_META.BLOCKED.color },
-    { key: 'COMPLETED', label: 'Completed', value: byStatus.COMPLETED || 0, color: STATUS_META.COMPLETED.color },
-    { key: 'CANCELLED', label: 'Cancelled', value: byStatus.CANCELLED || 0, color: STATUS_META.CANCELLED.color },
-  ]
-
-  /* ─── Priority Segments ─── */
-  const prioritySegments = [
-    { key: 'LOW', label: 'Low', value: byPriority.LOW || 0, color: PRIORITY_META.LOW.color },
-    { key: 'MEDIUM', label: 'Medium', value: byPriority.MEDIUM || 0, color: PRIORITY_META.MEDIUM.color },
-    { key: 'HIGH', label: 'High', value: byPriority.HIGH || 0, color: PRIORITY_META.HIGH.color },
-    { key: 'URGENT', label: 'Urgent', value: byPriority.URGENT || 0, color: PRIORITY_META.URGENT.color },
-  ]
-
-  /* ─── Priority Chart Data ─── */
-  const priorityChartData = [
-    { name: 'Low', value: byPriority.LOW || 0, fill: PRIORITY_META.LOW.color },
-    { name: 'Medium', value: byPriority.MEDIUM || 0, fill: PRIORITY_META.MEDIUM.color },
-    { name: 'High', value: byPriority.HIGH || 0, fill: PRIORITY_META.HIGH.color },
-    { name: 'Urgent', value: byPriority.URGENT || 0, fill: PRIORITY_META.URGENT.color },
-  ]
-
-  /* ─── Project Task Completion Chart Data (top 8 by task count) ─── */
-  const projectCompletionData = [...projects]
-    .sort((a, b) => (b.totalTasks || 0) - (a.totalTasks || 0))
-    .slice(0, 8)
-    .map((p) => ({
-      name: p.code || p.name?.substring(0, 14) || 'Project',
-      fullName: p.name,
-      completed: p.completedTasks || 0,
-      incomplete: p.incompleteTasks || 0,
-      total: p.totalTasks || 0,
-      pct: p.completionPercentage || 0,
-    }))
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
@@ -456,31 +566,10 @@ export function AnalyticsPage() {
               />
 
               {/* Priority Bar Chart */}
-              <div className="min-h-[175px] pt-1 border-t border-slate-100">
-                <ResponsiveContainer width="100%" height={175}>
-                  <BarChart data={priorityChartData} barCategoryGap="30%">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                    <XAxis
-                      dataKey="name"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
-                    />
-                    <YAxis
-                      allowDecimals={false}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12, fill: '#64748b' }}
-                    />
-                    <Tooltip content={<AnalyticsChartTooltip />} />
-                    <Bar dataKey="value" name="Tasks" radius={[4, 4, 0, 0]}>
-                      {priorityChartData.map((entry, idx) => (
-                        <Cell key={idx} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <PriorityDistributionChart
+                data={priorityChartData}
+                reducedMotion={prefersReducedMotion}
+              />
             </div>
           ) : (
             <InsightEmptyState
@@ -610,50 +699,10 @@ export function AnalyticsPage() {
               </Badge>
             }
           >
-            <div className="min-h-[290px] pt-2">
-              <ResponsiveContainer width="100%" height={290}>
-                <BarChart data={projectCompletionData} barCategoryGap="25%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }}
-                    interval={0}
-                    angle={-25}
-                    textAnchor="end"
-                    height={50}
-                  />
-                  <YAxis
-                    allowDecimals={false}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 12, fill: '#64748b' }}
-                  />
-                  <Tooltip content={<AnalyticsChartTooltip />} />
-                  <Legend
-                    verticalAlign="top"
-                    iconType="circle"
-                    iconSize={8}
-                    wrapperStyle={{ fontSize: 12, paddingBottom: 16 }}
-                  />
-                  <Bar
-                    dataKey="completed"
-                    name="Completed Tasks"
-                    fill="#16A34A"
-                    radius={[4, 4, 0, 0]}
-                    stackId="proj"
-                  />
-                  <Bar
-                    dataKey="incomplete"
-                    name="Incomplete Tasks"
-                    fill="#CBD5E1"
-                    radius={[4, 4, 0, 0]}
-                    stackId="proj"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <ProjectCompletionChart
+              data={projectCompletionData}
+              reducedMotion={prefersReducedMotion}
+            />
           </InsightSection>
         )}
 

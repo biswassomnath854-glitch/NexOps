@@ -1,0 +1,30 @@
+import { useState, useEffect } from 'react'
+
+/**
+ * Hook to detect user OS/browser preference for reduced motion.
+ * Respects accessibility settings without breaking visual aesthetics.
+ *
+ * @returns {boolean} Whether prefers-reduced-motion is active
+ */
+export function usePrefersReducedMotion() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const handler = (event) => setPrefersReducedMotion(event.matches)
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handler)
+      return () => mediaQuery.removeEventListener('change', handler)
+    } else if (mediaQuery.addListener) {
+      mediaQuery.addListener(handler)
+      return () => mediaQuery.removeListener(handler)
+    }
+  }, [])
+
+  return prefersReducedMotion
+}
