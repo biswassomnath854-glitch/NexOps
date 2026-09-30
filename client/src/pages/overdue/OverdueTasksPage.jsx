@@ -30,7 +30,6 @@ import {
   Filter,
   X,
   Calendar,
-  Layers,
 } from 'lucide-react'
 
 const PRIORITY_OPTIONS = [
@@ -204,7 +203,7 @@ export function OverdueTasksPage() {
     }
   }, [loadOverdue])
 
-  const tasks = data?.tasks || []
+  const tasks = useMemo(() => data?.tasks || [], [data?.tasks])
   const pagination = data?.pagination || {}
   const scope = data?.scope || (isManagement ? 'ORGANIZATION' : 'PERSONAL')
 

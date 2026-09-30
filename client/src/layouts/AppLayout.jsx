@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Navbar } from './Navbar'
@@ -9,6 +9,11 @@ import { RouteLoadingFallback } from '@/components/common/RouteLoadingFallback'
 export function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+
+  const handleOpenMobileSidebar = useCallback(() => setIsMobileMenuOpen(true), [])
+  const handleCloseMobileNav = useCallback(() => setIsMobileMenuOpen(false), [])
+  const handleOpenSearch = useCallback(() => setIsSearchOpen(true), [])
+  const handleCloseSearch = useCallback(() => setIsSearchOpen(false), [])
 
   // Listen for Cmd+K or Ctrl+K to open global search
   useEffect(() => {
@@ -41,21 +46,21 @@ export function AppLayout() {
       {/* Mobile Navigation Drawer */}
       <MobileNav
         isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
+        onClose={handleCloseMobileNav}
       />
 
       {/* Global Command Center Search Modal */}
       <GlobalSearchModal
         isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
+        onClose={handleCloseSearch}
       />
 
       {/* Main Workspace Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Top Navigation Header */}
         <Navbar
-          onOpenMobileSidebar={() => setIsMobileMenuOpen(true)}
-          onOpenSearch={() => setIsSearchOpen(true)}
+          onOpenMobileSidebar={handleOpenMobileSidebar}
+          onOpenSearch={handleOpenSearch}
         />
 
         {/* Page Content Container */}
