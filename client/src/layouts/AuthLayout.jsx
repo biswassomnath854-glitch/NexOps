@@ -1,6 +1,8 @@
+import { Suspense } from 'react'
 import { Outlet, Link } from 'react-router-dom'
 import { CheckCircle2, ShieldCheck, Zap, ArrowLeft } from 'lucide-react'
 import { SBLogo, SBLightLogo } from '@/components/common/SBLogo'
+import { RouteLoadingFallback } from '@/components/common/RouteLoadingFallback'
 import { ROUTES } from '@/constants/routes'
 
 export function AuthLayout() {
@@ -90,7 +92,9 @@ export function AuthLayout() {
               <SBLogo size="lg" />
             </Link>
           </div>
-          <Outlet />
+          <Suspense fallback={<RouteLoadingFallback message="Loading..." />}>
+            <Outlet />
+          </Suspense>
         </div>
       </div>
     </div>

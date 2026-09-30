@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Navbar } from './Navbar'
 import { MobileNav } from './MobileNav'
 import { GlobalSearchModal } from '@/components/common/GlobalSearchModal'
+import { RouteLoadingFallback } from '@/components/common/RouteLoadingFallback'
 
 export function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -60,7 +61,9 @@ export function AppLayout() {
         {/* Page Content Container */}
         <main id="main-content" className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl w-full mx-auto">
-            <Outlet />
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
       </div>
