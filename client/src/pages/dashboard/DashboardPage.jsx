@@ -58,20 +58,33 @@ export function DashboardPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const dashRes = await analyticsApi.getDashboard()
+      const [dashResult, overdueResult, workloadResult] = await Promise.allSettled([
+        analyticsApi.getDashboard(),
+        tasksApi.getOverdueTasks({ limit: 5 }),
+        isManagement ? analyticsApi.getWorkload({ limit: 5 }) : Promise.resolve(null),
+      ])
 
-      const data =
-        dashRes?.data?.dashboard ||
-        dashRes?.dashboard ||
-        dashRes?.data ||
-        dashRes
+      if (dashResult.status === 'fulfilled') {
+        const dashRes = dashResult.value
+        const data =
+          dashRes?.data?.dashboard ||
+          dashRes?.dashboard ||
+          dashRes?.data ||
+          dashRes
 
-      setDashboardData(data)
-      setError(null)
+        setDashboardData(data)
+        setError(null)
+      } else {
+        const err = dashResult.reason
+        console.error('Failed to load dashboard:', err)
+        setError(
+          err?.message ||
+            'Unable to connect to SB Pvt. Ltd. dashboard service.'
+        )
+      }
 
-      try {
-        const overdueRes = await tasksApi.getOverdueTasks({ limit: 5 })
-
+      if (overdueResult.status === 'fulfilled') {
+        const overdueRes = overdueResult.value
         const overdueList =
           overdueRes?.data?.tasks ||
           overdueRes?.tasks ||
@@ -79,23 +92,18 @@ export function DashboardPage() {
           []
 
         setOverdueTasks(overdueList)
-      } catch {
+      } else {
         setOverdueTasks([])
       }
 
-      if (isManagement) {
-        try {
-          const workloadRes = await analyticsApi.getWorkload({ limit: 5 })
+      if (isManagement && workloadResult.status === 'fulfilled' && workloadResult.value) {
+        const workloadRes = workloadResult.value
+        const workloadList =
+          workloadRes?.data?.workload ||
+          workloadRes?.workload ||
+          []
 
-          const workloadList =
-            workloadRes?.data?.workload ||
-            workloadRes?.workload ||
-            []
-
-          setWorkloadData(workloadList)
-        } catch {
-          setWorkloadData(null)
-        }
+        setWorkloadData(workloadList)
       } else {
         setWorkloadData(null)
       }
@@ -142,6 +150,29 @@ export function DashboardPage() {
       ignore = true
     }
   }, [loadData])
+
+  // Low-priority idle prefetch of the most likely next route (Tasks) once dashboard is ready
+  useEffect(() => {
+    if (isLoading || error) return
+
+    const idleCallback =
+      typeof window !== 'undefined' && 'requestIdleCallback' in window
+        ? window.requestIdleCallback
+        : (cb) => setTimeout(cb, 1200)
+
+    const cancelIdle =
+      typeof window !== 'undefined' && 'cancelIdleCallback' in window
+        ? window.cancelIdleCallback
+        : clearTimeout
+
+    const handle = idleCallback(() => {
+      import('@/pages/tasks/TasksPage')
+    })
+
+    return () => {
+      cancelIdle(handle)
+    }
+  }, [isLoading, error])
 
   if (isLoading) {
     return <DashboardSkeleton />
