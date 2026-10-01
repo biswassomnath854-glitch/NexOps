@@ -11,7 +11,7 @@ import { TaskStatusChangeModal } from '@/components/tasks/TaskStatusChangeModal'
 import { ConfirmationModal } from '@/components/common/ConfirmationModal'
 import { ErrorState } from '@/components/feedback/ErrorState'
 import { Button } from '@/components/ui/Button'
-import { ArrowLeft, RotateCw, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, RotateCw, CheckCircle2, AlertCircle } from 'lucide-react'
 
 const MANAGEMENT_ROLES = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.TEAM_LEAD]
 
@@ -58,7 +58,9 @@ export function TaskDetailsPage() {
       if (!currentUser || !t) return false
       if (isViewer) return false
       if (isManagement) return true
-      return t.assignedToId === currentUser.id || t.createdById === currentUser.id
+      const assigneeId = t.assignedTo || t.assignee?.id || t.assignedToId
+      const creatorId = t.createdBy || t.creator?.id || t.createdById
+      return assigneeId === currentUser.id || creatorId === currentUser.id
     },
     [currentUser, isManagement, isViewer]
   )
@@ -251,7 +253,11 @@ export function TaskDetailsPage() {
               : 'bg-emerald-50 border-emerald-200 text-emerald-800'
           }`}
         >
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+          {feedback.type === 'error' ? (
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+          )}
           <span>{feedback.message}</span>
         </div>
       )}

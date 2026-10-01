@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/Button'
-import { formatFileSize } from './AttachmentItem'
+import { formatFileSize } from './attachmentUtils'
 import {
   UploadCloud,
   File,

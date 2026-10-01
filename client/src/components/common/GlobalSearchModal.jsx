@@ -305,7 +305,7 @@ export function SearchResults({
             return (
               <SearchResultItem
                 key={user.id}
-                resultRef={itemRefs[idx]}
+                resultRef={(el) => { if (itemRefs?.current) itemRefs.current[idx] = el }}
                 icon={User}
                 iconBg="bg-indigo-50 text-indigo-500"
                 title={`${user.firstName} ${user.lastName}`}
@@ -332,7 +332,7 @@ export function SearchResults({
             return (
               <SearchResultItem
                 key={project.id}
-                resultRef={itemRefs[idx]}
+                resultRef={(el) => { if (itemRefs?.current) itemRefs.current[idx] = el }}
                 icon={FolderKanban}
                 iconBg="bg-violet-50 text-violet-500"
                 title={project.name}
@@ -360,7 +360,7 @@ export function SearchResults({
             return (
               <SearchResultItem
                 key={task.id}
-                resultRef={itemRefs[idx]}
+                resultRef={(el) => { if (itemRefs?.current) itemRefs.current[idx] = el }}
                 icon={
                   task.status === 'COMPLETED'
                     ? CheckCircle2
@@ -455,9 +455,6 @@ export function GlobalSearchModal({ isOpen, onClose }) {
 
   // Item refs for scrolling into view
   const itemRefs = useRef([])
-  useEffect(() => {
-    itemRefs.current = Array.from({ length: Math.max(navCount, 20) }, () => ({ current: null }))
-  }, [navCount])
 
   // ── Auto-focus on open ────────────────────────────────────────────────────
   useEffect(() => {
@@ -562,14 +559,14 @@ export function GlobalSearchModal({ isOpen, onClose }) {
         e.preventDefault()
         setActiveIndex((prev) => {
           const next = prev < navCount - 1 ? prev + 1 : 0
-          itemRefs.current[next]?.current?.scrollIntoView({ block: 'nearest' })
+          itemRefs.current[next]?.scrollIntoView?.({ block: 'nearest' })
           return next
         })
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
         setActiveIndex((prev) => {
           const next = prev > 0 ? prev - 1 : navCount - 1
-          itemRefs.current[next]?.current?.scrollIntoView({ block: 'nearest' })
+          itemRefs.current[next]?.scrollIntoView?.({ block: 'nearest' })
           return next
         })
       } else if (e.key === 'Enter' && activeIndex >= 0) {
@@ -654,7 +651,7 @@ export function GlobalSearchModal({ isOpen, onClose }) {
                   return (
                     <button
                       key={action.href}
-                      ref={(el) => { if (itemRefs.current[idx]) itemRefs.current[idx].current = el }}
+                      ref={(el) => { if (itemRefs.current) itemRefs.current[idx] = el }}
                       type="button"
                       onClick={() => handleQuickAction(action.href)}
                       className={cn(
@@ -748,7 +745,7 @@ export function GlobalSearchModal({ isOpen, onClose }) {
                   activeIndex={activeIndex}
                   flatItems={flatItems}
                   onSelect={handleSelect}
-                  itemRefs={itemRefs.current}
+                  itemRefs={itemRefs}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
