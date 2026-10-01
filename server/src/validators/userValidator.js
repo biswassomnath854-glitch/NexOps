@@ -71,7 +71,7 @@ const roleSchema = Joi.string()
   )
   .required()
   .messages({
-    "any.only": "Role must be a valid NexOps role.",
+    "any.only": "Role must be a valid SB Pvt. Ltd. role.",
     "any.required": "Role is required.",
     "string.empty": "Role is required.",
   });
@@ -183,7 +183,7 @@ const updateUserSchema = Joi.object({
     )
     .optional()
     .messages({
-      "any.only": "Role must be a valid NexOps role.",
+      "any.only": "Role must be a valid SB Pvt. Ltd. role.",
     }),
 
   status: Joi.string()
