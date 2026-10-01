@@ -86,7 +86,14 @@ export function NotificationDropdown() {
   useEffect(() => {
     fetchUnreadCount()
     const interval = setInterval(fetchUnreadCount, POLL_INTERVAL_MS)
-    return () => clearInterval(interval)
+    const handleSync = () => {
+      fetchUnreadCount()
+    }
+    window.addEventListener('nexops:notifications-updated', handleSync)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('nexops:notifications-updated', handleSync)
+    }
   }, [fetchUnreadCount])
 
   // ── Fetch notifications when dropdown opens ───────────────────────────────

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { tasksApi } from '@/api/endpoints/tasks'
 import { projectsApi } from '@/api/endpoints/projects'
@@ -136,6 +136,9 @@ export function TasksPage() {
     loadProjects()
   }, [loadProjects])
 
+  // Track active request ID to ignore stale responses from superseded requests
+  const taskRequestIdRef = useRef(0)
+
   // Load project members only for admin users.
   //
   // The project-members endpoint is intentionally restricted to
@@ -146,23 +149,31 @@ export function TasksPage() {
       return
     }
 
+    let isCurrent = true
     projectsApi
       .getMembers(selectedProjectId)
       .then((res) => {
+        if (!isCurrent) return
         const list = res?.data?.projectMembers || res?.projectMembers || []
         setMembers(list)
       })
       .catch((err) => {
+        if (!isCurrent) return
         console.error('Failed to load project members:', err)
         setMembers([])
       })
+
+    return () => {
+      isCurrent = false
+    }
   }, [selectedProjectId, isAdmin])
 
-  // Load tasks
+  // Load tasks with race condition protection
   const loadTasks = useCallback(
     async (projectId, queryFilters) => {
       if (!projectId) return
 
+      const currentId = ++taskRequestIdRef.current
       setIsLoading(true)
       setError(null)
 
@@ -175,6 +186,8 @@ export function TasksPage() {
         )
 
         const res = await tasksApi.getProjectTasks(projectId, params)
+        if (currentId !== taskRequestIdRef.current) return // Superseeded by newer project/filter request
+
         const data = res?.data || res
 
         setTasks(data?.tasks || [])
@@ -187,6 +200,7 @@ export function TasksPage() {
           }
         )
       } catch (err) {
+        if (currentId !== taskRequestIdRef.current) return
         console.error('Failed to load tasks:', err)
 
         const msg = err?.message || 'Failed to load tasks.'
@@ -194,7 +208,9 @@ export function TasksPage() {
         setError(msg)
         setTasks([])
       } finally {
-        setIsLoading(false)
+        if (currentId === taskRequestIdRef.current) {
+          setIsLoading(false)
+        }
       }
     },
     []

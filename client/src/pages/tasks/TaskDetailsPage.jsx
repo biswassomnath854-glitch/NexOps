@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { tasksApi } from '@/api/endpoints/tasks'
 import { projectsApi } from '@/api/endpoints/projects'
@@ -39,7 +39,17 @@ export function TaskDetailsPage() {
     setTimeout(() => setFeedback(null), 4500)
   }
 
+  const isMountedRef = useRef(true)
+
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   const isManagement = currentUser?.role && MANAGEMENT_ROLES.includes(currentUser.role)
+  const isAdmin = currentUser?.role && [ROLES.SUPER_ADMIN, ROLES.ADMIN].includes(currentUser.role)
   const isViewer = currentUser?.role === ROLES.VIEWER
 
   // Check canEdit: management OR (creator/assignee and not viewer)
@@ -64,28 +74,36 @@ export function TaskDetailsPage() {
     try {
       setError(null)
       const res = await tasksApi.getTaskById(taskId)
+      if (!isMountedRef.current) return
+
       const taskData = res?.data?.task || res?.data || res
       setTask(taskData)
 
-      // Fetch project members if projectId is present
+      // Fetch project members only if user has admin privileges (backend restricts members endpoint to SUPER_ADMIN/ADMIN)
       const projectId = taskData?.projectId || taskData?.project?.id
-      if (projectId) {
+      if (projectId && isAdmin) {
         try {
           const membersRes = await projectsApi.getMembers(projectId)
+          if (!isMountedRef.current) return
           const memberList = membersRes?.data?.projectMembers || membersRes?.projectMembers || []
           setMembers(memberList)
         } catch {
-          setMembers([])
+          if (isMountedRef.current) setMembers([])
         }
+      } else {
+        setMembers([])
       }
     } catch (err) {
+      if (!isMountedRef.current) return
       console.error('Failed to load task details:', err)
       setError(err?.message || 'Failed to load task details.')
     } finally {
-      setIsLoading(false)
-      setIsRefreshing(false)
+      if (isMountedRef.current) {
+        setIsLoading(false)
+        setIsRefreshing(false)
+      }
     }
-  }, [taskId])
+  }, [taskId, isAdmin])
 
   useEffect(() => {
     setIsLoading(true)
@@ -101,11 +119,12 @@ export function TaskDetailsPage() {
     setIsActionLoading(true)
     try {
       await tasksApi.updateTask(taskId, formData)
+      if (!isMountedRef.current) return
       showFeedback('Task updated successfully.')
       setIsEditOpen(false)
       await loadTaskData()
     } finally {
-      setIsActionLoading(false)
+      if (isMountedRef.current) setIsActionLoading(false)
     }
   }
 
@@ -113,11 +132,12 @@ export function TaskDetailsPage() {
     setIsActionLoading(true)
     try {
       await tasksApi.updateTaskStatus(taskId, { status, comment })
+      if (!isMountedRef.current) return
       showFeedback(`Status changed to ${status.replace('_', ' ')}.`)
       setIsStatusOpen(false)
       await loadTaskData()
     } finally {
-      setIsActionLoading(false)
+      if (isMountedRef.current) setIsActionLoading(false)
     }
   }
 
@@ -125,13 +145,15 @@ export function TaskDetailsPage() {
     setIsActionLoading(true)
     try {
       await tasksApi.deleteTask(taskId)
+      if (!isMountedRef.current) return
       setIsDeleteOpen(false)
       navigate(ROUTES.TASKS, { replace: true })
     } catch (err) {
+      if (!isMountedRef.current) return
       console.error('Failed to delete task:', err)
       showFeedback(err?.message || 'Failed to delete task.', 'error')
     } finally {
-      setIsActionLoading(false)
+      if (isMountedRef.current) setIsActionLoading(false)
     }
   }
 

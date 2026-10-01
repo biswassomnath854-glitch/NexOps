@@ -21,6 +21,7 @@ export function CommentForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (isLoading) return
     const trimmed = content.trim()
 
     if (!trimmed) {

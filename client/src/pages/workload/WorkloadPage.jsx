@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo, memo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { useDebounce } from '@/hooks/useDebounce'
 import { analyticsApi } from '@/api/endpoints/analytics'
 import { ROLES } from '@/constants/roles'
 import { ROUTES } from '@/constants/routes'
@@ -308,26 +309,33 @@ export function WorkloadPage() {
   const [priority, setPriority] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const requestIdRef = useRef(0)
+
+  const debouncedSearch = useDebounce(search, 350)
 
   const isManagement =
     user?.role &&
     [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.TEAM_LEAD].includes(user.role)
 
   const loadWorkload = useCallback(async () => {
+    const currentId = ++requestIdRef.current
     try {
       const params = { page, limit: pageSize }
-      if (search.trim()) params.search = search.trim()
+      if (debouncedSearch.trim()) params.search = debouncedSearch.trim()
       if (priority) params.priority = priority
 
       const res = await analyticsApi.getWorkload(params)
+      if (currentId !== requestIdRef.current) return // Superseeded by newer request
+
       const data = res?.data?.workload || res?.workload || res?.data || res
       setWorkloadData(data)
       setError(null)
     } catch (err) {
+      if (currentId !== requestIdRef.current) return
       console.error('Workload load failed:', err)
       setError(err.message || 'Unable to load workload data.')
     }
-  }, [page, pageSize, search, priority])
+  }, [page, pageSize, debouncedSearch, priority])
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -357,11 +365,6 @@ export function WorkloadPage() {
     init()
     return () => { ignore = true }
   }, [loadWorkload])
-
-  /* Reset page on filter change */
-  useEffect(() => {
-    setPage(1)
-  }, [search, priority])
 
   const prefersReducedMotion = usePrefersReducedMotion()
   const overview = workloadData?.overview || EMPTY_OBJECT
@@ -620,13 +623,19 @@ export function WorkloadPage() {
                 placeholder="Search by name or email..."
                 leftIcon={Search}
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setPage(1)
+                }}
               />
             </div>
             <div className="w-full sm:w-48">
               <Select
                 value={priority}
-                onChange={(e) => setPriority(e.target.value)}
+                onChange={(e) => {
+                  setPriority(e.target.value)
+                  setPage(1)
+                }}
                 options={PRIORITY_OPTIONS}
                 placeholder=""
               />

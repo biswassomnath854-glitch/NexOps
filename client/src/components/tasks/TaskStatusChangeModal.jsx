@@ -45,7 +45,7 @@ export function TaskStatusChangeModal({
   const allowedNext = ALLOWED_TRANSITIONS[currentStatus] || []
 
   const handleSubmit = async () => {
-    if (!selectedStatus) return
+    if (!selectedStatus || isLoading) return
     setServerError(null)
     try {
       await onSubmit(selectedStatus)

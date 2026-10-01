@@ -93,6 +93,7 @@ function TaskFormModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (isLoading) return
     setServerError(null)
     if (!validate()) return
 

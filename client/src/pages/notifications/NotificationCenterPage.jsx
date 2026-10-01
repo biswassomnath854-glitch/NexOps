@@ -95,6 +95,7 @@ export function NotificationCenterPage() {
         prev.map((n) => (n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n))
       )
       setUnreadCount((prev) => Math.max(0, prev - 1))
+      window.dispatchEvent(new CustomEvent('nexops:notifications-updated'))
     } catch (err) {
       showFeedback(err?.message || 'Failed to mark as read.', 'error')
     }
@@ -107,6 +108,7 @@ export function NotificationCenterPage() {
         prev.map((n) => ({ ...n, isRead: true, readAt: new Date().toISOString() }))
       )
       setUnreadCount(0)
+      window.dispatchEvent(new CustomEvent('nexops:notifications-updated'))
       showFeedback('All notifications marked as read.')
     } catch (err) {
       showFeedback(err?.message || 'Failed to mark all as read.', 'error')
@@ -124,6 +126,7 @@ export function NotificationCenterPage() {
         return prev.filter((n) => n.id !== id)
       })
       setPagination((prev) => ({ ...prev, total: Math.max(0, prev.total - 1) }))
+      window.dispatchEvent(new CustomEvent('nexops:notifications-updated'))
       showFeedback('Notification deleted.')
     } catch (err) {
       showFeedback(err?.message || 'Failed to delete notification.', 'error')

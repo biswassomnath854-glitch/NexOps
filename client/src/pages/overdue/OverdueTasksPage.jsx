@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useDebounce } from '@/hooks/useDebounce'
 import { tasksApi } from '@/api/endpoints/tasks'
 import { projectsApi } from '@/api/endpoints/projects'
 import { ROLES } from '@/constants/roles'
@@ -131,6 +132,9 @@ export function OverdueTasksPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const requestIdRef = useRef(0)
+
+  const debouncedSearch = useDebounce(search, 350)
 
   const isManagement =
     user?.role &&
@@ -162,21 +166,25 @@ export function OverdueTasksPage() {
 
   /* Main Overdue API Call */
   const loadOverdue = useCallback(async () => {
+    const currentId = ++requestIdRef.current
     try {
       const params = { page, limit: pageSize }
-      if (search.trim()) params.search = search.trim()
+      if (debouncedSearch.trim()) params.search = debouncedSearch.trim()
       if (priority) params.priority = priority
       if (projectId) params.projectId = projectId
 
       const res = await tasksApi.getOverdueTasks(params)
+      if (currentId !== requestIdRef.current) return // Superseeded by newer request
+
       const result = res?.data || res
       setData(result)
       setError(null)
     } catch (err) {
+      if (currentId !== requestIdRef.current) return
       console.error('Overdue tasks load failed:', err)
       setError(err.message || 'Unable to load overdue tasks.')
     }
-  }, [page, pageSize, search, priority, projectId])
+  }, [page, pageSize, debouncedSearch, priority, projectId])
 
   const handleRefresh = async () => {
     setIsRefreshing(true)

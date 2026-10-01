@@ -92,39 +92,49 @@ const buildUserScope = (user) => {
 };
 
 const getStatusStatistics = async (where) => {
-  const statistics = {};
+  const counts = await Promise.all(
+    TASK_STATUSES.map((status) =>
+      Task.count({
+        where: {
+          [Op.and]: [
+            where,
+            {
+              status,
+            },
+          ],
+        },
+      })
+    )
+  );
 
-  for (const status of TASK_STATUSES) {
-    statistics[status] = await Task.count({
-      where: {
-        [Op.and]: [
-          where,
-          {
-            status,
-          },
-        ],
-      },
-    });
-  }
+  const statistics = {};
+  TASK_STATUSES.forEach((status, index) => {
+    statistics[status] = counts[index];
+  });
 
   return statistics;
 };
 
 const getPriorityStatistics = async (where) => {
-  const statistics = {};
+  const counts = await Promise.all(
+    TASK_PRIORITIES.map((priority) =>
+      Task.count({
+        where: {
+          [Op.and]: [
+            where,
+            {
+              priority,
+            },
+          ],
+        },
+      })
+    )
+  );
 
-  for (const priority of TASK_PRIORITIES) {
-    statistics[priority] = await Task.count({
-      where: {
-        [Op.and]: [
-          where,
-          {
-            priority,
-          },
-        ],
-      },
-    });
-  }
+  const statistics = {};
+  TASK_PRIORITIES.forEach((priority, index) => {
+    statistics[priority] = counts[index];
+  });
 
   return statistics;
 };
@@ -132,20 +142,25 @@ const getPriorityStatistics = async (where) => {
 const getProjectStatusStatistics = async (
   where
 ) => {
-  const statistics = {};
+  const counts = await Promise.all(
+    PROJECT_STATUSES.map((status) =>
+      Project.count({
+        where: {
+          [Op.and]: [
+            where,
+            {
+              status,
+            },
+          ],
+        },
+      })
+    )
+  );
 
-  for (const status of PROJECT_STATUSES) {
-    statistics[status] = await Project.count({
-      where: {
-        [Op.and]: [
-          where,
-          {
-            status,
-          },
-        ],
-      },
-    });
-  }
+  const statistics = {};
+  PROJECT_STATUSES.forEach((status, index) => {
+    statistics[status] = counts[index];
+  });
 
   return statistics;
 };
