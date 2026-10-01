@@ -3,7 +3,8 @@ const projectMemberService = require("../services/projectMemberService");
 const getProjectMembers = async (req, res, next) => {
   try {
     const projectMembers = await projectMemberService.getProjectMembers(
-      req.params.projectId
+      req.params.projectId,
+      req.user
     );
 
     return res.status(200).json({
@@ -22,7 +23,8 @@ const createProjectMember = async (req, res, next) => {
   try {
     const projectMember = await projectMemberService.createProjectMember(
       req.params.projectId,
-      req.body
+      req.body,
+      req.user
     );
 
     return res.status(201).json({
@@ -42,7 +44,8 @@ const updateProjectMember = async (req, res, next) => {
     const projectMember = await projectMemberService.updateProjectMember(
       req.params.projectId,
       req.params.userId,
-      req.body
+      req.body,
+      req.user
     );
 
     return res.status(200).json({
@@ -61,7 +64,8 @@ const deleteProjectMember = async (req, res, next) => {
   try {
     const deletedMember = await projectMemberService.deleteProjectMember(
       req.params.projectId,
-      req.params.userId
+      req.params.userId,
+      req.user
     );
 
     return res.status(200).json({

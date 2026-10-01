@@ -1,3 +1,5 @@
+const path = require("path");
+const fs = require("fs/promises");
 const { Op } = require("sequelize");
 
 const {
@@ -5,6 +7,7 @@ const {
   Project,
   User,
   ProjectMember,
+  TaskAttachment,
 } = require("../models");
 
 const taskActivityService = require("./taskActivityService");
@@ -868,6 +871,11 @@ const createTask = async (
           ? "TODO"
           : status,
 
+      completedAt:
+        status === "COMPLETED"
+          ? new Date()
+          : null,
+
       dueDate:
         validatedDueDate,
     });
@@ -1460,7 +1468,33 @@ const deleteTask = async (
       task
     );
 
+  const attachments =
+    await TaskAttachment.findAll({
+      where: {
+        taskId: task.id,
+      },
+    });
+
   await task.destroy();
+
+  for (const attachment of attachments) {
+    if (attachment.filePath) {
+      try {
+        const physicalPath =
+          path.isAbsolute(attachment.filePath)
+            ? attachment.filePath
+            : path.resolve(__dirname, "../..", attachment.filePath);
+        await fs.unlink(physicalPath);
+      } catch (err) {
+        if (err.code !== "ENOENT") {
+          console.error(
+            "Failed to delete attachment physical file during task deletion:",
+            err
+          );
+        }
+      }
+    }
+  }
 
   return deletedTask;
 };

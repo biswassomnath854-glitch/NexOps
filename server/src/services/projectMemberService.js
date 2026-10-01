@@ -1,6 +1,6 @@
 const { ProjectMember, Project, User, Organization, Department } = require("../models");
 
-const findProjectById = async (projectId) => {
+const findProjectById = async (projectId, actorUser) => {
   const project = await Project.findByPk(projectId, {
     include: [
       {
@@ -18,10 +18,22 @@ const findProjectById = async (projectId) => {
     throw error;
   }
 
+  if (
+    actorUser &&
+    actorUser.role !== "SUPER_ADMIN" &&
+    actorUser.organizationId &&
+    project.organizationId !== actorUser.organizationId
+  ) {
+    const error = new Error("You do not have access to this project.");
+    error.statusCode = 403;
+    error.code = "CROSS_ORGANIZATION_ACCESS";
+    throw error;
+  }
+
   return project;
 };
 
-const findUserById = async (userId) => {
+const findUserById = async (userId, actorUser) => {
   const user = await User.findByPk(userId, {
     include: [
       {
@@ -44,11 +56,23 @@ const findUserById = async (userId) => {
     throw error;
   }
 
+  if (
+    actorUser &&
+    actorUser.role !== "SUPER_ADMIN" &&
+    actorUser.organizationId &&
+    user.organizationId !== actorUser.organizationId
+  ) {
+    const error = new Error("You do not have access to this user.");
+    error.statusCode = 403;
+    error.code = "CROSS_ORGANIZATION_ACCESS";
+    throw error;
+  }
+
   return user;
 };
 
-const getProjectMembers = async (projectId) => {
-  await findProjectById(projectId);
+const getProjectMembers = async (projectId, actorUser) => {
+  await findProjectById(projectId, actorUser);
 
   return ProjectMember.findAll({
     where: {
@@ -86,9 +110,9 @@ const getProjectMembers = async (projectId) => {
   });
 };
 
-const createProjectMember = async (projectId, data) => {
-  const project = await findProjectById(projectId);
-  const user = await findUserById(data.userId);
+const createProjectMember = async (projectId, data, actorUser) => {
+  const project = await findProjectById(projectId, actorUser);
+  const user = await findUserById(data.userId, actorUser);
 
   if (project.status !== "ACTIVE") {
     const error = new Error("Only active projects can have members assigned.");
@@ -178,9 +202,9 @@ const createProjectMember = async (projectId, data) => {
   });
 };
 
-const updateProjectMember = async (projectId, userId, data) => {
-  await findProjectById(projectId);
-  await findUserById(userId);
+const updateProjectMember = async (projectId, userId, data, actorUser) => {
+  await findProjectById(projectId, actorUser);
+  await findUserById(userId, actorUser);
 
   const projectMember = await ProjectMember.findOne({
     where: {
@@ -231,8 +255,9 @@ const updateProjectMember = async (projectId, userId, data) => {
   });
 };
 
-const deleteProjectMember = async (projectId, userId) => {
-  await findProjectById(projectId);
+const deleteProjectMember = async (projectId, userId, actorUser) => {
+  await findProjectById(projectId, actorUser);
+  await findUserById(userId, actorUser);
 
   const projectMember = await ProjectMember.findOne({
     where: {
