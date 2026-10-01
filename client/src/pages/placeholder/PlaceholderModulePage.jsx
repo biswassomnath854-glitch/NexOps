@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Sparkles, ArrowRight, Construction } from 'lucide-react'
+import { ArrowRight, Construction } from 'lucide-react'
 import { PageHeader } from '@/components/common/PageHeader'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'

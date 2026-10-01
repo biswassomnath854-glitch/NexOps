@@ -4,7 +4,6 @@ import {
   LogOut,
   Settings,
   Bell,
-  Sparkles,
   ChevronDown,
   Building,
 } from 'lucide-react'

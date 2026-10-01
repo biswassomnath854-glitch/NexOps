@@ -3,6 +3,7 @@ import {
   useEffect,
   useRef,
   useCallback,
+  useMemo,
   forwardRef,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -261,7 +262,7 @@ export function SearchResults({
   results,
   query,
   activeIndex,
-  flatItems,
+  flatItems: _flatItems,
   onSelect,
   itemRefs,
 }) {
@@ -434,13 +435,15 @@ export function GlobalSearchModal({ isOpen, onClose }) {
   const debouncedQuery = useDebounce(query.trim(), DEBOUNCE_MS)
 
   // Build flat item list for keyboard navigation
-  const flatItems = results
-    ? [
-        ...(results.users?.users || []).map((u) => ({ type: 'user', item: u })),
-        ...(results.projects?.projects || []).map((p) => ({ type: 'project', item: p })),
-        ...(results.tasks?.tasks || []).map((t) => ({ type: 'task', item: t })),
-      ]
-    : []
+  const flatItems = useMemo(() => {
+    return results
+      ? [
+          ...(results.users?.users || []).map((u) => ({ type: 'user', item: u })),
+          ...(results.projects?.projects || []).map((p) => ({ type: 'project', item: p })),
+          ...(results.tasks?.tasks || []).map((t) => ({ type: 'task', item: t })),
+        ]
+      : []
+  }, [results])
 
   // Build quick-action flat list (only shown when query is empty)
   const quickItems = QUICK_ACTIONS
@@ -521,6 +524,29 @@ export function GlobalSearchModal({ isOpen, onClose }) {
     onClose()
   }, [onClose])
 
+  // ── Navigate on select ────────────────────────────────────────────────────
+  const handleSelect = useCallback(
+    ({ type, item }) => {
+      handleClose()
+      if (type === 'user') {
+        navigate(ROUTES.USERS)
+      } else if (type === 'project') {
+        navigate(ROUTES.PROJECT_DETAILS(item.id))
+      } else if (type === 'task') {
+        navigate(ROUTES.TASK_DETAILS(item.id))
+      }
+    },
+    [handleClose, navigate]
+  )
+
+  const handleQuickAction = useCallback(
+    (href) => {
+      handleClose()
+      navigate(href)
+    },
+    [handleClose, navigate]
+  )
+
   useEffect(() => {
     if (!isOpen) return
 
@@ -559,24 +585,7 @@ export function GlobalSearchModal({ isOpen, onClose }) {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, activeIndex, navCount, flatItems, quickItems, query, handleClose])
-
-  // ── Navigate on select ────────────────────────────────────────────────────
-  const handleSelect = ({ type, item }) => {
-    handleClose()
-    if (type === 'user') {
-      navigate(ROUTES.USERS)
-    } else if (type === 'project') {
-      navigate(ROUTES.PROJECT_DETAILS(item.id))
-    } else if (type === 'task') {
-      navigate(ROUTES.TASK_DETAILS(item.id))
-    }
-  }
-
-  const handleQuickAction = (href) => {
-    handleClose()
-    navigate(href)
-  }
+  }, [isOpen, activeIndex, navCount, flatItems, quickItems, query, handleClose, handleSelect, handleQuickAction])
 
   if (!isOpen) return null
 

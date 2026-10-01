@@ -5,7 +5,6 @@ import { TaskAssignee } from './TaskAssignee'
 import { DueDateIndicator } from './DueDateIndicator'
 import { Button } from '@/components/ui/Button'
 import { ROUTES } from '@/constants/routes'
-import { formatDate } from '@/utils/formatters'
 import { Eye, Edit2, Trash2, FolderKanban } from 'lucide-react'
 
 /**

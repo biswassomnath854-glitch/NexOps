@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { Input } from '@/components/forms/Input'
-import { Button } from '@/components/ui/Button'
 import {
   Search,
   X,
   ChevronDown,
   ChevronUp,
-  Filter,
   SlidersHorizontal,
   RotateCcw,
   Calendar,

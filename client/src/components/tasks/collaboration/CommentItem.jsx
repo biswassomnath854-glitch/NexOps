@@ -4,7 +4,7 @@ import { CommentForm } from './CommentForm'
 import { formatDateTime } from '@/utils/formatters'
 import { Button } from '@/components/ui/Button'
 import { ConfirmationModal } from '@/components/common/ConfirmationModal'
-import { Edit2, Trash2, MoreVertical } from 'lucide-react'
+import { Edit2, Trash2 } from 'lucide-react'
 
 export function CommentItem({
   comment,
@@ -17,7 +17,6 @@ export function CommentItem({
   const [isEditing, setIsEditing] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isActionLoading, setIsActionLoading] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
 
   if (!comment) return null
 

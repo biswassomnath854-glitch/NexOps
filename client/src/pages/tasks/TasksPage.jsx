@@ -51,6 +51,9 @@ export function TasksPage() {
   const isManagement =
     currentUser?.role && MANAGEMENT_ROLES.includes(currentUser.role)
 
+  const isAdmin =
+    currentUser?.role && [ROLES.SUPER_ADMIN, ROLES.ADMIN].includes(currentUser.role)
+
   const isViewer = currentUser?.role === ROLES.VIEWER
 
   // Data state
@@ -86,9 +89,9 @@ export function TasksPage() {
 
   // Load projects available to the authenticated user.
   //
-  // Management roles use the existing project-management endpoint.
-  // Employee/Viewer roles use the accessible-project endpoint because
-  // the normal project-management endpoint is intentionally admin-only.
+  // Admin roles have access to the full project-management endpoint.
+  // Other roles (Manager, Team Lead, Employee, Viewer) use the accessible-project
+  // endpoint which safely scopes to their accessible projects without 403 errors.
   const loadProjects = useCallback(async () => {
     if (!currentUser?.role) return
 
@@ -96,8 +99,8 @@ export function TasksPage() {
     setError(null)
 
     try {
-      const res = isManagement
-        ? await projectsApi.getProjects()
+      const res = isAdmin
+        ? await projectsApi.getProjects().catch(() => projectsApi.getAccessibleProjects())
         : await projectsApi.getAccessibleProjects()
 
       const list = res?.data?.projects || res?.projects || []
@@ -127,18 +130,18 @@ export function TasksPage() {
     } finally {
       setIsProjectsLoading(false)
     }
-  }, [currentUser?.role, isManagement])
+  }, [currentUser?.role, isAdmin])
 
   useEffect(() => {
     loadProjects()
   }, [loadProjects])
 
-  // Load project members only for management users.
+  // Load project members only for admin users.
   //
   // The project-members endpoint is intentionally restricted to
-  // SUPER_ADMIN/ADMIN, so Employee/Viewer users must not call it.
+  // SUPER_ADMIN/ADMIN on the backend, so non-admin users must not call it.
   useEffect(() => {
-    if (!selectedProjectId || !isManagement) {
+    if (!selectedProjectId || !isAdmin) {
       setMembers([])
       return
     }
@@ -153,7 +156,7 @@ export function TasksPage() {
         console.error('Failed to load project members:', err)
         setMembers([])
       })
-  }, [selectedProjectId, isManagement])
+  }, [selectedProjectId, isAdmin])
 
   // Load tasks
   const loadTasks = useCallback(

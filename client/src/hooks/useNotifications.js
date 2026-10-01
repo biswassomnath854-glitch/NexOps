@@ -63,44 +63,32 @@ export function useNotifications({ autoFetch = true } = {}) {
 
   // ── Mark one as read ──────────────────────────────────────────────────────
   const markAsRead = useCallback(async (notificationId) => {
-    try {
-      await notificationsApi.markAsRead(notificationId)
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, isRead: true, readAt: new Date().toISOString() } : n))
-      )
-      setUnreadCount((prev) => Math.max(0, prev - 1))
-    } catch (err) {
-      throw err
-    }
+    await notificationsApi.markAsRead(notificationId)
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, isRead: true, readAt: new Date().toISOString() } : n))
+    )
+    setUnreadCount((prev) => Math.max(0, prev - 1))
   }, [])
 
   // ── Mark all as read ──────────────────────────────────────────────────────
   const markAllAsRead = useCallback(async () => {
-    try {
-      await notificationsApi.markAllAsRead()
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, isRead: true, readAt: new Date().toISOString() }))
-      )
-      setUnreadCount(0)
-    } catch (err) {
-      throw err
-    }
+    await notificationsApi.markAllAsRead()
+    setNotifications((prev) =>
+      prev.map((n) => ({ ...n, isRead: true, readAt: new Date().toISOString() }))
+    )
+    setUnreadCount(0)
   }, [])
 
   // ── Delete notification ───────────────────────────────────────────────────
   const deleteNotification = useCallback(async (notificationId) => {
-    try {
-      await notificationsApi.deleteNotification(notificationId)
-      setNotifications((prev) => {
-        const removed = prev.find((n) => n.id === notificationId)
-        if (removed && !removed.isRead) {
-          setUnreadCount((c) => Math.max(0, c - 1))
-        }
-        return prev.filter((n) => n.id !== notificationId)
-      })
-    } catch (err) {
-      throw err
-    }
+    await notificationsApi.deleteNotification(notificationId)
+    setNotifications((prev) => {
+      const removed = prev.find((n) => n.id === notificationId)
+      if (removed && !removed.isRead) {
+        setUnreadCount((c) => Math.max(0, c - 1))
+      }
+      return prev.filter((n) => n.id !== notificationId)
+    })
   }, [])
 
   // ── Auto-mount + polling ──────────────────────────────────────────────────

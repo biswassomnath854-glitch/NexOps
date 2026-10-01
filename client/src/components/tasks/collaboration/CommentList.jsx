@@ -4,7 +4,7 @@ import { CommentForm } from './CommentForm'
 import { CommentItem } from './CommentItem'
 import { Pagination } from '@/components/common/Pagination'
 import { EmptyState } from '@/components/feedback/EmptyState'
-import { MessageSquare, Loader2, RefreshCw } from 'lucide-react'
+import { MessageSquare, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 export function CommentList({

@@ -4,19 +4,18 @@ import {
   RotateCw,
   CheckCircle2,
   AlertTriangle,
-  Loader2,
-  Shield,
   UserPlus,
   RefreshCw,
   MessageSquare,
   Clock,
   Info,
+  Shield,
 } from 'lucide-react'
 import { notificationsApi } from '@/api/endpoints/notifications'
 import { PREFERENCE_FIELDS, NOTIFICATION_TYPE_META } from '@/constants/notifications'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { cn } from '@/utils/cn'
 
 /* ─── Enterprise Category Grouping of the 8 Backend Fields ─── */

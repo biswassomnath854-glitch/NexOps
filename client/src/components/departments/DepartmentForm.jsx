@@ -3,7 +3,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/forms/Input'
 import { Select } from '@/components/forms/Select'
 import { Button } from '@/components/ui/Button'
-import { AlertCircle, Building2, Landmark } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 
 export function DepartmentForm(props) {
   if (!props.isOpen) return null
