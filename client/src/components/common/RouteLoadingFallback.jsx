@@ -1,9 +1,5 @@
-/**
- * RouteLoadingFallback
- *
- * Compact, branded loading fallback conforming to the SB Pvt. Ltd. design system.
- * Used during route transitions when dynamic code chunks are loaded via React.lazy().
- */
+import { SBMonogram } from '@/components/common/SBLogo'
+
 export function RouteLoadingFallback({ fullPage = false, message = 'Loading workspace...' }) {
   if (fullPage) {
     return (
@@ -14,7 +10,8 @@ export function RouteLoadingFallback({ fullPage = false, message = 'Loading work
         aria-label={message}
       >
         <div className="flex flex-col items-center gap-3">
-          <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-[#635BFF] animate-spin" />
+          <SBMonogram size={40} className="mb-1 animate-pulse" />
+          <div className="w-5 h-5 rounded-full border-2 border-slate-200 border-t-[#635BFF] animate-spin" />
           <span className="text-xs font-semibold text-slate-500 tracking-wider uppercase">
             {message}
           </span>

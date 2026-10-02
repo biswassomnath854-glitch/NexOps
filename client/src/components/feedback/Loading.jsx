@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { SBMonogram } from '@/components/common/SBLogo'
 
 /**
  * Animated Spinner for inline or section loading.
@@ -37,8 +38,9 @@ export function Skeleton({ className, ...props }) {
  */
 export function FullPageLoader({ message = 'Loading SB Pvt. Ltd. workspace...' }) {
   return (
-    <div className="min-h-[50vh] flex flex-col items-center justify-center p-8 gap-4">
-      <Spinner size="lg" />
+    <div className="min-h-[50vh] flex flex-col items-center justify-center p-8 gap-3">
+      <SBMonogram size={44} className="animate-pulse mb-1" />
+      <Spinner size="md" />
       {message && <p className="text-sm font-medium text-slate-500">{message}</p>}
     </div>
   )

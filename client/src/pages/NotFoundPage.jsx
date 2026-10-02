@@ -1,11 +1,16 @@
 import { Link } from 'react-router-dom'
 import { FileQuestion, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { SBLogo } from '@/components/common/SBLogo'
 import { ROUTES } from '@/constants/routes'
 
 export function NotFoundPage() {
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center">
+      <Link to={ROUTES.HOME} className="mb-6 inline-block" title="SB Pvt. Ltd.">
+        <SBLogo size="md" />
+      </Link>
+
       <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-6 shadow-xs">
         <FileQuestion className="w-8 h-8" />
       </div>

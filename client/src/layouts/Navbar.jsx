@@ -1,7 +1,10 @@
+import { Link } from 'react-router-dom'
 import { Menu, Search } from 'lucide-react'
 import { Breadcrumbs } from '@/components/common/Breadcrumbs'
 import { NotificationDropdown } from '@/components/common/NotificationDropdown'
 import { UserMenu } from '@/components/common/UserMenu'
+import { SBMonogram } from '@/components/common/SBLogo'
+import { ROUTES } from '@/constants/routes'
 
 export function Navbar({ onOpenMobileSidebar, onOpenSearch }) {
   return (
@@ -16,6 +19,14 @@ export function Navbar({ onOpenMobileSidebar, onOpenSearch }) {
         >
           <Menu className="w-5 h-5" />
         </button>
+
+        <Link
+          to={ROUTES.DASHBOARD}
+          className="sm:hidden flex items-center shrink-0"
+          title="SB Pvt. Ltd."
+        >
+          <SBMonogram size={28} />
+        </Link>
 
         {/* Dynamic Breadcrumbs */}
         <div className="hidden sm:block min-w-0 flex-1">

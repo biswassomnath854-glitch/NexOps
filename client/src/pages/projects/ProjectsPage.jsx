@@ -6,7 +6,6 @@ import { usersApi } from '@/api/endpoints/users'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLES } from '@/constants/roles'
 import { ROUTES } from '@/constants/routes'
-import { formatRole } from '@/utils/formatters'
 import {
   ProjectCard,
   ProjectTable,
@@ -27,7 +26,6 @@ import {
   Search,
   RotateCw,
   CheckCircle2,
-  ShieldAlert,
   LayoutGrid,
   List,
   X,
@@ -79,7 +77,7 @@ export function ProjectsPage() {
   const [isActionLoading, setIsActionLoading] = useState(false)
 
   // Check admin authorization
-  const isAuthorized =
+  const isAdmin =
     currentUser?.role && [ROLES.SUPER_ADMIN, ROLES.ADMIN].includes(currentUser.role)
 
   const showFeedback = (message, type = 'success') => {
@@ -88,13 +86,19 @@ export function ProjectsPage() {
   }
 
   const loadData = useCallback(async () => {
-    if (!isAuthorized) return
-
     try {
+      const projPromise = isAdmin
+        ? projectsApi.getProjects().catch(() => projectsApi.getAccessibleProjects())
+        : projectsApi.getAccessibleProjects()
+
       const [projRes, orgRes, usersRes] = await Promise.all([
-        projectsApi.getProjects(),
-        organizationsApi.getOrganizations().catch(() => ({ data: { organizations: [] } })),
-        usersApi.getUsers().catch(() => ({ data: { users: [] } })),
+        projPromise,
+        isAdmin
+          ? organizationsApi.getOrganizations().catch(() => ({ data: { organizations: [] } }))
+          : Promise.resolve({ data: { organizations: [] } }),
+        isAdmin
+          ? usersApi.getUsers().catch(() => ({ data: { users: [] } }))
+          : Promise.resolve({ data: { users: [] } }),
       ])
 
       const projList = projRes?.data?.projects || projRes?.projects || []
@@ -109,14 +113,12 @@ export function ProjectsPage() {
       console.error('Failed to load projects workspace:', err)
       setError(err.message || 'Unable to retrieve projects from server.')
     }
-  }, [isAuthorized])
+  }, [isAdmin])
 
   useEffect(() => {
     let ignore = false
     async function init() {
-      if (isAuthorized) {
-        await loadData()
-      }
+      await loadData()
       if (!ignore) {
         setIsLoading(false)
       }
@@ -125,7 +127,7 @@ export function ProjectsPage() {
     return () => {
       ignore = true
     }
-  }, [loadData, isAuthorized])
+  }, [loadData])
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -262,41 +264,6 @@ export function ProjectsPage() {
     }
   }
 
-  // Graceful 403 Forbidden Screen for unauthorized roles
-  if (!isAuthorized) {
-    return (
-      <div className="py-16 max-w-lg mx-auto animate-in fade-in duration-200">
-        <Card className="border-rose-200/80 shadow-sm bg-white">
-          <CardContent className="p-8 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100 shadow-2xs">
-              <ShieldAlert className="w-7 h-7" />
-            </div>
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-              Administrator Access Required
-            </h2>
-            <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-              Project workspaces, milestone pipelines, and team allocation controls are restricted
-              to organization Administrators. Your authenticated role is{' '}
-              <strong className="text-slate-800 font-semibold">
-                {formatRole(currentUser?.role)}
-              </strong>
-              .
-            </p>
-            <div className="mt-6 flex items-center justify-center gap-3">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(ROUTES.DASHBOARD)}
-                className="text-xs"
-              >
-                Return to Dashboard
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
 
   if (error && !projects.length) {
     return (
@@ -344,18 +311,20 @@ export function ProjectsPage() {
             Refresh
           </Button>
 
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => {
-              setFormInitialData(null)
-              setIsFormOpen(true)
-            }}
-            className="flex items-center gap-1.5 text-xs font-semibold shadow-xs"
-          >
-            <FolderPlus className="w-4 h-4" />
-            New Project
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setFormInitialData(null)
+                setIsFormOpen(true)
+              }}
+              className="flex items-center gap-1.5 text-xs font-semibold shadow-xs"
+            >
+              <FolderPlus className="w-4 h-4" />
+              New Project
+            </Button>
+          )}
         </div>
       </div>
 
@@ -558,14 +527,16 @@ export function ProjectsPage() {
                 description={
                   hasActiveFilters
                     ? 'No project workspaces match your active search and status filters.'
-                    : 'Establish your first project workspace to begin tracking deliverables and team velocity.'
+                    : isAdmin
+                    ? 'Establish your first project workspace to begin tracking deliverables and team velocity.'
+                    : 'You are not assigned to any project workspaces yet. Please contact your organization administrator to add you to a project team.'
                 }
                 action={
                   hasActiveFilters ? (
                     <Button variant="secondary" size="sm" onClick={resetFilters} className="text-xs">
                       Clear Active Filters
                     </Button>
-                  ) : (
+                  ) : isAdmin ? (
                     <Button
                       variant="primary"
                       size="sm"
@@ -578,7 +549,7 @@ export function ProjectsPage() {
                       <FolderPlus className="w-4 h-4 mr-1.5" />
                       Create New Project
                     </Button>
-                  )
+                  ) : null
                 }
               />
             </div>
@@ -588,14 +559,18 @@ export function ProjectsPage() {
                 <ProjectCard
                   key={project.id}
                   project={project}
-                  onView={(p) => navigate(ROUTES.PROJECT_DETAILS(p.id))}
-                  onEdit={(p) => {
-                    setFormInitialData(p)
-                    setIsFormOpen(true)
-                  }}
-                  onChangeStatus={(p) => setStatusModalProject(p)}
-                  onManageMembers={(p) => handleOpenManageMembers(p)}
-                  onDelete={(p) => setDeleteModalProject(p)}
+                  onView={(p) => (isAdmin ? navigate(ROUTES.PROJECT_DETAILS(p.id)) : navigate(ROUTES.TASKS))}
+                  onEdit={
+                    isAdmin
+                      ? (p) => {
+                          setFormInitialData(p)
+                          setIsFormOpen(true)
+                        }
+                      : undefined
+                  }
+                  onChangeStatus={isAdmin ? (p) => setStatusModalProject(p) : undefined}
+                  onManageMembers={isAdmin ? (p) => handleOpenManageMembers(p) : undefined}
+                  onDelete={isAdmin ? (p) => setDeleteModalProject(p) : undefined}
                 />
               ))}
             </div>
@@ -623,14 +598,18 @@ export function ProjectsPage() {
           pageSize={pageSize}
           onPageChange={setCurrentPage}
           onPageSizeChange={setPageSize}
-          onView={(p) => navigate(ROUTES.PROJECT_DETAILS(p.id))}
-          onEdit={(p) => {
-            setFormInitialData(p)
-            setIsFormOpen(true)
-          }}
-          onChangeStatus={(p) => setStatusModalProject(p)}
-          onManageMembers={(p) => handleOpenManageMembers(p)}
-          onDelete={(p) => setDeleteModalProject(p)}
+          onView={(p) => (isAdmin ? navigate(ROUTES.PROJECT_DETAILS(p.id)) : navigate(ROUTES.TASKS))}
+          onEdit={
+            isAdmin
+              ? (p) => {
+                  setFormInitialData(p)
+                  setIsFormOpen(true)
+                }
+              : undefined
+          }
+          onChangeStatus={isAdmin ? (p) => setStatusModalProject(p) : undefined}
+          onManageMembers={isAdmin ? (p) => handleOpenManageMembers(p) : undefined}
+          onDelete={isAdmin ? (p) => setDeleteModalProject(p) : undefined}
         />
       )}
 

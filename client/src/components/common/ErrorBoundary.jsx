@@ -1,5 +1,6 @@
 import { Component } from 'react'
 import { ErrorState } from '@/components/feedback/ErrorState'
+import { SBLogo } from '@/components/common/SBLogo'
 
 export class ErrorBoundary extends Component {
   constructor(props) {
@@ -29,6 +30,9 @@ export class ErrorBoundary extends Component {
       return (
         <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
           <div className="max-w-md w-full">
+            <div className="flex justify-center mb-6">
+              <SBLogo size="lg" />
+            </div>
             <ErrorState
               title="Application Render Error"
               message={

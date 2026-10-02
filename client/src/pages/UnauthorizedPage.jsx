@@ -1,7 +1,8 @@
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ShieldX, ArrowLeft, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
+import { SBLogo } from '@/components/common/SBLogo'
 import { useAuth } from '@/hooks/useAuth'
 import { ROUTES } from '@/constants/routes'
 import { formatRole } from '@/utils/formatters'
@@ -19,6 +20,10 @@ export function UnauthorizedPage() {
     <div className="min-h-[70vh] flex items-center justify-center p-4">
       <Card className="max-w-lg w-full text-center border-rose-200/60 shadow-lg">
         <CardContent className="p-8 sm:p-10 flex flex-col items-center">
+          <Link to={ROUTES.HOME} className="mb-6 inline-block" title="SB Pvt. Ltd.">
+            <SBLogo size="md" />
+          </Link>
+
           <div className="w-16 h-16 rounded-2xl bg-rose-100/80 border border-rose-200 flex items-center justify-center text-rose-600 mb-6 shadow-xs">
             <ShieldX className="w-8 h-8" />
           </div>
