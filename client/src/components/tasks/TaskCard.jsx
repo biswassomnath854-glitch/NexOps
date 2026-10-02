@@ -5,7 +5,7 @@ import { TaskAssignee } from './TaskAssignee'
 import { DueDateIndicator } from './DueDateIndicator'
 import { Button } from '@/components/ui/Button'
 import { ROUTES } from '@/constants/routes'
-import { Eye, Edit2, Trash2, FolderKanban } from 'lucide-react'
+import { Eye, Edit2, Trash2, FolderKanban, Layers } from 'lucide-react'
 
 /**
  * TaskCard — Card-style task display for grid or compact views.
@@ -49,16 +49,24 @@ export function TaskCard({ task, canEdit = false, canDelete = false, onEdit, onD
         </p>
       )}
 
-      {/* Project */}
-      {task.project && (
-        <div className="flex items-center gap-1.5">
-          <FolderKanban className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-xs text-slate-600 font-medium truncate">{task.project.name}</span>
-          <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200/80 rounded px-1.5 py-0.5 shrink-0">
-            {task.project.code}
-          </span>
-        </div>
-      )}
+      {/* Project & Workstream */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {task.project && (
+          <div className="flex items-center gap-1.5">
+            <FolderKanban className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-xs text-slate-600 font-medium truncate">{task.project.name}</span>
+            <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200/80 rounded px-1.5 py-0.5 shrink-0">
+              {task.project.code}
+            </span>
+          </div>
+        )}
+        {task.workstream && (
+          <div className="flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/70 rounded px-1.5 py-0.5">
+            <Layers className="w-3 h-3 text-indigo-500" />
+            <span className="truncate">{task.workstream.name}</span>
+          </div>
+        )}
+      </div>
 
       {/* Assignee + Due date */}
       <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">

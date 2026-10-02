@@ -27,8 +27,8 @@ const TasksPage = lazy(() =>
 const TaskDetailsPage = lazy(() =>
   import('@/pages/tasks/TaskDetailsPage').then((m) => ({ default: m.TaskDetailsPage }))
 )
-const OverdueTasksPage = lazy(() =>
-  import('@/pages/overdue/OverdueTasksPage').then((m) => ({ default: m.OverdueTasksPage }))
+const ProjectHealthPage = lazy(() =>
+  import('@/pages/health/ProjectHealthPage').then((m) => ({ default: m.ProjectHealthPage }))
 )
 const ProjectsPage = lazy(() =>
   import('@/pages/projects/ProjectsPage').then((m) => ({ default: m.ProjectsPage }))
@@ -122,8 +122,16 @@ export const router = createBrowserRouter([
             element: <TaskDetailsPage />,
           },
           {
-            path: ROUTES.OVERDUE_TASKS,
-            element: <OverdueTasksPage />,
+            path: ROUTES.PROJECT_HEALTH,
+            element: <ProjectHealthPage />,
+          },
+          {
+            path: '/projects/:projectId/health',
+            element: <ProjectHealthPage />,
+          },
+          {
+            path: '/tasks/overdue',
+            element: <Navigate to={ROUTES.PROJECT_HEALTH} replace />,
           },
           {
             path: ROUTES.PROJECTS,

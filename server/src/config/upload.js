@@ -100,8 +100,18 @@ const upload = multer({
   },
 });
 
+const uploadMultiple = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: MAX_FILE_SIZE,
+    files: 10,
+  },
+});
+
 module.exports = {
   upload,
+  uploadMultiple,
   uploadDirectory,
   MAX_FILE_SIZE,
   ALLOWED_FILE_TYPES,

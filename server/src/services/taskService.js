@@ -8,6 +8,9 @@ const {
   User,
   ProjectMember,
   TaskAttachment,
+  TaskWorkstream,
+  ProjectWorkstream,
+  TaskSubmission,
 } = require("../models");
 
 const taskActivityService = require("./taskActivityService");
@@ -310,6 +313,15 @@ const attachDeadlineMetadata = (
 
   return {
     ...taskData,
+    workstream: taskData.taskWorkstream?.workstream
+      ? {
+          id: taskData.taskWorkstream.workstream.id,
+          name: taskData.taskWorkstream.workstream.name,
+          code: taskData.taskWorkstream.workstream.code,
+          status: taskData.taskWorkstream.workstream.status,
+        }
+      : null,
+    workstreamId: taskData.taskWorkstream?.workstream?.id || null,
     deadline:
       calculateDeadlineMetadata(
         taskData
@@ -640,6 +652,7 @@ const getProjectTasks = async (
   const {
     page = 1,
     limit = 10,
+    workstreamId,
   } = query;
 
   const offset =
@@ -651,6 +664,34 @@ const getProjectTasks = async (
       projectId,
       query
     );
+
+  if (workstreamId) {
+    if (workstreamId === "unassigned") {
+      const assignedTaskWorkstreams = await TaskWorkstream.findAll({
+        where: { projectId },
+        attributes: ["taskId"],
+      });
+      const assignedTaskIds = assignedTaskWorkstreams.map((tw) => tw.taskId);
+      if (assignedTaskIds.length > 0) {
+        where[Op.and].push({
+          id: {
+            [Op.notIn]: assignedTaskIds,
+          },
+        });
+      }
+    } else {
+      const wsTaskWorkstreams = await TaskWorkstream.findAll({
+        where: { projectId, workstreamId },
+        attributes: ["taskId"],
+      });
+      const wsTaskIds = wsTaskWorkstreams.map((tw) => tw.taskId);
+      where[Op.and].push({
+        id: {
+          [Op.in]: wsTaskIds,
+        },
+      });
+    }
+  }
 
   const { count, rows } =
     await Task.findAndCountAll({
@@ -688,6 +729,23 @@ const getProjectTasks = async (
             "firstName",
             "lastName",
             "email",
+          ],
+        },
+        {
+          model: TaskWorkstream,
+          as: "taskWorkstream",
+          include: [
+            {
+              model: ProjectWorkstream,
+              as: "workstream",
+              attributes: [
+                "id",
+                "name",
+                "code",
+                "status",
+                "leadUserId",
+              ],
+            },
           ],
         },
       ],
@@ -758,6 +816,23 @@ const getTaskById = async (
               "email",
             ],
           },
+          {
+            model: TaskWorkstream,
+            as: "taskWorkstream",
+            include: [
+              {
+                model: ProjectWorkstream,
+                as: "workstream",
+                attributes: [
+                  "id",
+                  "name",
+                  "code",
+                  "status",
+                  "leadUserId",
+                ],
+              },
+            ],
+          },
         ],
       }
     );
@@ -794,6 +869,7 @@ const createTask = async (
     priority,
     status,
     dueDate,
+    workstreamId,
   } = data;
 
   const creator =
@@ -880,6 +956,29 @@ const createTask = async (
         validatedDueDate,
     });
 
+  if (workstreamId) {
+    const ws = await ProjectWorkstream.findOne({
+      where: {
+        id: workstreamId,
+        projectId,
+        organizationId: creator.organizationId,
+      },
+    });
+    if (!ws) {
+      const error = new Error("Workstream not found in this project.");
+      error.statusCode = 404;
+      error.code = "WORKSTREAM_NOT_FOUND";
+      throw error;
+    }
+    await TaskWorkstream.create({
+      organizationId: creator.organizationId,
+      projectId,
+      workstreamId,
+      taskId: task.id,
+      assignedBy: userId,
+    });
+  }
+
   await createTaskActivity({
     task,
     userId,
@@ -958,6 +1057,7 @@ const updateTask = async (
     priority,
     status,
     dueDate,
+    workstreamId,
   } = data;
 
   const previousAssignedTo =
@@ -1044,6 +1144,43 @@ const updateTask = async (
   await task.update(
     updateData
   );
+
+  if (workstreamId !== undefined) {
+    if (workstreamId) {
+      const ws = await ProjectWorkstream.findOne({
+        where: {
+          id: workstreamId,
+          projectId: task.projectId,
+          organizationId: task.organizationId,
+        },
+      });
+      if (!ws) {
+        const error = new Error("Workstream not found in this project.");
+        error.statusCode = 404;
+        error.code = "WORKSTREAM_NOT_FOUND";
+        throw error;
+      }
+      const [taskWs, created] = await TaskWorkstream.findOrCreate({
+        where: { taskId: task.id },
+        defaults: {
+          organizationId: task.organizationId,
+          projectId: task.projectId,
+          workstreamId,
+          taskId: task.id,
+          assignedBy: user.id,
+        },
+      });
+      if (!created && taskWs.workstreamId !== workstreamId) {
+        taskWs.workstreamId = workstreamId;
+        taskWs.assignedBy = user.id;
+        await taskWs.save();
+      }
+    } else {
+      await TaskWorkstream.destroy({
+        where: { taskId: task.id },
+      });
+    }
+  }
 
   if (
     assignedTo !== undefined &&
@@ -1474,6 +1611,12 @@ const deleteTask = async (
         taskId: task.id,
       },
     });
+
+  await TaskWorkstream.destroy({
+    where: {
+      taskId: task.id,
+    },
+  });
 
   await task.destroy();
 

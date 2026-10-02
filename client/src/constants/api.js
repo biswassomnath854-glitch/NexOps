@@ -56,4 +56,24 @@ export const API_ENDPOINTS = {
   SEARCH: {
     GLOBAL: '/search',
   },
+  WORKSTREAMS: {
+    BASE: (projectId) => `/projects/${projectId}/workstreams`,
+    BY_ID: (id) => `/workstreams/${id}`,
+    MEMBERS: (id) => `/workstreams/${id}/members`,
+    MEMBER_BY_ID: (id, userId) => `/workstreams/${id}/members/${userId}`,
+  },
+  PROJECT_DOCUMENTS: {
+    BASE: (projectId) => `/projects/${projectId}/documents`,
+    BY_ID: (id) => `/project-documents/${id}`,
+    DOWNLOAD: (id) => `/project-documents/${id}/download`,
+  },
+  TASK_SUBMISSIONS: {
+    BASE: (taskId) => `/tasks/${taskId}/submissions`,
+    BY_ID: (id) => `/task-submissions/${id}`,
+    REVIEW: (id) => `/task-submissions/${id}/review`,
+  },
+  PROJECT_HEALTH: {
+    ALL: '/project-health',
+    BY_PROJECT: (projectId) => `/projects/${projectId}/health`,
+  },
 }

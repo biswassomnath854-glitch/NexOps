@@ -35,6 +35,8 @@ const createTaskSchema = Joi.object({
 
   assignedTo: uuidV4.allow(null).optional(),
 
+  workstreamId: uuidV4.allow(null).optional(),
+
   title: Joi.string().trim().min(2).max(200).required().messages({
     "string.empty": "Task title is required.",
     "string.min": "Task title must be at least 2 characters long.",
@@ -68,6 +70,8 @@ const createTaskSchema = Joi.object({
 
 const updateTaskSchema = Joi.object({
   assignedTo: uuidV4.allow(null).optional(),
+
+  workstreamId: uuidV4.allow(null).optional(),
 
   title: Joi.string().trim().min(2).max(200).optional().messages({
     "string.empty": "Task title cannot be empty.",
@@ -174,6 +178,8 @@ const getProjectTasksQuerySchema = Joi.object({
   assignedTo: uuidV4.optional(),
 
   createdBy: uuidV4.optional(),
+
+  workstreamId: Joi.string().trim().allow("", null).optional(),
 
   dueDateFrom: Joi.date()
     .iso()

@@ -22,6 +22,10 @@ const workloadRoutes = require("./routes/workloadRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const notificationPreferenceRoutes = require("./routes/notificationPreferenceRoutes");
 const globalSearchRoutes = require("./routes/globalSearchRoutes");
+const workstreamRoutes = require("./routes/workstreamRoutes");
+const projectDocumentRoutes = require("./routes/projectDocumentRoutes");
+const taskSubmissionRoutes = require("./routes/taskSubmissionRoutes");
+const projectHealthRoutes = require("./routes/projectHealthRoutes");
 
 const {
   errorHandler,
@@ -79,6 +83,10 @@ app.use("/api", taskRoutes);
 app.use("/api", taskActivityRoutes);
 app.use("/api", taskCommentRoutes);
 app.use("/api", taskAttachmentRoutes);
+app.use("/api", taskSubmissionRoutes);
+app.use("/api", workstreamRoutes);
+app.use("/api", projectDocumentRoutes);
+app.use("/api", projectHealthRoutes);
 
 app.use("/api/projects", projectRoutes);
 app.use("/api/projects", projectMemberRoutes);

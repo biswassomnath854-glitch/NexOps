@@ -131,7 +131,13 @@ function FilterDropdown({ label, options, selected, onChange }) {
 /**
  * TaskFilters — High-density workspace toolbar for task search & filters.
  */
-export function TaskFilters({ filters, onChange, members = [], isLoading = false }) {
+export function TaskFilters({
+  filters,
+  onChange,
+  members = [],
+  workstreams = [],
+  isLoading = false,
+}) {
   const [search, setSearch] = useState(filters.search || '')
   const [showAdvancedDate, setShowAdvancedDate] = useState(
     Boolean(filters.dueDateFrom || filters.dueDateTo)
@@ -158,6 +164,10 @@ export function TaskFilters({ filters, onChange, members = [], isLoading = false
     onChange({ ...filters, assignedTo: e.target.value || undefined, page: 1 })
   }
 
+  const handleWorkstreamChange = (e) => {
+    onChange({ ...filters, workstreamId: e.target.value || undefined, page: 1 })
+  }
+
   const handleDeadlineChange = (e) => {
     onChange({ ...filters, deadline: e.target.value || undefined, page: 1 })
   }
@@ -178,6 +188,7 @@ export function TaskFilters({ filters, onChange, members = [], isLoading = false
     (selectedStatuses.length > 0 ? 1 : 0) +
     (selectedPriorities.length > 0 ? 1 : 0) +
     (filters.assignedTo ? 1 : 0) +
+    (filters.workstreamId ? 1 : 0) +
     (filters.deadline ? 1 : 0) +
     (filters.dueDateFrom || filters.dueDateTo ? 1 : 0)
 
@@ -200,6 +211,10 @@ export function TaskFilters({ filters, onChange, members = [], isLoading = false
   ]
 
   const selectedAssigneeName = memberOptions.find((o) => o.value === filters.assignedTo)?.label
+  const selectedWorkstreamName =
+    filters.workstreamId === 'unassigned'
+      ? 'Unassigned Workstream'
+      : workstreams.find((w) => String(w.id) === String(filters.workstreamId))?.name
 
   return (
     <div className="space-y-2.5">
@@ -286,6 +301,30 @@ export function TaskFilters({ filters, onChange, members = [], isLoading = false
             </select>
             <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
+
+          {/* Workstream Filter */}
+          {workstreams && workstreams.length > 0 && (
+            <div className="relative">
+              <select
+                value={filters.workstreamId || ''}
+                onChange={handleWorkstreamChange}
+                className={`pl-3 pr-7 py-1.5 rounded-lg border text-xs font-medium appearance-none cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-[#635BFF]/20 ${
+                  filters.workstreamId
+                    ? 'bg-[#635BFF]/10 border-[#635BFF]/30 text-[#5148E5] font-semibold'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                <option value="">All Workstreams</option>
+                <option value="unassigned">Unassigned Workstream</option>
+                {workstreams.map((ws) => (
+                  <option key={ws.id} value={ws.id}>
+                    {ws.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
+          )}
 
           {/* Deadline Filter */}
           <div className="relative">
@@ -421,6 +460,25 @@ export function TaskFilters({ filters, onChange, members = [], isLoading = false
               </select>
             </div>
 
+            {workstreams && workstreams.length > 0 && (
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1">Workstream</label>
+                <select
+                  value={filters.workstreamId || ''}
+                  onChange={handleWorkstreamChange}
+                  className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-700"
+                >
+                  <option value="">All Workstreams</option>
+                  <option value="unassigned">Unassigned Workstream</option>
+                  {workstreams.map((ws) => (
+                    <option key={ws.id} value={ws.id}>
+                      {ws.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 mb-1">Deadline Urgency</label>
               <select
@@ -532,6 +590,19 @@ export function TaskFilters({ filters, onChange, members = [], isLoading = false
                 type="button"
                 onClick={() => onChange({ ...filters, assignedTo: undefined, page: 1 })}
                 className="text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          {filters.workstreamId && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs">
+              <span>Workstream: {selectedWorkstreamName || filters.workstreamId}</span>
+              <button
+                type="button"
+                onClick={() => onChange({ ...filters, workstreamId: undefined, page: 1 })}
+                className="text-indigo-400 hover:text-indigo-700"
               >
                 <X className="w-3 h-3" />
               </button>

@@ -259,6 +259,11 @@ export function TaskTable({
                           {task.project.code}
                         </span>
                       )}
+                      {task.workstream && (
+                        <span className="font-sans text-[10px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200/70 shrink-0">
+                          {task.workstream.name}
+                        </span>
+                      )}
                       <button
                         type="button"
                         onClick={() => handleView(task)}

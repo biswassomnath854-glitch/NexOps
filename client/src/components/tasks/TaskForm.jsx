@@ -52,6 +52,7 @@ function TaskFormModal({
   initialData = null,
   project = null,
   members = [],
+  workstreams = [],
   isLoading = false,
 }) {
   const isEditing = Boolean(initialData?.id)
@@ -62,6 +63,7 @@ function TaskFormModal({
     priority: initialData?.priority || 'MEDIUM',
     status: initialData?.status || 'TODO',
     assignedTo: initialData?.assignedTo || initialData?.assignee?.id || '',
+    workstreamId: initialData?.workstreamId || initialData?.workstream?.id || '',
     dueDate: initialData?.dueDate ? initialData.dueDate.slice(0, 10) : '',
   }))
 
@@ -103,6 +105,7 @@ function TaskFormModal({
       priority: formData.priority,
       status: formData.status,
       assignedTo: formData.assignedTo || null,
+      workstreamId: formData.workstreamId ? Number(formData.workstreamId) : null,
       dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
     }
 
@@ -220,6 +223,23 @@ function TaskFormModal({
           options={assigneeOptions}
           placeholder="Select an assignee (optional)"
         />
+
+        {/* Workstream selector (if project has workstreams) */}
+        {workstreams && workstreams.length > 0 && (
+          <Select
+            label="Workstream / Squad"
+            name="workstreamId"
+            value={formData.workstreamId}
+            onChange={handleChange}
+            options={[
+              { value: '', label: 'Unassigned Workstream' },
+              ...workstreams.map((ws) => ({
+                value: ws.id,
+                label: `${ws.name}${ws.code ? ` (${ws.code})` : ''}`,
+              })),
+            ]}
+          />
+        )}
 
         {/* Due Date */}
         <Input

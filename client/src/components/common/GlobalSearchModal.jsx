@@ -21,6 +21,9 @@ import {
   Sparkles,
   CheckSquare as TaskIcon,
   AlertCircle,
+  Layers,
+  FileText,
+  UploadCloud,
 } from 'lucide-react'
 import { searchApi } from '@/api/endpoints/search'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -271,7 +274,10 @@ export function SearchResults({
   const totalCount =
     (users?.pagination?.totalItems || 0) +
     (projects?.pagination?.totalItems || 0) +
-    (tasks?.pagination?.totalItems || 0)
+    (tasks?.pagination?.totalItems || 0) +
+    (results?.workstreams?.workstreams?.length || 0) +
+    (results?.documents?.documents?.length || 0) +
+    (results?.submissions?.submissions?.length || 0)
 
   if (totalCount === 0) {
     return (
@@ -404,6 +410,84 @@ export function SearchResults({
           })}
         </SearchResultGroup>
       )}
+
+      {/* ── Workstreams ─────────────────────────────────────────────── */}
+      {results?.workstreams?.workstreams?.length > 0 && (
+        <SearchResultGroup
+          label="Workstreams"
+          icon={Layers}
+          count={results.workstreams.workstreams.length}
+        >
+          {results.workstreams.workstreams.map((ws) => {
+            const idx = itemIndex++
+            return (
+              <SearchResultItem
+                key={ws.id}
+                resultRef={(el) => { if (itemRefs?.current) itemRefs.current[idx] = el }}
+                icon={Layers}
+                iconBg="bg-indigo-50 text-indigo-500"
+                title={ws.name}
+                subtitle={ws.project?.name ? `Project: ${ws.project.name}` : ws.description || ''}
+                meta={<StatusPill status={ws.status} />}
+                isActive={activeIndex === idx}
+                onClick={() => onSelect({ type: 'workstream', item: ws })}
+              />
+            )
+          })}
+        </SearchResultGroup>
+      )}
+
+      {/* ── Documents & Deliverables ─────────────────────────────────── */}
+      {results?.documents?.documents?.length > 0 && (
+        <SearchResultGroup
+          label="Documents & Deliverables"
+          icon={FileText}
+          count={results.documents.documents.length}
+        >
+          {results.documents.documents.map((doc) => {
+            const idx = itemIndex++
+            return (
+              <SearchResultItem
+                key={doc.id}
+                resultRef={(el) => { if (itemRefs?.current) itemRefs.current[idx] = el }}
+                icon={FileText}
+                iconBg="bg-sky-50 text-sky-500"
+                title={doc.title}
+                subtitle={`${doc.originalName} · ${doc.project?.name || ''}`}
+                meta={<span className="text-[10px] font-semibold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded">{doc.category}</span>}
+                isActive={activeIndex === idx}
+                onClick={() => onSelect({ type: 'document', item: doc })}
+              />
+            )
+          })}
+        </SearchResultGroup>
+      )}
+
+      {/* ── Task Submissions ───────────────────────────────────────── */}
+      {results?.submissions?.submissions?.length > 0 && (
+        <SearchResultGroup
+          label="Work Submissions"
+          icon={UploadCloud}
+          count={results.submissions.submissions.length}
+        >
+          {results.submissions.submissions.map((sub) => {
+            const idx = itemIndex++
+            return (
+              <SearchResultItem
+                key={sub.id}
+                resultRef={(el) => { if (itemRefs?.current) itemRefs.current[idx] = el }}
+                icon={UploadCloud}
+                iconBg="bg-emerald-50 text-emerald-500"
+                title={sub.task?.title || `Task #${sub.taskId}`}
+                subtitle={sub.note ? `Note: ${sub.note}` : 'Work deliverable submission'}
+                meta={<StatusPill status={sub.status} />}
+                isActive={activeIndex === idx}
+                onClick={() => onSelect({ type: 'submission', item: sub })}
+              />
+            )
+          })}
+        </SearchResultGroup>
+      )}
     </div>
   )
 }
@@ -441,6 +525,9 @@ export function GlobalSearchModal({ isOpen, onClose }) {
           ...(results.users?.users || []).map((u) => ({ type: 'user', item: u })),
           ...(results.projects?.projects || []).map((p) => ({ type: 'project', item: p })),
           ...(results.tasks?.tasks || []).map((t) => ({ type: 'task', item: t })),
+          ...(results.workstreams?.workstreams || []).map((w) => ({ type: 'workstream', item: w })),
+          ...(results.documents?.documents || []).map((d) => ({ type: 'document', item: d })),
+          ...(results.submissions?.submissions || []).map((s) => ({ type: 'submission', item: s })),
         ]
       : []
   }, [results])
@@ -494,6 +581,9 @@ export function GlobalSearchModal({ isOpen, onClose }) {
           users: data.users || { users: [], pagination: { totalItems: 0 } },
           projects: data.projects || { projects: [], pagination: { totalItems: 0 } },
           tasks: data.tasks || { tasks: [], pagination: { totalItems: 0 } },
+          workstreams: data.workstreams || { workstreams: [] },
+          documents: data.documents || { documents: [] },
+          submissions: data.submissions || { submissions: [] },
         })
       })
       .catch((err) => {
@@ -531,6 +621,12 @@ export function GlobalSearchModal({ isOpen, onClose }) {
         navigate(ROUTES.PROJECT_DETAILS(item.id))
       } else if (type === 'task') {
         navigate(ROUTES.TASK_DETAILS(item.id))
+      } else if (type === 'workstream') {
+        navigate(ROUTES.PROJECT_DETAILS(item.projectId))
+      } else if (type === 'document') {
+        navigate(ROUTES.PROJECT_DETAILS(item.projectId))
+      } else if (type === 'submission') {
+        navigate(ROUTES.TASK_DETAILS(item.taskId))
       }
     },
     [handleClose, navigate]

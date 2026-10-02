@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { tasksApi } from '@/api/endpoints/tasks'
 import { projectsApi } from '@/api/endpoints/projects'
+import { workstreamsApi } from '@/api/endpoints/workstreams'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLES } from '@/constants/roles'
 import { ROUTES } from '@/constants/routes'
@@ -67,6 +68,7 @@ export function TasksPage() {
     totalPages: 0,
   })
   const [members, setMembers] = useState([])
+  const [workstreams, setWorkstreams] = useState([])
 
   // UI state
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
@@ -167,6 +169,32 @@ export function TasksPage() {
       isCurrent = false
     }
   }, [selectedProjectId, isAdmin])
+
+  // Load project workstreams
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setWorkstreams([])
+      return
+    }
+
+    let isCurrent = true
+    workstreamsApi
+      .getProjectWorkstreams(selectedProjectId)
+      .then((res) => {
+        if (!isCurrent) return
+        const list = res?.data?.workstreams || res?.workstreams || []
+        setWorkstreams(list)
+      })
+      .catch((err) => {
+        if (!isCurrent) return
+        console.error('Failed to load project workstreams:', err)
+        setWorkstreams([])
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [selectedProjectId])
 
   // Load tasks with race condition protection
   const loadTasks = useCallback(
@@ -470,6 +498,7 @@ export function TasksPage() {
               filters={filters}
               onChange={handleFiltersChange}
               members={members}
+              workstreams={workstreams}
               isLoading={isLoading}
             />
           </CardContent>
@@ -518,6 +547,7 @@ export function TasksPage() {
         onSubmit={handleCreateTask}
         project={selectedProject}
         members={members}
+        workstreams={workstreams}
         isLoading={isActionLoading}
       />
 
@@ -529,6 +559,7 @@ export function TasksPage() {
         initialData={editTarget}
         project={selectedProject}
         members={members}
+        workstreams={workstreams}
         isLoading={isActionLoading}
       />
 

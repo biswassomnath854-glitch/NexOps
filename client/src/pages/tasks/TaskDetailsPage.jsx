@@ -273,6 +273,7 @@ export function TaskDetailsPage() {
         onEdit={() => setIsEditOpen(true)}
         onChangeStatus={() => setIsStatusOpen(true)}
         onDelete={() => setIsDeleteOpen(true)}
+        onRefresh={handleRefresh}
       />
 
       {/* Edit Task Modal */}

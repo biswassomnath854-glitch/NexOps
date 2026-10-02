@@ -8,6 +8,8 @@ import { DueDateIndicator } from './DueDateIndicator'
 import { CommentList } from './collaboration/CommentList'
 import { ActivityTimeline } from './collaboration/ActivityTimeline'
 import { AttachmentList } from './collaboration/AttachmentList'
+import { TaskSubmissionList } from './collaboration/TaskSubmissionList'
+import { SubmitWorkModal } from './SubmitWorkModal'
 import { formatDateTime } from '@/utils/formatters'
 import {
   Edit2,
@@ -24,6 +26,8 @@ import {
   History,
   Paperclip,
   FileText,
+  Layers,
+  UploadCloud,
 } from 'lucide-react'
 
 function SpecificationRow({ icon: Icon, label, children }) {
@@ -58,18 +62,23 @@ export function TaskDetails({
   onEdit,
   onDelete,
   onChangeStatus,
+  onRefresh,
 }) {
   const [activeTab, setActiveTab] = useState('comments')
+  const [isSubmitWorkOpen, setIsSubmitWorkOpen] = useState(false)
+  const [submissionsCount, setSubmissionsCount] = useState(0)
 
   if (!task) return null
 
   const isCompleted = task.status === 'COMPLETED'
   const isCancelled = task.status === 'CANCELLED'
+  const canSubmitWork = !isViewer && (isManagement || task.assignedTo === currentUser?.id)
 
   const TABS = [
     { id: 'comments', label: 'Comments', icon: MessageSquare },
-    { id: 'activity', label: 'Activity Timeline', icon: History },
+    { id: 'submissions', label: `Work Submissions${submissionsCount > 0 ? ` (${submissionsCount})` : ''}`, icon: UploadCloud },
     { id: 'attachments', label: 'Attachments', icon: Paperclip },
+    { id: 'activity', label: 'Activity Timeline', icon: History },
   ]
 
   return (
@@ -79,18 +88,29 @@ export function TaskDetails({
         <CardContent className="p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              {/* Project Context & Code */}
-              {task.project && (
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
+              {/* Project & Workstream Context & Code */}
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                {task.project && (
                   <div className="inline-flex items-center gap-1.5 text-xs text-[#5148E5] font-semibold">
                     <FolderKanban className="w-3.5 h-3.5 text-[#635BFF]" />
                     <span>{task.project.name}</span>
+                    <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 rounded px-1.5 py-0.5 ml-1">
+                      {task.project.code}
+                    </span>
                   </div>
-                  <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 rounded px-1.5 py-0.5">
-                    {task.project.code}
-                  </span>
-                </div>
-              )}
+                )}
+                {task.workstream && (
+                  <div className="inline-flex items-center gap-1.5 text-xs text-indigo-700 bg-indigo-50 border border-indigo-200/80 rounded-md px-2 py-0.5 font-semibold">
+                    <Layers className="w-3 h-3 text-indigo-600" />
+                    <span>{task.workstream.name}</span>
+                    {task.workstream.lead && (
+                      <span className="text-[10px] text-indigo-500 font-normal">
+                        • Lead: {task.workstream.lead.firstName} {task.workstream.lead.lastName}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Task Title */}
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 leading-snug">
@@ -117,7 +137,19 @@ export function TaskDetails({
             </div>
 
             {/* Top Action Affordances */}
-            <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+            <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 flex-wrap">
+              {canSubmitWork && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setIsSubmitWorkOpen(true)}
+                  leftIcon={UploadCloud}
+                  className="text-xs h-8 px-3 font-semibold shadow-xs"
+                >
+                  Submit Work
+                </Button>
+              )}
+
               {canEdit && (
                 <>
                   <Button
@@ -226,6 +258,18 @@ export function TaskDetails({
                 </div>
               )}
 
+              {/* Tab 2: Work Submissions */}
+              {activeTab === 'submissions' && (
+                <div className="animate-in fade-in duration-150">
+                  <TaskSubmissionList
+                    taskId={task.id}
+                    isManagement={isManagement}
+                    isViewer={isViewer}
+                    onSubmissionsChange={(items) => setSubmissionsCount(items.length)}
+                  />
+                </div>
+              )}
+
               {/* Tab 3: Attachments */}
               {activeTab === 'attachments' && (
                 <div className="animate-in fade-in duration-150">
@@ -236,6 +280,13 @@ export function TaskDetails({
                     isViewer={isViewer}
                     canUpdate={canEdit}
                   />
+                </div>
+              )}
+
+              {/* Tab 4: Activity Timeline */}
+              {activeTab === 'activity' && (
+                <div className="animate-in fade-in duration-150">
+                  <ActivityTimeline taskId={task.id} />
                 </div>
               )}
             </CardContent>
@@ -277,6 +328,25 @@ export function TaskDetails({
                     </div>
                   </SpecificationRow>
                 )}
+
+                {/* Workstream */}
+                <SpecificationRow icon={Layers} label="Assigned Workstream">
+                  {task.workstream ? (
+                    <div>
+                      <span className="font-semibold text-slate-800">{task.workstream.name}</span>
+                      {task.workstream.code && (
+                        <span className="text-[10px] text-slate-400 font-mono ml-1.5">({task.workstream.code})</span>
+                      )}
+                      {task.workstream.lead && (
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Lead: {task.workstream.lead.firstName} {task.workstream.lead.lastName}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-slate-400 italic">Unassigned Workstream</span>
+                  )}
+                </SpecificationRow>
 
                 {/* Created By */}
                 <SpecificationRow icon={User} label="Created By">
@@ -324,6 +394,17 @@ export function TaskDetails({
           </Card>
         </div>
       </div>
+
+      {/* Submit Work Modal Dialog */}
+      <SubmitWorkModal
+        isOpen={isSubmitWorkOpen}
+        onClose={() => setIsSubmitWorkOpen(false)}
+        taskId={task.id}
+        onSubmissionSuccess={() => {
+          setActiveTab('submissions')
+          if (onRefresh) onRefresh()
+        }}
+      />
     </div>
   )
 }

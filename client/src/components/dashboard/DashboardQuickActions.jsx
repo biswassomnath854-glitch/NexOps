@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 import {
   CheckSquare,
   FolderKanban,
-  AlertOctagon,
+  Activity,
   Users2,
   ArrowRight,
 } from 'lucide-react'
@@ -25,11 +25,11 @@ const actions = [
     color: 'text-sky-600 bg-sky-50 border border-sky-100',
   },
   {
-    title: 'Overdue Escalations',
-    desc: 'Monitor SLA breaches and automated alert notifications.',
-    href: ROUTES.OVERDUE_TASKS,
-    icon: AlertOctagon,
-    color: 'text-rose-600 bg-rose-50 border border-rose-100',
+    title: 'Project Health',
+    desc: 'Operational overview, workstreams, blocked work, and deliverables.',
+    href: ROUTES.PROJECT_HEALTH,
+    icon: Activity,
+    color: 'text-indigo-600 bg-indigo-50 border border-indigo-100',
   },
   {
     title: 'Workload & Analytics',

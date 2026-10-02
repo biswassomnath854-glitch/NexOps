@@ -259,7 +259,7 @@ export function DashboardPage() {
                 {overdueCount > 0 && (
                   <button
                     type="button"
-                    onClick={() => navigate(ROUTES.OVERDUE_TASKS)}
+                    onClick={() => navigate(ROUTES.PROJECT_HEALTH)}
                     className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-rose-100/90 text-rose-800 border border-rose-200 text-xs font-semibold hover:bg-rose-200/70 transition-colors cursor-pointer"
                   >
                     <AlertOctagon className="w-3 h-3 text-rose-600" />
@@ -298,11 +298,11 @@ export function DashboardPage() {
             <Button
               variant="outline"
               size="xs"
-              onClick={() => navigate(ROUTES.OVERDUE_TASKS)}
+              onClick={() => navigate(ROUTES.PROJECT_HEALTH)}
               rightIcon={ArrowRight}
               className="text-xs bg-white border-amber-300 hover:bg-amber-50 text-slate-800"
             >
-              Review Escalations
+              View Project Health
             </Button>
           </div>
         </div>

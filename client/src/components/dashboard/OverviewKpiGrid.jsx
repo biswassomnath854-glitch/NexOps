@@ -74,7 +74,7 @@ export function OverviewKpiGrid({ overview, taskStatistics }) {
         badgeVariant={overdueTasks > 0 ? 'danger' : 'success'}
         icon={AlertOctagon}
         color={overdueTasks > 0 ? 'rose' : 'emerald'}
-        onClick={() => navigate(ROUTES.OVERDUE_TASKS)}
+        onClick={() => navigate(ROUTES.PROJECT_HEALTH)}
       />
     </div>
   )

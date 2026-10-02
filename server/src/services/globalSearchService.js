@@ -4,6 +4,10 @@ const {
   User,
   Project,
   Task,
+  ProjectMember,
+  ProjectWorkstream,
+  ProjectDocument,
+  TaskSubmission,
 } = require("../models");
 
 const MANAGEMENT_ROLES = [
@@ -415,6 +419,169 @@ const getSearchTasks = async ({
   };
 };
 
+const getSearchWorkstreams = async ({
+  organizationId,
+  user,
+  searchQuery,
+  page,
+  limit,
+  offset,
+}) => {
+  const searchValue = buildLikeSearch(searchQuery);
+
+  let projectCondition = {};
+  if (user && !MANAGEMENT_ROLES.includes(user.role)) {
+    const memberships = await ProjectMember.findAll({
+      where: { userId: user.id },
+      attributes: ["projectId"],
+    });
+    const allowedProjectIds = memberships.map((m) => m.projectId);
+    projectCondition = {
+      projectId: { [Op.in]: allowedProjectIds },
+    };
+  }
+
+  const { count, rows } = await ProjectWorkstream.findAndCountAll({
+    where: {
+      organizationId,
+      ...projectCondition,
+      [Op.or]: [
+        { name: { [Op.like]: searchValue } },
+        { code: { [Op.like]: searchValue } },
+        { description: { [Op.like]: searchValue } },
+      ],
+    },
+    include: [
+      {
+        model: Project,
+        as: "project",
+        attributes: ["id", "name", "code", "status"],
+      },
+      {
+        model: User,
+        as: "lead",
+        attributes: ["id", "firstName", "lastName", "email"],
+      },
+    ],
+    order: [["createdAt", "DESC"]],
+    limit,
+    offset,
+  });
+
+  return {
+    workstreams: rows,
+    pagination: buildPagination({ page, limit, totalItems: count }),
+  };
+};
+
+const getSearchDocuments = async ({
+  organizationId,
+  user,
+  searchQuery,
+  page,
+  limit,
+  offset,
+}) => {
+  const searchValue = buildLikeSearch(searchQuery);
+
+  let projectCondition = {};
+  if (user && !MANAGEMENT_ROLES.includes(user.role)) {
+    const memberships = await ProjectMember.findAll({
+      where: { userId: user.id },
+      attributes: ["projectId"],
+    });
+    const allowedProjectIds = memberships.map((m) => m.projectId);
+    projectCondition = {
+      projectId: { [Op.in]: allowedProjectIds },
+    };
+  }
+
+  const { count, rows } = await ProjectDocument.findAndCountAll({
+    where: {
+      organizationId,
+      ...projectCondition,
+      [Op.or]: [
+        { title: { [Op.like]: searchValue } },
+        { description: { [Op.like]: searchValue } },
+        { originalName: { [Op.like]: searchValue } },
+      ],
+    },
+    include: [
+      {
+        model: Project,
+        as: "project",
+        attributes: ["id", "name", "code", "status"],
+      },
+      {
+        model: User,
+        as: "uploader",
+        attributes: ["id", "firstName", "lastName", "email"],
+      },
+    ],
+    order: [["createdAt", "DESC"]],
+    limit,
+    offset,
+  });
+
+  return {
+    documents: rows,
+    pagination: buildPagination({ page, limit, totalItems: count }),
+  };
+};
+
+const getSearchSubmissions = async ({
+  organizationId,
+  user,
+  searchQuery,
+  page,
+  limit,
+  offset,
+}) => {
+  const searchValue = buildLikeSearch(searchQuery);
+
+  let projectCondition = {};
+  if (user && !MANAGEMENT_ROLES.includes(user.role)) {
+    const memberships = await ProjectMember.findAll({
+      where: { userId: user.id },
+      attributes: ["projectId"],
+    });
+    const allowedProjectIds = memberships.map((m) => m.projectId);
+    projectCondition = {
+      projectId: { [Op.in]: allowedProjectIds },
+    };
+  }
+
+  const { count, rows } = await TaskSubmission.findAndCountAll({
+    where: {
+      organizationId,
+      ...projectCondition,
+      [Op.or]: [
+        { note: { [Op.like]: searchValue } },
+      ],
+    },
+    include: [
+      {
+        model: Task,
+        as: "task",
+        attributes: ["id", "title", "projectId", "status", "priority"],
+      },
+      {
+        model: User,
+        as: "submitter",
+        attributes: ["id", "firstName", "lastName", "email"],
+      },
+    ],
+    order: [["submittedAt", "DESC"]],
+    limit,
+    offset,
+  });
+
+  return {
+    submissions: rows,
+    pagination: buildPagination({ page, limit, totalItems: count }),
+  };
+};
+
 const globalSearch = async (
   user,
   query
@@ -453,6 +620,9 @@ const globalSearch = async (
     users,
     projects,
     tasks,
+    workstreams,
+    documents,
+    submissions,
   ] = await Promise.all([
     getSearchUsers({
       organizationId:
@@ -481,6 +651,33 @@ const globalSearch = async (
       limit,
       offset,
     }),
+
+    getSearchWorkstreams({
+      organizationId: user.organizationId,
+      user,
+      searchQuery,
+      page,
+      limit,
+      offset,
+    }),
+
+    getSearchDocuments({
+      organizationId: user.organizationId,
+      user,
+      searchQuery,
+      page,
+      limit,
+      offset,
+    }),
+
+    getSearchSubmissions({
+      organizationId: user.organizationId,
+      user,
+      searchQuery,
+      page,
+      limit,
+      offset,
+    }),
   ]);
 
   return {
@@ -491,6 +688,12 @@ const globalSearch = async (
     projects,
 
     tasks,
+
+    workstreams,
+
+    documents,
+
+    submissions,
   };
 };
 
