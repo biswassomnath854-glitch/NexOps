@@ -64,8 +64,15 @@ const register = async ({
   organizationId = null,
   departmentId = null,
   organizationName = null,
-  role = "ADMIN",
+  role = "EMPLOYEE",
 }) => {
+  if (role && role.toString().trim().toUpperCase() === "CLIENT") {
+    const error = new Error("Public registration is not permitted for client accounts.");
+    error.statusCode = 400;
+    error.code = "CLIENT_REGISTRATION_FORBIDDEN";
+    throw error;
+  }
+
   const existingUser = await User.findOne({
     where: {
       email,

@@ -1,6 +1,6 @@
 const express = require("express");
 const workstreamController = require("../controllers/workstreamController");
-const { authenticate } = require("../middleware/authMiddleware");
+const { authenticate, blockClientRole } = require("../middleware/authMiddleware");
 const {
   createWorkstreamSchema,
   updateWorkstreamSchema,
@@ -49,6 +49,7 @@ const validateBody = (schema) => (req, res, next) => {
 router.post(
   "/projects/:projectId/workstreams",
   authenticate,
+  blockClientRole,
   validateParamId("projectId", "INVALID_PROJECT_ID"),
   validateBody(createWorkstreamSchema),
   workstreamController.createWorkstream
@@ -57,6 +58,7 @@ router.post(
 router.get(
   "/projects/:projectId/workstreams",
   authenticate,
+  blockClientRole,
   validateParamId("projectId", "INVALID_PROJECT_ID"),
   workstreamController.getProjectWorkstreams
 );
@@ -65,6 +67,7 @@ router.get(
 router.get(
   "/workstreams/:workstreamId",
   authenticate,
+  blockClientRole,
   validateParamId("workstreamId", "INVALID_WORKSTREAM_ID"),
   workstreamController.getWorkstreamById
 );
@@ -72,6 +75,7 @@ router.get(
 router.patch(
   "/workstreams/:workstreamId",
   authenticate,
+  blockClientRole,
   validateParamId("workstreamId", "INVALID_WORKSTREAM_ID"),
   validateBody(updateWorkstreamSchema),
   workstreamController.updateWorkstream
@@ -80,6 +84,7 @@ router.patch(
 router.post(
   "/workstreams/:workstreamId/archive",
   authenticate,
+  blockClientRole,
   validateParamId("workstreamId", "INVALID_WORKSTREAM_ID"),
   workstreamController.archiveWorkstream
 );
@@ -87,6 +92,7 @@ router.post(
 router.delete(
   "/workstreams/:workstreamId",
   authenticate,
+  blockClientRole,
   validateParamId("workstreamId", "INVALID_WORKSTREAM_ID"),
   workstreamController.deleteWorkstream
 );
@@ -95,6 +101,7 @@ router.delete(
 router.get(
   "/workstreams/:workstreamId/members",
   authenticate,
+  blockClientRole,
   validateParamId("workstreamId", "INVALID_WORKSTREAM_ID"),
   workstreamController.getWorkstreamMembers
 );
@@ -102,6 +109,7 @@ router.get(
 router.post(
   "/workstreams/:workstreamId/members",
   authenticate,
+  blockClientRole,
   validateParamId("workstreamId", "INVALID_WORKSTREAM_ID"),
   validateBody(addWorkstreamMemberSchema),
   workstreamController.addWorkstreamMember
@@ -110,6 +118,7 @@ router.post(
 router.delete(
   "/workstreams/:workstreamId/members/:userId",
   authenticate,
+  blockClientRole,
   validateParamId("workstreamId", "INVALID_WORKSTREAM_ID"),
   validateParamId("userId", "INVALID_USER_ID"),
   workstreamController.removeWorkstreamMember

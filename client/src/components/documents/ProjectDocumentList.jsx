@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { ConfirmationModal } from '@/components/common/ConfirmationModal'
 import { projectDocumentsApi } from '@/api/endpoints/projectDocuments'
+import { projectsApi } from '@/api/endpoints/projects'
 import { UploadDocumentModal } from './UploadDocumentModal'
 import { formatDate } from '@/utils/formatters'
 import {
@@ -12,6 +13,9 @@ import {
   Download,
   Trash2,
   Paperclip,
+  Eye,
+  EyeOff,
+  Loader2,
 } from 'lucide-react'
 
 const CATEGORIES = [
@@ -36,6 +40,22 @@ export function ProjectDocumentList({
   const [isUploadOpen, setIsUploadOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [togglingDocId, setTogglingDocId] = useState(null)
+
+  const handleToggleClientVisibility = async (doc) => {
+    if (!isManagement) return
+    setTogglingDocId(doc.id)
+    try {
+      await projectsApi.updateDocumentClientVisibility(projectId, doc.id, {
+        isClientVisible: !doc.isClientVisible,
+      })
+      if (onDocumentsChange) onDocumentsChange()
+    } catch (err) {
+      console.error('Toggle client visibility error:', err)
+    } finally {
+      setTogglingDocId(null)
+    }
+  }
 
   const filteredDocs = documents.filter((doc) => {
     if (activeCategory === 'ALL') return true
@@ -169,6 +189,7 @@ export function ProjectDocumentList({
                   <th className="py-2.5 px-4">Document / File</th>
                   <th className="py-2.5 px-4">Category</th>
                   <th className="py-2.5 px-4">Size</th>
+                  <th className="py-2.5 px-4">Client Access</th>
                   <th className="py-2.5 px-4">Uploaded By</th>
                   <th className="py-2.5 px-4">Date</th>
                   <th className="py-2.5 px-4 text-right">Actions</th>
@@ -178,6 +199,7 @@ export function ProjectDocumentList({
                 {filteredDocs.map((doc) => {
                   const canDelete =
                     !isViewer && (isManagement || doc.uploadedBy === currentUser?.id)
+                  const isToggling = togglingDocId === doc.id
 
                   return (
                     <tr key={doc.id} className="hover:bg-slate-50/50 transition-colors">
@@ -203,6 +225,41 @@ export function ProjectDocumentList({
                       <td className="py-3 px-4">{getCategoryBadge(doc.category)}</td>
                       <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
                         {(doc.fileSize / 1024).toFixed(1)} KB
+                      </td>
+                      <td className="py-3 px-4">
+                        {isManagement ? (
+                          <button
+                            type="button"
+                            disabled={isToggling}
+                            onClick={() => handleToggleClientVisibility(doc)}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors cursor-pointer border ${
+                              doc.isClientVisible
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                            }`}
+                            title={
+                              doc.isClientVisible
+                                ? 'Client-visible: click to hide from client'
+                                : 'Internal only: click to approve for client visibility'
+                            }
+                          >
+                            {isToggling ? (
+                              <Loader2 className="w-3 h-3 animate-spin text-slate-400" />
+                            ) : doc.isClientVisible ? (
+                              <Eye className="w-3 h-3 text-emerald-600" />
+                            ) : (
+                              <EyeOff className="w-3 h-3 text-slate-400" />
+                            )}
+                            <span>{doc.isClientVisible ? 'Client Visible' : 'Internal Only'}</span>
+                          </button>
+                        ) : (
+                          <Badge
+                            variant={doc.isClientVisible ? 'success' : 'neutral'}
+                            size="sm"
+                          >
+                            {doc.isClientVisible ? 'Client Visible' : 'Internal Only'}
+                          </Badge>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-slate-700">
                         {doc.uploader ? (

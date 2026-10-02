@@ -3,6 +3,7 @@ const express = require("express");
 const projectController = require("../controllers/projectController");
 const {
   authenticate,
+  blockClientRole,
 } = require("../middleware/authMiddleware");
 const {
   authorize,
@@ -74,21 +75,113 @@ const validateProjectId = (
   next();
 };
 
+const projectApprovalController = require("../controllers/projectApprovalController");
+const {
+  submitApprovalSchema,
+  approveProjectSchema,
+  requestRevisionSchema,
+  grantClientAccessSchema,
+} = require("../validators/projectApprovalValidator");
+
 /*
  * Accessible Projects
  *
- * Available to every authenticated user.
- *
- * Management users receive projects
- * from their organization.
- *
- * Non-management users receive only
- * projects where they are members.
+ * Available to every internal authenticated user.
+ * Blocked for CLIENT users.
  */
 router.get(
   "/accessible",
   authenticate,
+  blockClientRole,
   projectController.getAccessibleProjects
+);
+
+/*
+ * Project Approval & Client Access Routes
+ */
+router.get(
+  "/:projectId/approval",
+  authenticate,
+  blockClientRole,
+  validateProjectId,
+  authorize("SUPER_ADMIN", "ADMIN", "MANAGER", "TEAM_LEAD"),
+  projectApprovalController.getApprovalStatus
+);
+
+router.post(
+  "/:projectId/approval/submit",
+  authenticate,
+  blockClientRole,
+  validateProjectId,
+  authorize("SUPER_ADMIN", "ADMIN", "MANAGER"),
+  validateRequestBody(submitApprovalSchema),
+  projectApprovalController.submitForApproval
+);
+
+router.post(
+  "/:projectId/approval/approve",
+  authenticate,
+  blockClientRole,
+  validateProjectId,
+  authorize("SUPER_ADMIN", "ADMIN"),
+  validateRequestBody(approveProjectSchema),
+  projectApprovalController.approveProject
+);
+
+router.post(
+  "/:projectId/approval/request-revision",
+  authenticate,
+  blockClientRole,
+  validateProjectId,
+  authorize("SUPER_ADMIN", "ADMIN"),
+  validateRequestBody(requestRevisionSchema),
+  projectApprovalController.requestRevision
+);
+
+router.post(
+  "/:projectId/publish",
+  authenticate,
+  blockClientRole,
+  validateProjectId,
+  authorize("SUPER_ADMIN", "ADMIN"),
+  projectApprovalController.publishProject
+);
+
+router.post(
+  "/:projectId/unpublish",
+  authenticate,
+  blockClientRole,
+  validateProjectId,
+  authorize("SUPER_ADMIN", "ADMIN"),
+  projectApprovalController.unpublishProject
+);
+
+router.get(
+  "/:projectId/client-access",
+  authenticate,
+  blockClientRole,
+  validateProjectId,
+  authorize("SUPER_ADMIN", "ADMIN", "MANAGER"),
+  projectApprovalController.listClientAccess
+);
+
+router.post(
+  "/:projectId/client-access",
+  authenticate,
+  blockClientRole,
+  validateProjectId,
+  authorize("SUPER_ADMIN", "ADMIN"),
+  validateRequestBody(grantClientAccessSchema),
+  projectApprovalController.grantClientAccess
+);
+
+router.delete(
+  "/:projectId/client-access/:clientUserId",
+  authenticate,
+  blockClientRole,
+  validateProjectId,
+  authorize("SUPER_ADMIN", "ADMIN"),
+  projectApprovalController.revokeClientAccess
 );
 
 /*
@@ -99,6 +192,7 @@ router.get(
  */
 
 router.use(authenticate);
+router.use(blockClientRole);
 router.use(
   authorize("SUPER_ADMIN", "ADMIN")
 );

@@ -31,4 +31,28 @@ export const projectsApi = {
   // Project Tasks Summary
   getProjectTasks: (projectId, params) =>
     apiClient.get(`/projects/${projectId}/tasks`, { params }),
+
+  // Project Approval & Publication
+  getApprovalStatus: (projectId) => apiClient.get(`/projects/${projectId}/approval`),
+  submitForApproval: (projectId, data = {}) =>
+    apiClient.post(`/projects/${projectId}/approval/submit`, data),
+  approveProject: (projectId, data = {}) =>
+    apiClient.post(`/projects/${projectId}/approval/approve`, data),
+  requestRevision: (projectId, data) =>
+    apiClient.post(`/projects/${projectId}/approval/request-revision`, data),
+  publishProject: (projectId) => apiClient.post(`/projects/${projectId}/publish`),
+  unpublishProject: (projectId) => apiClient.post(`/projects/${projectId}/unpublish`),
+
+  // Client Access Management
+  getClientAccess: (projectId) => apiClient.get(`/projects/${projectId}/client-access`),
+  grantClientAccess: (projectId, data) =>
+    apiClient.post(`/projects/${projectId}/client-access`, data),
+  revokeClientAccess: (projectId, clientUserId) =>
+    apiClient.delete(`/projects/${projectId}/client-access/${clientUserId}`),
+
+  // Document Client Visibility
+  updateDocumentClientVisibility: (projectId, documentId, isClientVisible) =>
+    apiClient.patch(`/projects/${projectId}/documents/${documentId}/client-visibility`, {
+      isClientVisible,
+    }),
 }

@@ -1,7 +1,7 @@
 const express = require("express");
 
 const taskCommentController = require("../controllers/taskCommentController");
-const { authenticate } = require("../middleware/authMiddleware");
+const { authenticate, blockClientRole } = require("../middleware/authMiddleware");
 const { authorizeTaskAccess } = require("../middleware/taskAuthorizationMiddleware");
 
 const {
@@ -58,6 +58,7 @@ const validateQuery = (schema) => {
 router.post(
   "/tasks/:taskId/comments",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("view"),
   validateBody(createTaskCommentSchema),
   taskCommentController.createTaskComment
@@ -66,6 +67,7 @@ router.post(
 router.get(
   "/tasks/:taskId/comments",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("view"),
   validateQuery(getTaskCommentsQuerySchema),
   taskCommentController.getTaskComments
@@ -74,6 +76,7 @@ router.get(
 router.get(
   "/tasks/:taskId/comments/:commentId",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("view"),
   taskCommentController.getTaskCommentById
 );
@@ -81,6 +84,7 @@ router.get(
 router.patch(
   "/tasks/:taskId/comments/:commentId",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("view"),
   validateBody(updateTaskCommentSchema),
   taskCommentController.updateTaskComment
@@ -89,6 +93,7 @@ router.patch(
 router.delete(
   "/tasks/:taskId/comments/:commentId",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("view"),
   taskCommentController.deleteTaskComment
 );

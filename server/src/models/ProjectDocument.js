@@ -128,6 +128,28 @@ const ProjectDocument = sequelize.define(
         },
       },
     },
+
+    isClientVisible: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+
+    approvedForClientAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    approvedForClientBy: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
+    },
   },
   {
     tableName: "project_documents",
@@ -148,6 +170,9 @@ const ProjectDocument = sequelize.define(
       },
       {
         fields: ["created_at"],
+      },
+      {
+        fields: ["project_id", "is_client_visible"],
       },
     ],
   }

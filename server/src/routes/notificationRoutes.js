@@ -1,11 +1,12 @@
 const express = require("express");
 
 const notificationController = require("../controllers/notificationController");
-const { authenticate } = require("../middleware/authMiddleware");
+const { authenticate, blockClientRole } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
 router.use(authenticate);
+router.use(blockClientRole);
 
 router.get(
   "/",

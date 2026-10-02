@@ -1,10 +1,15 @@
 const express = require("express");
 const projectDocumentController = require("../controllers/projectDocumentController");
-const { authenticate } = require("../middleware/authMiddleware");
+const projectApprovalController = require("../controllers/projectApprovalController");
+const { authenticate, blockClientRole } = require("../middleware/authMiddleware");
+const { authorize } = require("../middleware/authorizationMiddleware");
 const { upload } = require("../config/upload");
 const {
   createProjectDocumentSchema,
 } = require("../validators/projectDocumentValidator");
+const {
+  updateDocumentVisibilitySchema,
+} = require("../validators/projectApprovalValidator");
 
 const router = express.Router();
 
@@ -48,6 +53,7 @@ const validateBody = (schema) => (req, res, next) => {
 router.get(
   "/projects/:projectId/documents",
   authenticate,
+  blockClientRole,
   validateParamId("projectId", "INVALID_PROJECT_ID"),
   projectDocumentController.getProjectDocuments
 );
@@ -55,16 +61,30 @@ router.get(
 router.post(
   "/projects/:projectId/documents",
   authenticate,
+  blockClientRole,
   validateParamId("projectId", "INVALID_PROJECT_ID"),
   upload.single("file"),
   validateBody(createProjectDocumentSchema),
   projectDocumentController.createProjectDocument
 );
 
+// Toggle client visibility
+router.patch(
+  "/projects/:projectId/documents/:documentId/client-visibility",
+  authenticate,
+  blockClientRole,
+  validateParamId("projectId", "INVALID_PROJECT_ID"),
+  validateParamId("documentId", "INVALID_DOCUMENT_ID"),
+  authorize("SUPER_ADMIN", "ADMIN", "MANAGER"),
+  validateBody(updateDocumentVisibilitySchema),
+  projectApprovalController.updateDocumentClientVisibility
+);
+
 // Individual document routes
 router.get(
   "/project-documents/:documentId",
   authenticate,
+  blockClientRole,
   validateParamId("documentId", "INVALID_DOCUMENT_ID"),
   projectDocumentController.getProjectDocumentById
 );
@@ -72,6 +92,7 @@ router.get(
 router.get(
   "/project-documents/:documentId/download",
   authenticate,
+  blockClientRole,
   validateParamId("documentId", "INVALID_DOCUMENT_ID"),
   projectDocumentController.downloadProjectDocument
 );
@@ -79,6 +100,7 @@ router.get(
 router.delete(
   "/project-documents/:documentId",
   authenticate,
+  blockClientRole,
   validateParamId("documentId", "INVALID_DOCUMENT_ID"),
   projectDocumentController.deleteProjectDocument
 );

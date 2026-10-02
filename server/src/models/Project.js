@@ -79,6 +79,60 @@ const Project = sequelize.define(
       allowNull: false,
       defaultValue: "PLANNING",
     },
+
+    approvalStatus: {
+      type: DataTypes.ENUM(
+        "DRAFT",
+        "READY_FOR_APPROVAL",
+        "APPROVED",
+        "REVISION_REQUIRED"
+      ),
+      allowNull: false,
+      defaultValue: "DRAFT",
+    },
+
+    publicationStatus: {
+      type: DataTypes.ENUM("UNPUBLISHED", "PUBLISHED"),
+      allowNull: false,
+      defaultValue: "UNPUBLISHED",
+    },
+
+    approvedBy: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
+    },
+
+    approvedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    approvalNotes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+
+    publishedBy: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "SET NULL",
+    },
+
+    publishedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "projects",
@@ -95,6 +149,12 @@ const Project = sequelize.define(
       },
       {
         fields: ["status"],
+      },
+      {
+        fields: ["approval_status"],
+      },
+      {
+        fields: ["publication_status"],
       },
     ],
   }

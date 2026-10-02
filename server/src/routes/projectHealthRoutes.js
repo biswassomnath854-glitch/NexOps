@@ -1,6 +1,6 @@
 const express = require("express");
 const projectHealthController = require("../controllers/projectHealthController");
-const { authenticate } = require("../middleware/authMiddleware");
+const { authenticate, blockClientRole } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -22,6 +22,7 @@ const validateParamId = (paramName, errorCode) => (req, res, next) => {
 router.get(
   "/project-health",
   authenticate,
+  blockClientRole,
   projectHealthController.getOrganizationProjectsHealth
 );
 
@@ -29,6 +30,7 @@ router.get(
 router.get(
   "/projects/:projectId/health",
   authenticate,
+  blockClientRole,
   validateParamId("projectId", "INVALID_PROJECT_ID"),
   projectHealthController.getProjectHealth
 );

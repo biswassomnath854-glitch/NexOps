@@ -19,6 +19,7 @@ const ProjectDocument = require("./ProjectDocument");
 const TaskSubmission = require("./TaskSubmission");
 const TaskSubmissionAttachment = require("./TaskSubmissionAttachment");
 const ProjectActivity = require("./ProjectActivity");
+const ClientProjectAccess = require("./ClientProjectAccess");
 
 /*
  * Organization ↔ User
@@ -715,6 +716,96 @@ ProjectActivity.belongsTo(User, {
   as: "user",
 });
 
+/*
+ * Organization ↔ ClientProjectAccess
+ */
+Organization.hasMany(ClientProjectAccess, {
+  foreignKey: "organizationId",
+  as: "clientProjectAccesses",
+});
+
+ClientProjectAccess.belongsTo(Organization, {
+  foreignKey: "organizationId",
+  as: "organization",
+});
+
+/*
+ * Project ↔ ClientProjectAccess
+ */
+Project.hasMany(ClientProjectAccess, {
+  foreignKey: "projectId",
+  as: "clientAccesses",
+});
+
+ClientProjectAccess.belongsTo(Project, {
+  foreignKey: "projectId",
+  as: "project",
+});
+
+/*
+ * Project ↔ User (Client Users via ClientProjectAccess)
+ */
+Project.belongsToMany(User, {
+  through: ClientProjectAccess,
+  foreignKey: "projectId",
+  otherKey: "clientUserId",
+  as: "clientUsers",
+});
+
+User.belongsToMany(Project, {
+  through: ClientProjectAccess,
+  foreignKey: "clientUserId",
+  otherKey: "projectId",
+  as: "clientProjects",
+});
+
+/*
+ * User ↔ ClientProjectAccess
+ */
+User.hasMany(ClientProjectAccess, {
+  foreignKey: "clientUserId",
+  as: "clientProjectAccesses",
+});
+
+ClientProjectAccess.belongsTo(User, {
+  foreignKey: "clientUserId",
+  as: "clientUser",
+});
+
+/*
+ * User (Granter) ↔ ClientProjectAccess
+ */
+User.hasMany(ClientProjectAccess, {
+  foreignKey: "grantedBy",
+  as: "grantedClientAccesses",
+});
+
+ClientProjectAccess.belongsTo(User, {
+  foreignKey: "grantedBy",
+  as: "granter",
+});
+
+/*
+ * Project Approver & Publisher
+ */
+Project.belongsTo(User, {
+  foreignKey: "approvedBy",
+  as: "approver",
+});
+
+Project.belongsTo(User, {
+  foreignKey: "publishedBy",
+  as: "publisher",
+});
+
+/*
+ * ProjectDocument Client Approver
+ */
+ProjectDocument.belongsTo(User, {
+  foreignKey: "approvedForClientBy",
+  as: "clientApprover",
+});
+
 const db = {
   sequelize,
   User,
@@ -736,6 +827,7 @@ const db = {
   TaskSubmission,
   TaskSubmissionAttachment,
   ProjectActivity,
+  ClientProjectAccess,
 };
 
 module.exports = db;

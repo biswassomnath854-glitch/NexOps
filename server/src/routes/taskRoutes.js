@@ -1,7 +1,7 @@
 const express = require("express");
 
 const taskController = require("../controllers/taskController");
-const { authenticate } = require("../middleware/authMiddleware");
+const { authenticate, blockClientRole } = require("../middleware/authMiddleware");
 const {
   authorizeTaskAccess,
   authorizeProjectTaskListAccess,
@@ -111,6 +111,7 @@ const validateCreateTask = (req, res, next) => {
 router.post(
   "/projects/:projectId/tasks",
   authenticate,
+  blockClientRole,
   authorizeProjectTaskListAccess,
   validateCreateTask,
   taskController.createTask
@@ -119,6 +120,7 @@ router.post(
 router.get(
   "/projects/:projectId/tasks",
   authenticate,
+  blockClientRole,
   authorizeProjectTaskListAccess,
   validateQuery(getProjectTasksQuerySchema),
   taskController.getProjectTasks
@@ -136,6 +138,7 @@ router.get(
 router.get(
   "/tasks/:taskId",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("view"),
   taskController.getTaskById
 );
@@ -143,6 +146,7 @@ router.get(
 router.patch(
   "/tasks/:taskId",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("update"),
   validateBody(updateTaskSchema),
   taskController.updateTask
@@ -151,6 +155,7 @@ router.patch(
 router.patch(
   "/tasks/:taskId/status",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("update"),
   validateBody(updateTaskStatusSchema),
   taskController.updateTaskStatus
@@ -159,6 +164,7 @@ router.patch(
 router.delete(
   "/tasks/:taskId",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("delete"),
   taskController.deleteTask
 );

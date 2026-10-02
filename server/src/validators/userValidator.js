@@ -67,7 +67,8 @@ const roleSchema = Joi.string()
     "MANAGER",
     "TEAM_LEAD",
     "EMPLOYEE",
-    "VIEWER"
+    "VIEWER",
+    "CLIENT"
   )
   .required()
   .messages({
@@ -179,7 +180,8 @@ const updateUserSchema = Joi.object({
       "MANAGER",
       "TEAM_LEAD",
       "EMPLOYEE",
-      "VIEWER"
+      "VIEWER",
+      "CLIENT"
     )
     .optional()
     .messages({

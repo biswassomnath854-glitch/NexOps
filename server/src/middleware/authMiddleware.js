@@ -77,6 +77,18 @@ const authenticate = async (req, res, next) => {
   }
 };
 
+const blockClientRole = (req, res, next) => {
+  if (req.user && req.user.role === "CLIENT") {
+    return res.status(403).json({
+      success: false,
+      message: "Client accounts are restricted to the Client Portal.",
+      code: "CLIENT_WORKSPACE_ACCESS_DENIED",
+    });
+  }
+  next();
+};
+
 module.exports = {
   authenticate,
+  blockClientRole,
 };

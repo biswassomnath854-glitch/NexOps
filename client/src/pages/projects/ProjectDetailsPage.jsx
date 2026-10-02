@@ -15,6 +15,7 @@ import {
   ProjectForm,
   MemberSelector,
 } from '@/components/projects'
+import { ProjectApprovalSection } from '@/components/projects/ProjectApprovalSection'
 import { WorkstreamList } from '@/components/workstreams/WorkstreamList'
 import { ProjectDocumentList } from '@/components/documents/ProjectDocumentList'
 import { TaskFilters } from '@/components/tasks/TaskFilters'
@@ -38,6 +39,7 @@ import {
   Activity,
   Plus,
   Info,
+  ShieldCheck,
 } from 'lucide-react'
 
 const TABS = [
@@ -337,7 +339,12 @@ export function ProjectDetailsPage() {
           {/* Navigation Workspace Tabs */}
           <div className="border-b border-slate-200">
             <div className="flex items-center gap-2 overflow-x-auto">
-              {TABS.map((tab) => {
+              {[
+                ...TABS,
+                ...(isManagement
+                  ? [{ id: 'approval', label: 'Client Portal & Approval', icon: ShieldCheck }]
+                  : []),
+              ].map((tab) => {
                 const Icon = tab.icon
                 const isActive = activeTab === tab.id
                 let countBadge = null
@@ -628,6 +635,16 @@ export function ProjectDetailsPage() {
                 </div>
               )}
             </div>
+          )}
+
+          {/* TAB 6: Client Portal & Approval */}
+          {activeTab === 'approval' && isManagement && (
+            <ProjectApprovalSection
+              projectId={projectId}
+              isManagement={isManagement}
+              isAdmin={isAdmin}
+              onUpdate={loadProjectData}
+            />
           )}
         </>
       ) : (

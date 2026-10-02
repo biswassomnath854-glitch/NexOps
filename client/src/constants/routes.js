@@ -29,6 +29,11 @@ export const ROUTES = {
   DEPARTMENTS: '/departments',
   SETTINGS: '/settings',
 
+  // Client Portal Routes
+  CLIENT_PORTAL: '/client/projects',
+  CLIENT_PROJECTS: '/client/projects',
+  CLIENT_PROJECT_DETAILS: (id = ':projectId') => `/client/projects/${id}`,
+
   // Showcase / Foundation Lab
   SHOWCASE: '/showcase',
 

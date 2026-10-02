@@ -9,6 +9,7 @@ export const ROLES = {
   TEAM_LEAD: 'TEAM_LEAD',
   EMPLOYEE: 'EMPLOYEE',
   VIEWER: 'VIEWER',
+  CLIENT: 'CLIENT',
 }
 
 export const USER_STATUS = {

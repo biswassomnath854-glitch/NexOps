@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import { AppLayout, AuthLayout } from '@/layouts'
+import { AppLayout, AuthLayout, ClientLayout } from '@/layouts'
 import { ProtectedRoute } from './ProtectedRoute'
 import { PublicRoute } from './PublicRoute'
 import { RouteLoadingFallback } from '@/components/common/RouteLoadingFallback'
@@ -61,6 +61,14 @@ const OrganizationsPage = lazy(() =>
 )
 const SettingsPage = lazy(() =>
   import('@/pages/admin/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+)
+
+// Protected client portal pages (lazy-loaded)
+const ClientProjectsPage = lazy(() =>
+  import('@/pages/client/ClientProjectsPage').then((m) => ({ default: m.ClientProjectsPage }))
+)
+const ClientProjectDetailsPage = lazy(() =>
+  import('@/pages/client/ClientProjectDetailsPage').then((m) => ({ default: m.ClientProjectDetailsPage }))
 )
 
 // Standalone security & error pages (lazy-loaded)
@@ -176,6 +184,34 @@ export const router = createBrowserRouter([
           {
             path: ROUTES.SHOWCASE,
             element: <Navigate to={ROUTES.DASHBOARD} replace />,
+          },
+        ],
+      },
+    ],
+  },
+
+  // Protected Client Portal Routes (Restricted strictly to CLIENT role)
+  {
+    element: <ProtectedRoute allowedRoles={['CLIENT']} />,
+    children: [
+      {
+        element: <ClientLayout />,
+        children: [
+          {
+            path: '/client',
+            element: <Navigate to={ROUTES.CLIENT_PROJECTS} replace />,
+          },
+          {
+            path: ROUTES.CLIENT_PROJECTS,
+            element: <ClientProjectsPage />,
+          },
+          {
+            path: ROUTES.CLIENT_PROJECT_DETAILS(),
+            element: <ClientProjectDetailsPage />,
+          },
+          {
+            path: '/client/projects/:projectId/documents',
+            element: <ClientProjectDetailsPage />,
           },
         ],
       },

@@ -62,13 +62,21 @@ export function LoginPage() {
     setIsLoading(true)
 
     try {
-      await login({
+      const result = await login({
         email: email.trim().toLowerCase(),
         password,
       })
 
-      // Navigate to intended destination
-      navigate(destination, { replace: true })
+      // Navigate to client portal if CLIENT, else to destination
+      if (result?.user?.role === 'CLIENT') {
+        const clientDestination =
+          location.state?.from?.pathname?.startsWith('/client')
+            ? location.state.from.pathname
+            : ROUTES.CLIENT_PROJECTS
+        navigate(clientDestination, { replace: true })
+      } else {
+        navigate(destination, { replace: true })
+      }
     } catch (err) {
       if (err.code === 'ACCOUNT_NOT_ACTIVE') {
         setFormError('Your account has been deactivated or suspended. Please contact your organization administrator.')

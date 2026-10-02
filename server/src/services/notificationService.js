@@ -191,6 +191,14 @@ const validateRecipient = async (
     );
   }
 
+  if (recipient.role === "CLIENT") {
+    throw createServiceError(
+      "Client accounts cannot be targeted with internal notifications.",
+      400,
+      "CLIENT_NOTIFICATION_TARGET_FORBIDDEN"
+    );
+  }
+
   return recipient;
 };
 

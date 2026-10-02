@@ -4,6 +4,7 @@ const taskAttachmentController = require("../controllers/taskAttachmentControlle
 
 const {
   authenticate,
+  blockClientRole,
 } = require("../middleware/authMiddleware");
 
 const {
@@ -19,6 +20,7 @@ const router = express.Router();
 router.get(
   "/tasks/:taskId/attachments",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("view"),
   taskAttachmentController.getTaskAttachments
 );
@@ -26,6 +28,7 @@ router.get(
 router.get(
   "/tasks/:taskId/attachments/:attachmentId",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("view"),
   taskAttachmentController.getTaskAttachmentById
 );
@@ -33,6 +36,7 @@ router.get(
 router.get(
   "/tasks/:taskId/attachments/:attachmentId/download",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("view"),
   taskAttachmentController.downloadTaskAttachment
 );
@@ -40,6 +44,7 @@ router.get(
 router.post(
   "/tasks/:taskId/attachments",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("update"),
   upload.single("file"),
   taskAttachmentController.createTaskAttachment
@@ -48,6 +53,7 @@ router.post(
 router.delete(
   "/tasks/:taskId/attachments/:attachmentId",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("update"),
   taskAttachmentController.deleteTaskAttachment
 );

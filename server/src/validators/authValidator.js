@@ -1,4 +1,4 @@
-﻿const Joi = require("joi");
+const Joi = require("joi");
 
 const emailSchema = Joi.string()
   .trim()
@@ -84,6 +84,14 @@ const registerSchema = Joi.object({
     .messages({
       "string.min": "Organization name must be at least 2 characters long.",
       "string.max": "Organization name must not exceed 150 characters.",
+    }),
+
+  role: Joi.string()
+    .trim()
+    .optional()
+    .invalid("CLIENT")
+    .messages({
+      "any.invalid": "Public registration is not permitted for client accounts.",
     }),
 }).options({
   abortEarly: false,

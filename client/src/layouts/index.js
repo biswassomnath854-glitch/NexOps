@@ -1,5 +1,6 @@
 export * from './AppLayout'
 export * from './AuthLayout'
+export * from './ClientLayout'
 export * from './Sidebar'
 export * from './Navbar'
 export * from './MobileNav'

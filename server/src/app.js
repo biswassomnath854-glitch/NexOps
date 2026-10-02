@@ -26,6 +26,7 @@ const workstreamRoutes = require("./routes/workstreamRoutes");
 const projectDocumentRoutes = require("./routes/projectDocumentRoutes");
 const taskSubmissionRoutes = require("./routes/taskSubmissionRoutes");
 const projectHealthRoutes = require("./routes/projectHealthRoutes");
+const clientRoutes = require("./routes/clientRoutes");
 
 const {
   errorHandler,
@@ -57,7 +58,15 @@ if (process.env.NODE_ENV !== "test") {
   app.use(morgan("dev"));
 }
 
+app.get("/api/health", (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: "NexOps API is running",
+  });
+});
+
 app.use("/api/auth", authRoutes);
+app.use("/api/client", clientRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/departments", departmentRoutes);
@@ -121,12 +130,7 @@ app.use(
   notificationRoutes
 );
 
-app.get("/api/health", (req, res) => {
-  return res.status(200).json({
-    success: true,
-    message: "NexOps API is running",
-  });
-});
+
 
 /*
  * Catch-all 404 handler for unmatched routes.

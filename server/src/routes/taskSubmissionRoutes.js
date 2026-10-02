@@ -1,6 +1,6 @@
 const express = require("express");
 const taskSubmissionController = require("../controllers/taskSubmissionController");
-const { authenticate } = require("../middleware/authMiddleware");
+const { authenticate, blockClientRole } = require("../middleware/authMiddleware");
 const { uploadMultiple } = require("../config/upload");
 const {
   reviewTaskSubmissionSchema,
@@ -48,6 +48,7 @@ const validateBody = (schema) => (req, res, next) => {
 router.post(
   "/tasks/:taskId/submissions",
   authenticate,
+  blockClientRole,
   validateParamId("taskId", "INVALID_TASK_ID"),
   uploadMultiple.array("files", 10),
   taskSubmissionController.createTaskSubmission
@@ -56,6 +57,7 @@ router.post(
 router.get(
   "/tasks/:taskId/submissions",
   authenticate,
+  blockClientRole,
   validateParamId("taskId", "INVALID_TASK_ID"),
   taskSubmissionController.getTaskSubmissions
 );
@@ -64,6 +66,7 @@ router.get(
 router.get(
   "/task-submissions/:submissionId",
   authenticate,
+  blockClientRole,
   validateParamId("submissionId", "INVALID_SUBMISSION_ID"),
   taskSubmissionController.getTaskSubmissionById
 );
@@ -71,6 +74,7 @@ router.get(
 router.patch(
   "/task-submissions/:submissionId/review",
   authenticate,
+  blockClientRole,
   validateParamId("submissionId", "INVALID_SUBMISSION_ID"),
   validateBody(reviewTaskSubmissionSchema),
   taskSubmissionController.reviewTaskSubmission

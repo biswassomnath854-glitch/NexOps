@@ -20,6 +20,18 @@ export function ProtectedRoute({ allowedRoles }) {
     return <Navigate to={ROUTES.UNAUTHORIZED} replace />
   }
 
+  // Client role isolation: redirect client away from internal workspace
+  if (user && user.role === 'CLIENT') {
+    if (!allowedRoles || !allowedRoles.includes('CLIENT')) {
+      return <Navigate to={ROUTES.CLIENT_PROJECTS} replace />
+    }
+  }
+
+  // Internal users trying to access client portal: redirect to dashboard
+  if (allowedRoles && allowedRoles.includes('CLIENT') && user && user.role !== 'CLIENT') {
+    return <Navigate to={ROUTES.DASHBOARD} replace />
+  }
+
   // Optional role check
   if (allowedRoles && allowedRoles.length > 0) {
     if (!user || !allowedRoles.includes(user.role)) {

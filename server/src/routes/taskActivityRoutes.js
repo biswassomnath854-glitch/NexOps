@@ -1,7 +1,7 @@
 const express = require("express");
 
 const taskActivityController = require("../controllers/taskActivityController");
-const { authenticate } = require("../middleware/authMiddleware");
+const { authenticate, blockClientRole } = require("../middleware/authMiddleware");
 const {
   authorizeTaskAccess,
 } = require("../middleware/taskAuthorizationMiddleware");
@@ -47,6 +47,7 @@ const validateQuery = (schema) => {
 router.get(
   "/tasks/:taskId/activities",
   authenticate,
+  blockClientRole,
   authorizeTaskAccess("view"),
   validateQuery(getTaskActivitiesQuerySchema),
   taskActivityController.getTaskActivities

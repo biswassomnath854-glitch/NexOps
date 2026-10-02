@@ -96,7 +96,8 @@ const User = sequelize.define(
         "MANAGER",
         "TEAM_LEAD",
         "EMPLOYEE",
-        "VIEWER"
+        "VIEWER",
+        "CLIENT"
       ),
       allowNull: false,
       defaultValue: "EMPLOYEE",

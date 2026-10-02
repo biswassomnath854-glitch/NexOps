@@ -269,9 +269,15 @@ const updateProjectStatus = async (
     user
   );
 
-  await project.update({
+  const updatePayload = {
     status,
-  });
+  };
+
+  if (status === "CANCELLED" && project.publicationStatus === "PUBLISHED") {
+    updatePayload.publicationStatus = "UNPUBLISHED";
+  }
+
+  await project.update(updatePayload);
 
   return findProjectById(
     projectId,
