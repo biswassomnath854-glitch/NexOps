@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Info,
   MessageSquareQuote,
+  ArrowRight,
 } from 'lucide-react'
 import { projectsApi } from '@/api/endpoints/projects'
 import { usersApi } from '@/api/endpoints/users'
@@ -20,6 +21,7 @@ import { Badge } from '@/components/ui/Badge'
 import { ConfirmationModal } from '@/components/common/ConfirmationModal'
 import { formatDate } from '@/utils/formatters'
 import { ClientInvitationManager } from '@/components/client/ClientInvitationManager'
+import { ClientAuditViewer } from '@/components/client/ClientAuditViewer'
 
 export function ProjectApprovalSection({
   projectId,
@@ -146,6 +148,21 @@ export function ProjectApprovalSection({
     }
   }
 
+  const getOperationalBadge = (status) => {
+    switch (status) {
+      case 'COMPLETED':
+        return <Badge variant="success">COMPLETED</Badge>
+      case 'ACTIVE':
+        return <Badge variant="primary">ACTIVE</Badge>
+      case 'ON_HOLD':
+        return <Badge variant="warning">ON HOLD</Badge>
+      case 'PLANNING':
+        return <Badge variant="neutral">PLANNING</Badge>
+      default:
+        return <Badge variant="neutral">{status || 'ACTIVE'}</Badge>
+    }
+  }
+
   const getApprovalBadge = (status) => {
     switch (status) {
       case 'APPROVED':
@@ -250,44 +267,68 @@ export function ProjectApprovalSection({
         </CardHeader>
 
         <CardContent className="p-6 space-y-6">
+          {/* Three-Stage Lifecycle Explainer & Separation */}
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+            <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <span className="text-slate-700">1. Operational Work</span>
+              <ArrowRight className="w-3 h-3 text-slate-400 shrink-0" />
+              <span className="text-indigo-600">2. Quality Review &amp; Approval</span>
+              <ArrowRight className="w-3 h-3 text-slate-400 shrink-0" />
+              <span className="text-emerald-600">3. Portal Publication &amp; Client Access</span>
+            </div>
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              Operational tasks and internal execution are kept strictly segregated from the client. When verified deliverables are ready, submit the project for administrative sign-off. Once approved, publish the project to grant external client portal access.
+            </p>
+          </div>
+
           {/* Status Matrix */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/60 space-y-1.5">
-              <p className="text-xs font-medium text-slate-500">Approval State</p>
-              <div>{getApprovalBadge(approvalData.approvalStatus)}</div>
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                1. Operational Status
+              </p>
+              <div>{getOperationalBadge(approvalData.operationalStatus)}</div>
+              <p className="text-[10px] text-slate-400">Internal workspace lifecycle</p>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/60 space-y-1.5">
-              <p className="text-xs font-medium text-slate-500">Publication State</p>
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                2. Approval Status
+              </p>
+              <div>{getApprovalBadge(approvalData.approvalStatus)}</div>
+              <p className="text-[10px] text-slate-400">Management &amp; QA verification</p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/60 space-y-1.5">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                3. Publication Status
+              </p>
               <div>{getPublicationBadge(approvalData.publicationStatus)}</div>
+              <p className="text-[10px] text-slate-400">External Client Portal visibility</p>
             </div>
 
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/60 space-y-1">
-              <p className="text-xs font-medium text-slate-500">Approved By</p>
-              <p className="text-xs font-semibold text-slate-900">
-                {approvalData.approver
-                  ? `${approvalData.approver.firstName} ${approvalData.approver.lastName}`
-                  : 'Pending Sign-off'}
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Sign-off Signatures
               </p>
-              {approvalData.approvedAt && (
-                <p className="text-[10px] text-slate-400">
-                  {formatDate(approvalData.approvedAt)}
-                </p>
-              )}
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/60 space-y-1">
-              <p className="text-xs font-medium text-slate-500">Published By</p>
-              <p className="text-xs font-semibold text-slate-900">
-                {approvalData.publisher
-                  ? `${approvalData.publisher.firstName} ${approvalData.publisher.lastName}`
-                  : 'Not Published'}
-              </p>
-              {approvalData.publishedAt && (
-                <p className="text-[10px] text-slate-400">
-                  {formatDate(approvalData.publishedAt)}
-                </p>
-              )}
+              <div className="text-[11px] space-y-1">
+                <div>
+                  <span className="text-slate-400">Approved: </span>
+                  <span className="font-semibold text-slate-900">
+                    {approvalData.approver
+                      ? `${approvalData.approver.firstName} ${approvalData.approver.lastName}`
+                      : 'Pending'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400">Published: </span>
+                  <span className="font-semibold text-slate-900">
+                    {approvalData.publisher
+                      ? `${approvalData.publisher.firstName} ${approvalData.publisher.lastName}`
+                      : 'Unpublished'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -573,6 +614,14 @@ export function ProjectApprovalSection({
           )}
         </CardContent>
       </Card>
+
+      {/* Internal Client Portal Audit Trail (SUPER_ADMIN / ADMIN Only) */}
+      {isAdmin && (
+        <ClientAuditViewer
+          projectId={projectId}
+          projectName={approvalData?.projectName || approvalData?.name}
+        />
+      )}
 
       {/* Action Dialog / Modal */}
       {modalType && (

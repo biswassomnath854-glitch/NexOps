@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Mail,
   UserPlus,
@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Info,
   CheckCircle2,
+  Search,
   X,
 } from 'lucide-react'
 import { clientInvitationsApi } from '@/api/endpoints/clientInvitations'
@@ -29,6 +30,8 @@ export function ClientInvitationManager({
 }) {
   const [invitations, setInvitations] = useState([])
   const [projects, setProjects] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
   const [isLoading, setIsLoading] = useState(true)
   const [feedback, setFeedback] = useState(null)
 
@@ -116,23 +119,76 @@ export function ClientInvitationManager({
       if (onInvitationCreated) onInvitationCreated()
       showToast('Client invitation created successfully.')
     } catch (err) {
-      const msg =
+      const code = err.response?.data?.code
+      let msg =
         err.response?.data?.message ||
         err.message ||
         'Failed to create invitation.'
+
+      if (code === 'INVITATION_CONFLICT') {
+        msg = 'An active pending invitation already exists for this email address.'
+      } else if (code === 'ACCOUNT_ROLE_CONFLICT') {
+        msg = 'A user with this email already exists as an internal workspace member.'
+      } else if (code === 'CROSS_ORGANIZATION_ACCOUNT_CONFLICT') {
+        msg = 'A client account with this email exists in another organization.'
+      }
       setCreateError(msg)
     } finally {
       setIsCreating(false)
     }
   }
 
+  const fallbackCopy = (text) => {
+    try {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+      return true
+    } catch {
+      return false
+    }
+  }
+
   const handleCopyLink = (link) => {
     if (!link) return
-    navigator.clipboard.writeText(link).then(() => {
+    const markCopied = () => {
       setCopied(true)
       setTimeout(() => setCopied(false), 3000)
-    })
+    }
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(link)
+        .then(markCopied)
+        .catch(() => {
+          fallbackCopy(link)
+          markCopied()
+        })
+    } else {
+      fallbackCopy(link)
+      markCopied()
+    }
   }
+
+  const filteredInvitations = useMemo(() => {
+    return invitations.filter((inv) => {
+      if (statusFilter !== 'ALL' && inv.status !== statusFilter) {
+        return false
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim()
+        const emailMatch = (inv.email || '').toLowerCase().includes(q)
+        const projMatch = (inv.project?.name || '').toLowerCase().includes(q)
+        if (!emailMatch && !projMatch) return false
+      }
+      return true
+    })
+  }, [invitations, statusFilter, searchQuery])
 
   const handleRevokeInvitation = async () => {
     if (!revokeTarget) return
@@ -244,6 +300,46 @@ export function ClientInvitationManager({
             </Button>
           </div>
         </CardHeader>
+        {/* Filter & Search Bar */}
+        {invitations.length > 0 && (
+          <div className="bg-white border-b border-slate-100 p-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-1 max-w-sm">
+              <div className="relative w-full">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Filter invitations by email..."
+                  className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50/50"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 focus:border-indigo-500 focus:outline-hidden bg-white text-slate-700"
+              >
+                <option value="ALL">All Statuses ({invitations.length})</option>
+                <option value="PENDING">Pending</option>
+                <option value="ACCEPTED">Accepted</option>
+                <option value="EXPIRED">Expired</option>
+                <option value="REVOKED">Revoked</option>
+              </select>
+            </div>
+          </div>
+        )}
 
         <CardContent className="p-0">
           {isLoading && invitations.length === 0 ? (
@@ -254,6 +350,10 @@ export function ClientInvitationManager({
           ) : invitations.length === 0 ? (
             <div className="py-8 text-center text-xs text-slate-400">
               No client invitations found. Use &ldquo;Invite Client&rdquo; to issue an onboarding link.
+            </div>
+          ) : filteredInvitations.length === 0 ? (
+            <div className="py-8 text-center text-xs text-slate-400">
+              No invitations match the search or filter criteria.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -270,7 +370,7 @@ export function ClientInvitationManager({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {invitations.map((inv) => {
+                  {filteredInvitations.map((inv) => {
                     const isPending = inv.status === 'PENDING'
                     return (
                       <tr key={inv.id} className="hover:bg-slate-50/50">

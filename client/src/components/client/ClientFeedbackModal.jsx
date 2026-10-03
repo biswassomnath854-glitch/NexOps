@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { CheckCircle2, AlertTriangle, ShieldAlert, FileText, Send } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, ShieldAlert, Send } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/forms/Input'

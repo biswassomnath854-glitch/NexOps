@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   FolderKanban,
@@ -7,6 +7,8 @@ import {
   ArrowRight,
   ShieldCheck,
   RefreshCw,
+  Search,
+  X,
 } from 'lucide-react'
 import { clientApi } from '@/api/endpoints/client'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -18,6 +20,7 @@ import { formatDate } from '@/utils/formatters'
 
 export function ClientProjectsPage() {
   const [projects, setProjects] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -41,6 +44,17 @@ export function ClientProjectsPage() {
     fetchProjects()
   }, [fetchProjects])
 
+  const filteredProjects = useMemo(() => {
+    if (!searchQuery.trim()) return projects
+    const q = searchQuery.toLowerCase().trim()
+    return projects.filter(
+      (p) =>
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.code && p.code.toLowerCase().includes(q)) ||
+        (p.description && p.description.toLowerCase().includes(q))
+    )
+  }, [projects, searchQuery])
+
   return (
     <div className="space-y-8">
       {/* Header Banner */}
@@ -61,19 +75,51 @@ export function ClientProjectsPage() {
             </p>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchProjects}
-            disabled={isLoading}
-            className="self-start sm:self-auto text-slate-700"
-          >
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`}
-            />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchProjects}
+              disabled={isLoading}
+              className="text-slate-700"
+            >
+              <RefreshCw
+                className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`}
+              />
+              Refresh
+            </Button>
+          </div>
         </div>
+
+        {/* Search Bar */}
+        {projects.length > 0 && (
+          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search projects by name or code..."
+                className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50/50"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {searchQuery && (
+              <span className="text-xs text-slate-500">
+                Found {filteredProjects.length} of {projects.length}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Loading State */}
@@ -101,7 +147,7 @@ export function ClientProjectsPage() {
         />
       )}
 
-      {/* Empty State */}
+      {/* Empty State: No Projects In Entire Org */}
       {!isLoading && !error && projects.length === 0 && (
         <Card className="bg-white border-dashed border-2 border-slate-200 text-center py-16 px-4">
           <CardContent className="space-y-4 max-w-md mx-auto">
@@ -120,10 +166,35 @@ export function ClientProjectsPage() {
         </Card>
       )}
 
+      {/* Empty State: Search Query Mismatch */}
+      {!isLoading && !error && projects.length > 0 && filteredProjects.length === 0 && (
+        <Card className="bg-white border border-slate-200 text-center py-12 px-4 rounded-2xl">
+          <CardContent className="space-y-3 max-w-sm mx-auto">
+            <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+              <Search className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-semibold text-slate-900">
+              No Matching Projects Found
+            </h3>
+            <p className="text-xs text-slate-500">
+              No approved projects matched your search for &ldquo;{searchQuery}&rdquo;.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSearchQuery('')}
+              className="text-xs mt-2"
+            >
+              Clear Search Query
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Projects Grid */}
-      {!isLoading && !error && projects.length > 0 && (
+      {!isLoading && !error && filteredProjects.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
+          {filteredProjects.map((project) => (
             <Card
               key={project.id}
               className="bg-white border border-slate-200/90 rounded-2xl hover:shadow-md hover:border-indigo-300 transition-all flex flex-col justify-between group"
@@ -142,7 +213,7 @@ export function ClientProjectsPage() {
                       className="text-[11px] font-semibold flex items-center gap-1"
                     >
                       <ShieldCheck className="w-3 h-3" />
-                      Approved & Published
+                      Approved &amp; Published
                     </Badge>
                   </div>
 

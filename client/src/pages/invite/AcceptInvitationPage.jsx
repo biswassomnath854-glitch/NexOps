@@ -15,7 +15,6 @@ import {
   Clock,
 } from 'lucide-react'
 import { clientInvitationsApi } from '@/api/endpoints/clientInvitations'
-import { Input } from '@/components/forms/Input'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
