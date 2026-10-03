@@ -23,4 +23,24 @@ export const clientApi = {
         responseType: 'blob',
       }
     ),
+
+  // Get client feedback and history for a deliverable
+  getDeliverableFeedback: (projectId, documentId) =>
+    apiClient.get(
+      `/client/projects/${projectId}/deliverables/${documentId}/feedback`
+    ),
+
+  // Accept a published deliverable
+  acceptDeliverable: (projectId, documentId, data = {}) =>
+    apiClient.post(
+      `/client/projects/${projectId}/deliverables/${documentId}/accept`,
+      data
+    ),
+
+  // Request revision on a published deliverable
+  requestRevision: (projectId, documentId, data) =>
+    apiClient.post(
+      `/client/projects/${projectId}/deliverables/${documentId}/request-revision`,
+      data
+    ),
 }

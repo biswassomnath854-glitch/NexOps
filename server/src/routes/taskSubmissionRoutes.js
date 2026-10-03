@@ -64,6 +64,13 @@ router.get(
 
 // Individual submission & review
 router.get(
+  "/task-submissions",
+  authenticate,
+  blockClientRole,
+  (req, res) => res.status(200).json({ success: true, data: { submissions: [] } })
+);
+
+router.get(
   "/task-submissions/:submissionId",
   authenticate,
   blockClientRole,

@@ -55,4 +55,8 @@ export const projectsApi = {
     apiClient.patch(`/projects/${projectId}/documents/${documentId}/client-visibility`, {
       isClientVisible,
     }),
+
+  // Internal Client Deliverable Feedback Overview
+  getClientFeedback: (projectId) =>
+    apiClient.get(`/projects/${projectId}/deliverables/feedback`),
 }

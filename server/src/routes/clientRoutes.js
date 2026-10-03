@@ -43,11 +43,63 @@ router.get(
   clientController.getDeliverables
 );
 
+const clientFeedbackController = require("../controllers/clientFeedbackController");
+const {
+  acceptDeliverableSchema,
+  requestRevisionSchema,
+} = require("../validators/clientFeedbackValidator");
+
+const validateBody = (schema) => (req, res, next) => {
+  const { error, value } = schema.validate(req.body || {}, {
+    abortEarly: false,
+    stripUnknown: false,
+  });
+
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed.",
+      code: "VALIDATION_ERROR",
+      errors: error.details.map((d) => ({
+        field: d.path.join("."),
+        message: d.message,
+      })),
+    });
+  }
+
+  req.body = value;
+  next();
+};
+
 router.get(
   "/projects/:projectId/documents/:documentId/download",
   validateParamId("projectId", "INVALID_PROJECT_ID"),
   validateParamId("documentId", "INVALID_DOCUMENT_ID"),
   clientController.downloadDocument
+);
+
+// Client Deliverable Feedback Routes
+router.get(
+  "/projects/:projectId/deliverables/:documentId/feedback",
+  validateParamId("projectId", "INVALID_PROJECT_ID"),
+  validateParamId("documentId", "INVALID_DOCUMENT_ID"),
+  clientFeedbackController.getFeedback
+);
+
+router.post(
+  "/projects/:projectId/deliverables/:documentId/accept",
+  validateParamId("projectId", "INVALID_PROJECT_ID"),
+  validateParamId("documentId", "INVALID_DOCUMENT_ID"),
+  validateBody(acceptDeliverableSchema),
+  clientFeedbackController.acceptDeliverable
+);
+
+router.post(
+  "/projects/:projectId/deliverables/:documentId/request-revision",
+  validateParamId("projectId", "INVALID_PROJECT_ID"),
+  validateParamId("documentId", "INVALID_DOCUMENT_ID"),
+  validateBody(requestRevisionSchema),
+  clientFeedbackController.requestRevision
 );
 
 module.exports = router;

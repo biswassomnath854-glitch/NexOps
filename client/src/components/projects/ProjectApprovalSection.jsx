@@ -10,6 +10,7 @@ import {
   UserMinus,
   RefreshCw,
   Info,
+  MessageSquareQuote,
 } from 'lucide-react'
 import { projectsApi } from '@/api/endpoints/projects'
 import { usersApi } from '@/api/endpoints/users'
@@ -28,6 +29,7 @@ export function ProjectApprovalSection({
   const [approvalData, setApprovalData] = useState(null)
   const [clientAccesses, setClientAccesses] = useState([])
   const [availableClients, setAvailableClients] = useState([])
+  const [clientFeedbacks, setClientFeedbacks] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [feedback, setFeedback] = useState(null)
@@ -47,16 +49,18 @@ export function ProjectApprovalSection({
     if (!projectId) return
     setIsLoading(true)
     try {
-      const [approvalRes, accessRes, usersRes] = await Promise.all([
+      const [approvalRes, accessRes, usersRes, feedbackRes] = await Promise.all([
         projectsApi.getApprovalStatus(projectId).catch(() => ({ data: null })),
         projectsApi.getClientAccess(projectId).catch(() => ({ data: { accesses: [] } })),
         isAdmin
           ? usersApi.getUsers().catch(() => ({ data: { users: [] } }))
           : Promise.resolve({ data: { users: [] } }),
+        projectsApi.getClientFeedback(projectId).catch(() => ({ data: { feedbacks: [] } })),
       ])
 
       setApprovalData(approvalRes.data || null)
       setClientAccesses(accessRes.data?.accesses || [])
+      setClientFeedbacks(feedbackRes.data?.feedbacks || [])
 
       // Filter available users with role CLIENT
       const allUsers = usersRes.data?.users || []
@@ -465,6 +469,94 @@ export function ProjectApprovalSection({
                       </tr>
                     )
                   })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Client Deliverable Feedback Overview Card */}
+      <Card className="border border-slate-200 shadow-xs">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <div className="flex items-center gap-2">
+            <MessageSquareQuote className="w-5 h-5 text-indigo-600" />
+            <CardTitle className="text-base font-bold text-slate-900">
+              Client Deliverable Feedback & Review Status
+            </CardTitle>
+          </div>
+          <span className="text-xs text-slate-500 font-medium">
+            {clientFeedbacks.length} review submission{clientFeedbacks.length === 1 ? '' : 's'}
+          </span>
+        </CardHeader>
+        <CardContent>
+          {clientFeedbacks.length === 0 ? (
+            <div className="text-center py-8 px-4 bg-slate-50 rounded-xl border border-slate-200/60">
+              <p className="text-xs text-slate-500 font-medium">
+                No client feedback or acceptance submissions recorded yet for this project.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500 uppercase tracking-wider text-[10px]">
+                    <th className="py-2.5 px-3">Deliverable</th>
+                    <th className="py-2.5 px-3">Client Stakeholder</th>
+                    <th className="py-2.5 px-3">Review Status</th>
+                    <th className="py-2.5 px-3">Feedback / Notes</th>
+                    <th className="py-2.5 px-3 text-right">Submitted</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {clientFeedbacks.map((fb) => (
+                    <tr key={fb.id} className="hover:bg-slate-50/60">
+                      <td className="py-3 px-3 font-semibold text-slate-900">
+                        {fb.document?.title || fb.document?.originalName || 'Document'}
+                        {fb.document?.category && (
+                          <span className="block text-[10px] text-slate-400 font-normal">
+                            {fb.document.category}
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3">
+                        <p className="font-semibold text-slate-900 leading-tight">
+                          {fb.client?.name || 'Client User'}
+                        </p>
+                        <p className="text-[11px] text-slate-500">{fb.client?.email}</p>
+                        {fb.clientSignedName && (
+                          <p className="text-[10px] text-indigo-600 font-medium mt-0.5">
+                            Signed: {fb.clientSignedName}
+                          </p>
+                        )}
+                      </td>
+                      <td className="py-3 px-3">
+                        {fb.status === 'ACCEPTED' ? (
+                          <Badge variant="success" className="text-[10px] font-semibold flex items-center gap-1 w-fit">
+                            <CheckCircle className="w-3 h-3" />
+                            Accepted
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] font-semibold flex items-center gap-1 w-fit bg-amber-50 text-amber-700 border-amber-200">
+                            <AlertTriangle className="w-3 h-3 text-amber-600" />
+                            Revision Requested
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-slate-700 max-w-xs">
+                        {fb.notes ? (
+                          <span className="line-clamp-2 italic" title={fb.notes}>
+                            &ldquo;{fb.notes}&rdquo;
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-right text-slate-500 whitespace-nowrap">
+                        {formatDate(fb.createdAt)}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

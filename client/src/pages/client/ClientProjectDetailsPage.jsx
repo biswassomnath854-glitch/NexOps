@@ -11,12 +11,14 @@ import {
   Clock,
   RefreshCw,
   CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react'
 import { clientApi } from '@/api/endpoints/client'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { ErrorState } from '@/components/feedback/ErrorState'
+import { ClientFeedbackModal } from '@/components/client/ClientFeedbackModal'
 import { ROUTES } from '@/constants/routes'
 import { formatDate } from '@/utils/formatters'
 
@@ -35,6 +37,12 @@ export function ClientProjectDetailsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [downloadingDocId, setDownloadingDocId] = useState(null)
+  const [feedbackMap, setFeedbackMap] = useState({})
+  const [feedbackModal, setFeedbackModal] = useState({
+    isOpen: false,
+    type: 'accept',
+    document: null,
+  })
 
   const fetchData = useCallback(async () => {
     if (!projectId) return
@@ -47,8 +55,22 @@ export function ClientProjectDetailsPage() {
         clientApi.getDocuments(projectId),
       ])
 
+      const docs = docsRes.data?.documents || []
       setProject(projectRes.data?.project || null)
-      setDocuments(docsRes.data?.documents || [])
+      setDocuments(docs)
+
+      // Fetch feedback status for deliverables
+      const feedbackEntries = await Promise.all(
+        docs.map(async (doc) => {
+          try {
+            const fbRes = await clientApi.getDeliverableFeedback(projectId, doc.id)
+            return [doc.id, fbRes.data?.data || fbRes.data || { currentStatus: 'PENDING_REVIEW' }]
+          } catch (_) {
+            return [doc.id, { currentStatus: 'PENDING_REVIEW' }]
+          }
+        })
+      )
+      setFeedbackMap(Object.fromEntries(feedbackEntries))
     } catch (err) {
       console.error('Failed to fetch client project details:', err)
       setError(
@@ -304,6 +326,94 @@ export function ClientProjectDetailsPage() {
                         {downloadingDocId === doc.id ? 'Downloading...' : 'Download'}
                       </Button>
                     </div>
+
+                    {/* Client Feedback Section */}
+                    {(() => {
+                      const fb = feedbackMap[doc.id] || { currentStatus: 'PENDING_REVIEW' }
+                      const isAccepted = fb.currentStatus === 'ACCEPTED'
+                      const isRevision = fb.currentStatus === 'REVISION_REQUESTED'
+
+                      return (
+                        <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                              Client Review:
+                            </span>
+
+                            {isAccepted ? (
+                              <Badge
+                                variant="outline"
+                                className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[11px] font-semibold flex items-center gap-1"
+                              >
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                Accepted
+                              </Badge>
+                            ) : isRevision ? (
+                              <Badge
+                                variant="outline"
+                                className="bg-amber-50 text-amber-700 border-amber-200 text-[11px] font-semibold flex items-center gap-1"
+                              >
+                                <AlertTriangle className="w-3 h-3 text-amber-600" />
+                                Revision Requested
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="bg-slate-50 text-slate-600 border-slate-200 text-[11px] font-semibold"
+                              >
+                                Pending Review
+                              </Badge>
+                            )}
+                          </div>
+
+                          {fb.latestFeedback?.notes && (
+                            <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200/70 text-xs text-slate-700">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">
+                                Your Feedback Notes:
+                              </p>
+                              <p className="line-clamp-2 leading-relaxed italic">
+                                &ldquo;{fb.latestFeedback.notes}&rdquo;
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-end gap-2 pt-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setFeedbackModal({
+                                  isOpen: true,
+                                  type: 'revision',
+                                  document: doc,
+                                })
+                              }
+                              className="text-xs h-7 px-2.5 border-slate-200 text-slate-700 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200"
+                            >
+                              Request Revision
+                            </Button>
+
+                            {!isAccepted && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setFeedbackModal({
+                                    isOpen: true,
+                                    type: 'accept',
+                                    document: doc,
+                                  })
+                                }
+                                className="text-xs h-7 px-2.5 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                              >
+                                <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" />
+                                Accept
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
                 </CardContent>
               </Card>
@@ -311,6 +421,20 @@ export function ClientProjectDetailsPage() {
           </div>
         )}
       </div>
+
+      {/* Client Feedback Action Modal */}
+      {feedbackModal.document && (
+        <ClientFeedbackModal
+          isOpen={feedbackModal.isOpen}
+          onClose={() =>
+            setFeedbackModal((prev) => ({ ...prev, isOpen: false, document: null }))
+          }
+          onSuccess={fetchData}
+          projectId={projectId}
+          document={feedbackModal.document}
+          type={feedbackModal.type}
+        />
+      )}
     </div>
   )
 }

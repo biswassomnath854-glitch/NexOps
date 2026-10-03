@@ -63,6 +63,14 @@ router.get(
   workstreamController.getProjectWorkstreams
 );
 
+router.get(
+  "/workstreams/project/:projectId",
+  authenticate,
+  blockClientRole,
+  validateParamId("projectId", "INVALID_PROJECT_ID"),
+  workstreamController.getProjectWorkstreams
+);
+
 // Workstream entity routes
 router.get(
   "/workstreams/:workstreamId",

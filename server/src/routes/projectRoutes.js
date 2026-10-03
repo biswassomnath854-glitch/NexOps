@@ -1,6 +1,7 @@
 const express = require("express");
 
 const projectController = require("../controllers/projectController");
+const clientFeedbackController = require("../controllers/clientFeedbackController");
 const {
   authenticate,
   blockClientRole,
@@ -182,6 +183,18 @@ router.delete(
   validateProjectId,
   authorize("SUPER_ADMIN", "ADMIN"),
   projectApprovalController.revokeClientAccess
+);
+
+/*
+ * Client Deliverable Feedback (Internal Review)
+ */
+router.get(
+  "/:projectId/deliverables/feedback",
+  authenticate,
+  blockClientRole,
+  validateProjectId,
+  authorize("SUPER_ADMIN", "ADMIN", "MANAGER"),
+  clientFeedbackController.getProjectFeedback
 );
 
 /*

@@ -20,6 +20,7 @@ const TaskSubmission = require("./TaskSubmission");
 const TaskSubmissionAttachment = require("./TaskSubmissionAttachment");
 const ProjectActivity = require("./ProjectActivity");
 const ClientProjectAccess = require("./ClientProjectAccess");
+const ClientDeliverableFeedback = require("./ClientDeliverableFeedback");
 
 /*
  * Organization ↔ User
@@ -806,6 +807,49 @@ ProjectDocument.belongsTo(User, {
   as: "clientApprover",
 });
 
+/*
+ * ClientDeliverableFeedback Associations
+ */
+Organization.hasMany(ClientDeliverableFeedback, {
+  foreignKey: "organizationId",
+  as: "clientDeliverableFeedbacks",
+});
+
+ClientDeliverableFeedback.belongsTo(Organization, {
+  foreignKey: "organizationId",
+  as: "organization",
+});
+
+Project.hasMany(ClientDeliverableFeedback, {
+  foreignKey: "projectId",
+  as: "clientDeliverableFeedbacks",
+});
+
+ClientDeliverableFeedback.belongsTo(Project, {
+  foreignKey: "projectId",
+  as: "project",
+});
+
+ProjectDocument.hasMany(ClientDeliverableFeedback, {
+  foreignKey: "documentId",
+  as: "clientFeedbacks",
+});
+
+ClientDeliverableFeedback.belongsTo(ProjectDocument, {
+  foreignKey: "documentId",
+  as: "document",
+});
+
+User.hasMany(ClientDeliverableFeedback, {
+  foreignKey: "clientUserId",
+  as: "clientDeliverableFeedbacks",
+});
+
+ClientDeliverableFeedback.belongsTo(User, {
+  foreignKey: "clientUserId",
+  as: "clientUser",
+});
+
 const db = {
   sequelize,
   User,
@@ -828,6 +872,7 @@ const db = {
   TaskSubmissionAttachment,
   ProjectActivity,
   ClientProjectAccess,
+  ClientDeliverableFeedback,
 };
 
 module.exports = db;

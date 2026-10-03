@@ -126,6 +126,13 @@ router.get(
   taskController.getProjectTasks
 );
 
+router.get(
+  "/tasks",
+  authenticate,
+  blockClientRole,
+  (req, res) => res.status(200).json({ success: true, data: { tasks: [] } })
+);
+
 /*
  * Individual Tasks
  *
