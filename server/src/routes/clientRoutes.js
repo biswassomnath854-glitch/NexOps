@@ -38,9 +38,23 @@ router.get(
 );
 
 router.get(
+  "/projects/:projectId/documents/:documentId",
+  validateParamId("projectId", "INVALID_PROJECT_ID"),
+  validateParamId("documentId", "INVALID_DOCUMENT_ID"),
+  clientController.getDocumentById
+);
+
+router.get(
   "/projects/:projectId/deliverables",
   validateParamId("projectId", "INVALID_PROJECT_ID"),
   clientController.getDeliverables
+);
+
+router.get(
+  "/projects/:projectId/deliverables/:documentId",
+  validateParamId("projectId", "INVALID_PROJECT_ID"),
+  validateParamId("documentId", "INVALID_DOCUMENT_ID"),
+  clientController.getDeliverableById
 );
 
 const clientFeedbackController = require("../controllers/clientFeedbackController");

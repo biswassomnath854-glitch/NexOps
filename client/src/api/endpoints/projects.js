@@ -59,4 +59,8 @@ export const projectsApi = {
   // Internal Client Deliverable Feedback Overview
   getClientFeedback: (projectId) =>
     apiClient.get(`/projects/${projectId}/deliverables/feedback`),
+
+  // Internal Client Portal Audit Logs Overview
+  getClientAuditLogs: (projectId, params) =>
+    apiClient.get(`/projects/${projectId}/client-audit`, { params }),
 }

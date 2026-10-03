@@ -27,7 +27,8 @@ const acceptDeliverable = async (req, res, next) => {
         notes: req.body.notes,
         clientSignedName: req.body.clientSignedName,
       },
-      req.user
+      req.user,
+      req
     );
 
     return res.status(201).json({
@@ -51,7 +52,8 @@ const requestRevision = async (req, res, next) => {
         notes: req.body.notes,
         clientSignedName: req.body.clientSignedName,
       },
-      req.user
+      req.user,
+      req
     );
 
     return res.status(201).json({

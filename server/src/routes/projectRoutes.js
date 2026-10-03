@@ -2,6 +2,7 @@ const express = require("express");
 
 const projectController = require("../controllers/projectController");
 const clientFeedbackController = require("../controllers/clientFeedbackController");
+const clientPortalAuditController = require("../controllers/clientPortalAuditController");
 const {
   authenticate,
   blockClientRole,
@@ -195,6 +196,18 @@ router.get(
   validateProjectId,
   authorize("SUPER_ADMIN", "ADMIN", "MANAGER"),
   clientFeedbackController.getProjectFeedback
+);
+
+/*
+ * Client Portal Audit Logs (Internal Review)
+ */
+router.get(
+  "/:projectId/client-audit",
+  authenticate,
+  blockClientRole,
+  validateProjectId,
+  authorize("SUPER_ADMIN", "ADMIN"),
+  clientPortalAuditController.getProjectAuditLogs
 );
 
 /*

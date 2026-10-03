@@ -7,6 +7,7 @@ const {
   ClientProjectAccess,
   Organization,
 } = require("../models");
+const { logClientPortalEvent } = require("./clientPortalAuditService");
 
 const createServiceError = (message, statusCode = 400, code = "SERVICE_ERROR") => {
   const error = new Error(message);
@@ -184,7 +185,7 @@ const getClientProjects = async (user) => {
   return projectSummaries;
 };
 
-const getClientProjectById = async (projectId, user) => {
+const getClientProjectById = async (projectId, user, req = null) => {
   const project = await verifyClientProjectAccess(projectId, user);
 
   const documentCount = await ProjectDocument.count({
@@ -193,6 +194,16 @@ const getClientProjectById = async (projectId, user) => {
       organizationId: user.organizationId,
       isClientVisible: true,
     },
+  });
+
+  // Attempt client portal audit logging (reliable, non-blocking)
+  await logClientPortalEvent(req, {
+    organizationId: user.organizationId,
+    projectId: project.id,
+    documentId: null,
+    clientUserId: user.id,
+    action: "CLIENT_PROJECT_VIEWED",
+    metadata: { source: "client_portal" },
   });
 
   return {
@@ -264,7 +275,119 @@ const getClientDeliverables = async (projectId, user) => {
   return deliverables;
 };
 
-const getClientDocumentDownload = async (projectId, documentId, user) => {
+const getClientDocumentById = async (
+  projectId,
+  documentId,
+  user,
+  req = null
+) => {
+  await verifyClientProjectAccess(projectId, user);
+
+  const document = await ProjectDocument.findOne({
+    where: {
+      id: documentId,
+      projectId,
+      organizationId: user.organizationId,
+      isClientVisible: true,
+    },
+    attributes: [
+      "id",
+      "projectId",
+      "title",
+      "description",
+      "category",
+      "originalName",
+      "mimeType",
+      "fileSize",
+      "approvedForClientAt",
+      "createdAt",
+    ],
+  });
+
+  if (!document) {
+    throw createServiceError(
+      "Document not found or not approved for client access.",
+      404,
+      "DOCUMENT_NOT_FOUND"
+    );
+  }
+
+  // Attempt client portal audit logging (reliable, non-blocking)
+  await logClientPortalEvent(req, {
+    organizationId: user.organizationId,
+    projectId,
+    documentId: document.id,
+    clientUserId: user.id,
+    action: "CLIENT_DOCUMENT_VIEWED",
+    metadata: {
+      category: document.category,
+    },
+  });
+
+  return document;
+};
+
+const getClientDeliverableById = async (
+  projectId,
+  documentId,
+  user,
+  req = null
+) => {
+  await verifyClientProjectAccess(projectId, user);
+
+  const deliverable = await ProjectDocument.findOne({
+    where: {
+      id: documentId,
+      projectId,
+      organizationId: user.organizationId,
+      isClientVisible: true,
+      category: {
+        [Op.in]: ["DELIVERABLE", "REPORT", "DESIGN", "SPECIFICATION"],
+      },
+    },
+    attributes: [
+      "id",
+      "projectId",
+      "title",
+      "description",
+      "category",
+      "originalName",
+      "mimeType",
+      "fileSize",
+      "approvedForClientAt",
+      "createdAt",
+    ],
+  });
+
+  if (!deliverable) {
+    throw createServiceError(
+      "Deliverable not found or not approved for client access.",
+      404,
+      "DELIVERABLE_NOT_FOUND"
+    );
+  }
+
+  // Attempt client portal audit logging (reliable, non-blocking)
+  await logClientPortalEvent(req, {
+    organizationId: user.organizationId,
+    projectId,
+    documentId: deliverable.id,
+    clientUserId: user.id,
+    action: "CLIENT_DELIVERABLE_VIEWED",
+    metadata: {
+      category: deliverable.category,
+    },
+  });
+
+  return deliverable;
+};
+
+const getClientDocumentDownload = async (
+  projectId,
+  documentId,
+  user,
+  req = null
+) => {
   await verifyClientProjectAccess(projectId, user);
 
   const document = await ProjectDocument.findOne({
@@ -304,6 +427,19 @@ const getClientDocumentDownload = async (projectId, documentId, user) => {
     );
   }
 
+  // Attempt client portal audit logging (reliable, non-blocking)
+  await logClientPortalEvent(req, {
+    organizationId: user.organizationId,
+    projectId,
+    documentId: document.id,
+    clientUserId: user.id,
+    action: "CLIENT_DOCUMENT_DOWNLOADED",
+    metadata: {
+      fileSize: document.fileSize,
+      mimeType: document.mimeType,
+    },
+  });
+
   return {
     document,
     physicalPath,
@@ -317,5 +453,7 @@ module.exports = {
   getClientProjectById,
   getClientDocuments,
   getClientDeliverables,
+  getClientDocumentById,
+  getClientDeliverableById,
   getClientDocumentDownload,
 };

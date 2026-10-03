@@ -5,6 +5,7 @@ const {
   ClientDeliverableFeedback,
   User,
 } = require("../models");
+const { logClientPortalEvent } = require("./clientPortalAuditService");
 
 const createServiceError = (message, statusCode = 400, code = "SERVICE_ERROR") => {
   const error = new Error(message);
@@ -139,7 +140,8 @@ const submitFeedback = async (
   projectId,
   documentId,
   { status, notes, clientSignedName },
-  user
+  user,
+  req = null
 ) => {
   const { project, document } = await verifyClientDeliverableAccess(
     projectId,
@@ -194,6 +196,25 @@ const submitFeedback = async (
     status,
     notes: trimmedNotes,
     clientSignedName: trimmedSignedName,
+  });
+
+  // Attempt client portal audit logging (reliable, non-blocking)
+  const auditAction =
+    status === "ACCEPTED"
+      ? "CLIENT_DELIVERABLE_ACCEPTED"
+      : "CLIENT_REVISION_REQUESTED";
+
+  await logClientPortalEvent(req, {
+    organizationId: user.organizationId,
+    projectId: project.id,
+    documentId: document.id,
+    clientUserId: user.id,
+    action: auditAction,
+    metadata: {
+      feedbackStatus: status,
+      hasNotes: Boolean(trimmedNotes),
+      hasSignedName: Boolean(trimmedSignedName),
+    },
   });
 
   return {

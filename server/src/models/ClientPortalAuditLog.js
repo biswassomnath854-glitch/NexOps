@@ -1,8 +1,17 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/database");
 
-const ClientDeliverableFeedback = sequelize.define(
-  "ClientDeliverableFeedback",
+const CLIENT_PORTAL_AUDIT_ACTIONS = [
+  "CLIENT_PROJECT_VIEWED",
+  "CLIENT_DOCUMENT_VIEWED",
+  "CLIENT_DOCUMENT_DOWNLOADED",
+  "CLIENT_DELIVERABLE_VIEWED",
+  "CLIENT_DELIVERABLE_ACCEPTED",
+  "CLIENT_REVISION_REQUESTED",
+];
+
+const ClientPortalAuditLog = sequelize.define(
+  "ClientPortalAuditLog",
   {
     id: {
       type: DataTypes.UUID,
@@ -35,7 +44,7 @@ const ClientDeliverableFeedback = sequelize.define(
 
     documentId: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: "project_documents",
         key: "id",
@@ -55,18 +64,23 @@ const ClientDeliverableFeedback = sequelize.define(
       onDelete: "RESTRICT",
     },
 
-    status: {
-      type: DataTypes.ENUM("ACCEPTED", "REVISION_REQUESTED"),
+    action: {
+      type: DataTypes.ENUM(...CLIENT_PORTAL_AUDIT_ACTIONS),
       allowNull: false,
     },
 
-    notes: {
+    ipAddress: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+
+    userAgent: {
       type: DataTypes.TEXT,
       allowNull: true,
     },
 
-    clientSignedName: {
-      type: DataTypes.STRING(150),
+    metadata: {
+      type: DataTypes.JSON,
       allowNull: true,
     },
 
@@ -79,7 +93,7 @@ const ClientDeliverableFeedback = sequelize.define(
     },
   },
   {
-    tableName: "client_deliverable_feedbacks",
+    tableName: "client_portal_audit_logs",
     timestamps: true,
     underscored: true,
     indexes: [
@@ -96,13 +110,18 @@ const ClientDeliverableFeedback = sequelize.define(
         fields: ["client_user_id"],
       },
       {
-        fields: ["project_id", "document_id"],
+        fields: ["action"],
       },
       {
-        fields: ["document_id", "created_at"],
+        fields: ["created_at"],
+      },
+      {
+        fields: ["project_id", "created_at"],
       },
     ],
   }
 );
 
-module.exports = ClientDeliverableFeedback;
+ClientPortalAuditLog.ACTIONS = CLIENT_PORTAL_AUDIT_ACTIONS;
+
+module.exports = ClientPortalAuditLog;
