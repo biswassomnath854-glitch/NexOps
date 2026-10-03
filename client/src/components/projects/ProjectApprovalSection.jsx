@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { ConfirmationModal } from '@/components/common/ConfirmationModal'
 import { formatDate } from '@/utils/formatters'
+import { ClientInvitationManager } from '@/components/client/ClientInvitationManager'
 
 export function ProjectApprovalSection({
   projectId,
@@ -475,6 +476,15 @@ export function ProjectApprovalSection({
           )}
         </CardContent>
       </Card>
+
+      {/* Project-Specific Client Invitations */}
+      {isAdmin && (
+        <ClientInvitationManager
+          projectId={projectId}
+          projectName={approvalData?.name}
+          onInvitationCreated={loadData}
+        />
+      )}
 
       {/* Client Deliverable Feedback Overview Card */}
       <Card className="border border-slate-200 shadow-xs">

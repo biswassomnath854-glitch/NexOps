@@ -27,6 +27,7 @@ const projectDocumentRoutes = require("./routes/projectDocumentRoutes");
 const taskSubmissionRoutes = require("./routes/taskSubmissionRoutes");
 const projectHealthRoutes = require("./routes/projectHealthRoutes");
 const clientRoutes = require("./routes/clientRoutes");
+const clientInvitationRoutes = require("./routes/clientInvitationRoutes");
 
 const {
   errorHandler,
@@ -67,6 +68,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/client", clientRoutes);
+app.use("/api/client-invitations", clientInvitationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/departments", departmentRoutes);

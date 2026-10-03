@@ -48,4 +48,10 @@ module.exports = {
   loginRateLimiter,
   registerRateLimiter,
   refreshRateLimiter,
+  invitationRateLimiter: createRateLimiter({
+    windowMs: 15 * 60 * 1000,
+    limit: isDev ? 300 : 30,
+    message: "Too many invitation attempts. Please try again later.",
+    code: "INVITATION_RATE_LIMIT_EXCEEDED",
+  }),
 };

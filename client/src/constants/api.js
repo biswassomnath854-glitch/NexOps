@@ -76,4 +76,11 @@ export const API_ENDPOINTS = {
     ALL: '/project-health',
     BY_PROJECT: (projectId) => `/projects/${projectId}/health`,
   },
+  CLIENT_INVITATIONS: {
+    BASE: '/client-invitations',
+    BY_ID: (id) => `/client-invitations/${id}`,
+    REVOKE: (id) => `/client-invitations/${id}/revoke`,
+    VERIFY: (token) => `/auth/invitations/${token}`,
+    ACCEPT: '/auth/invitations/accept',
+  },
 }

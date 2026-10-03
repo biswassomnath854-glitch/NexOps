@@ -1,17 +1,22 @@
 const express = require("express");
 
 const authController = require("../controllers/authController");
+const clientInvitationController = require("../controllers/clientInvitationController");
 const { authenticate } = require("../middleware/authMiddleware");
 const {
   loginRateLimiter,
   registerRateLimiter,
   refreshRateLimiter,
+  invitationRateLimiter,
 } = require("../middleware/rateLimitMiddleware");
 
 const {
   validateRegister,
   validateLogin,
 } = require("../validators/authValidator");
+const {
+  validateAcceptInvitation,
+} = require("../validators/clientInvitationValidator");
 
 const router = express.Router();
 
@@ -64,5 +69,21 @@ router.post(
 router.post("/logout", authController.logout);
 
 router.get("/me", authenticate, authController.me);
+
+/*
+ * Client Invitation Public Endpoints
+ */
+router.get(
+  "/invitations/:token",
+  invitationRateLimiter,
+  clientInvitationController.verifyInvitation
+);
+
+router.post(
+  "/invitations/accept",
+  invitationRateLimiter,
+  validateRequest(validateAcceptInvitation),
+  clientInvitationController.acceptInvitation
+);
 
 module.exports = router;

@@ -23,7 +23,9 @@ import {
   UserX,
   X,
   Building2,
+  Mail,
 } from 'lucide-react'
+import { ClientInvitationManager } from '@/components/client/ClientInvitationManager'
 
 export function UsersPage() {
   const { user: currentUser } = useAuth()
@@ -36,6 +38,9 @@ export function UsersPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState(null)
   const [feedback, setFeedback] = useState(null)
+
+  // Active Tab
+  const [activeTab, setActiveTab] = useState('directory') // 'directory' | 'invitations'
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('')
@@ -317,7 +322,39 @@ export function UsersPage() {
         </div>
       </div>
 
-      {/* 2. Operational Statistics Bar */}
+      {/* Tab Navigation */}
+      <div className="flex border-b border-slate-200 gap-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab('directory')}
+          className={`pb-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition-colors ${
+            activeTab === 'directory'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Users className="w-3.5 h-3.5" />
+          Team Directory
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('invitations')}
+          className={`pb-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-1.5 transition-colors ${
+            activeTab === 'invitations'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Mail className="w-3.5 h-3.5" />
+          Client Invitations
+        </button>
+      </div>
+
+      {activeTab === 'invitations' ? (
+        <ClientInvitationManager />
+      ) : (
+        <>
+          {/* 2. Operational Statistics Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-3.5 rounded-xl border border-slate-200/80 bg-white flex items-center gap-3 shadow-2xs">
           <div className="w-9 h-9 rounded-lg bg-[#635BFF]/10 text-[#635BFF] flex items-center justify-center shrink-0">
@@ -560,6 +597,8 @@ export function UsersPage() {
           tone="danger"
           isLoading={isActionLoading}
         />
+      )}
+        </>
       )}
     </div>
   )

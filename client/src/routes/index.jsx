@@ -16,6 +16,9 @@ const LoginPage = lazy(() =>
 const RegisterPage = lazy(() =>
   import('@/pages/auth/RegisterPage').then((m) => ({ default: m.RegisterPage }))
 )
+const AcceptInvitationPage = lazy(() =>
+  import('@/pages/invite/AcceptInvitationPage').then((m) => ({ default: m.AcceptInvitationPage }))
+)
 
 // Protected core workspace pages (lazy-loaded)
 const DashboardPage = lazy(() =>
@@ -86,6 +89,16 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<RouteLoadingFallback fullPage message="Loading SB Pvt. Ltd...." />}>
         <LandingPage />
+      </Suspense>
+    ),
+  },
+
+  // Public Client Invitation Acceptance Route
+  {
+    path: ROUTES.ACCEPT_INVITATION,
+    element: (
+      <Suspense fallback={<RouteLoadingFallback fullPage message="Verifying client invitation..." />}>
+        <AcceptInvitationPage />
       </Suspense>
     ),
   },

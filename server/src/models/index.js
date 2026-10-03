@@ -22,6 +22,7 @@ const ProjectActivity = require("./ProjectActivity");
 const ClientProjectAccess = require("./ClientProjectAccess");
 const ClientDeliverableFeedback = require("./ClientDeliverableFeedback");
 const ClientPortalAuditLog = require("./ClientPortalAuditLog");
+const ClientInvitation = require("./ClientInvitation");
 
 /*
  * Organization ↔ User
@@ -894,6 +895,49 @@ ClientPortalAuditLog.belongsTo(User, {
   as: "clientUser",
 });
 
+/*
+ * ClientInvitation Associations
+ */
+Organization.hasMany(ClientInvitation, {
+  foreignKey: "organizationId",
+  as: "clientInvitations",
+});
+
+ClientInvitation.belongsTo(Organization, {
+  foreignKey: "organizationId",
+  as: "organization",
+});
+
+Project.hasMany(ClientInvitation, {
+  foreignKey: "projectId",
+  as: "clientInvitations",
+});
+
+ClientInvitation.belongsTo(Project, {
+  foreignKey: "projectId",
+  as: "project",
+});
+
+User.hasMany(ClientInvitation, {
+  foreignKey: "invitedBy",
+  as: "sentClientInvitations",
+});
+
+ClientInvitation.belongsTo(User, {
+  foreignKey: "invitedBy",
+  as: "inviter",
+});
+
+User.hasMany(ClientInvitation, {
+  foreignKey: "acceptedBy",
+  as: "acceptedClientInvitations",
+});
+
+ClientInvitation.belongsTo(User, {
+  foreignKey: "acceptedBy",
+  as: "acceptor",
+});
+
 const db = {
   sequelize,
   User,
@@ -918,6 +962,7 @@ const db = {
   ClientProjectAccess,
   ClientDeliverableFeedback,
   ClientPortalAuditLog,
+  ClientInvitation,
 };
 
 module.exports = db;
