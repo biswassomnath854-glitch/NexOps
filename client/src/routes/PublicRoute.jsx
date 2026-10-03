@@ -4,7 +4,7 @@ import { FullPageLoader } from '@/components/feedback/Loading'
 import { ROUTES } from '@/constants/routes'
 
 export function PublicRoute() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading } = useAuth()
   const location = useLocation()
 
   if (isLoading) {
@@ -12,7 +12,8 @@ export function PublicRoute() {
   }
 
   if (isAuthenticated) {
-    const destination = location.state?.from?.pathname || ROUTES.DASHBOARD
+    const defaultDestination = user?.role === 'CLIENT' ? ROUTES.CLIENT_PROJECTS : ROUTES.DASHBOARD
+    const destination = location.state?.from?.pathname || defaultDestination
     return <Navigate to={destination} replace />
   }
 
