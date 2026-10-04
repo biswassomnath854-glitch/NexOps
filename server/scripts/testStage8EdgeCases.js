@@ -66,7 +66,7 @@ test("3. Health check GET /api/health responds with 200 OK", async () => {
   const res = await rawRequest("/health");
   assert.equal(res.status, 200);
   assert.equal(res.data.success, true);
-  assert.equal(res.data.message, "NexOps API is running");
+  assert.equal(res.data.message, "SB Pvt. Ltd. API is running");
 });
 
 test("4. Invalid UUID in route param returns 400 with invalid ID code and descriptive message", async () => {

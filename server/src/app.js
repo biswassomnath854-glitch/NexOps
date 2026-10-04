@@ -62,7 +62,7 @@ if (process.env.NODE_ENV !== "test") {
 app.get("/api/health", (req, res) => {
   return res.status(200).json({
     success: true,
-    message: "NexOps API is running",
+    message: "SB Pvt. Ltd. API is running",
   });
 });
 
