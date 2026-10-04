@@ -51,10 +51,16 @@ export const projectsApi = {
     apiClient.delete(`/projects/${projectId}/client-access/${clientUserId}`),
 
   // Document Client Visibility
-  updateDocumentClientVisibility: (projectId, documentId, isClientVisible) =>
-    apiClient.patch(`/projects/${projectId}/documents/${documentId}/client-visibility`, {
-      isClientVisible,
-    }),
+  updateDocumentClientVisibility: (projectId, documentId, dataOrBoolean) => {
+    const isClientVisible =
+      typeof dataOrBoolean === 'object' && dataOrBoolean !== null
+        ? Boolean(dataOrBoolean.isClientVisible)
+        : Boolean(dataOrBoolean)
+    return apiClient.patch(
+      `/projects/${projectId}/documents/${documentId}/client-visibility`,
+      { isClientVisible }
+    )
+  },
 
   // Internal Client Deliverable Feedback Overview
   getClientFeedback: (projectId) =>

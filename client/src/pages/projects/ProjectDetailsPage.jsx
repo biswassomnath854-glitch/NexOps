@@ -250,7 +250,7 @@ export function ProjectDetailsPage() {
     try {
       await tasksApi.createTask({
         ...taskPayload,
-        projectId: Number(projectId),
+        projectId: projectId,
       })
       showFeedback('Task created successfully.')
       setIsCreateTaskOpen(false)

@@ -105,7 +105,7 @@ function TaskFormModal({
       priority: formData.priority,
       status: formData.status,
       assignedTo: formData.assignedTo || null,
-      workstreamId: formData.workstreamId ? Number(formData.workstreamId) : null,
+      workstreamId: formData.workstreamId || null,
       dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : null,
     }
 

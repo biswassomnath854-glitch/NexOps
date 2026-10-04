@@ -57,7 +57,7 @@ export function WorkstreamModal({
         name: name.trim(),
         code: code.trim().toUpperCase() || undefined,
         description: description.trim() || undefined,
-        leadUserId: leadUserId ? Number(leadUserId) : null,
+        leadUserId: leadUserId || null,
         status,
       }
 

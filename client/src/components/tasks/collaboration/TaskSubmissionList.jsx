@@ -4,6 +4,7 @@ import { tasksApi } from '@/api/endpoints/tasks'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { Modal } from '@/components/ui/Modal'
 import { formatDateTime } from '@/utils/formatters'
 import {
   UploadCloud,
@@ -12,6 +13,7 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
+  MessageSquare,
 } from 'lucide-react'
 
 export function TaskSubmissionList({ taskId, isManagement = false, isViewer = false, onSubmissionsChange }) {
@@ -19,6 +21,13 @@ export function TaskSubmissionList({ taskId, isManagement = false, isViewer = fa
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [actionLoadingId, setActionLoadingId] = useState(null)
+  const [reviewModal, setReviewModal] = useState({
+    isOpen: false,
+    submissionId: null,
+    status: null,
+  })
+  const [reviewNote, setReviewNote] = useState('')
+  const [reviewError, setReviewError] = useState(null)
 
   const loadSubmissions = useCallback(async () => {
     if (!taskId) return
@@ -41,13 +50,28 @@ export function TaskSubmissionList({ taskId, isManagement = false, isViewer = fa
     loadSubmissions()
   }, [loadSubmissions])
 
-  const handleReview = async (submissionId, status) => {
-    setActionLoadingId(submissionId)
+  const openReviewModal = (submissionId, status) => {
+    setReviewModal({ isOpen: true, submissionId, status })
+    setReviewNote('')
+    setReviewError(null)
+  }
+
+  const handleReviewSubmit = async (e) => {
+    if (e) e.preventDefault()
+    if (!reviewModal.submissionId || !reviewModal.status) return
+    setActionLoadingId(reviewModal.submissionId)
+    setReviewError(null)
     try {
-      await taskSubmissionsApi.reviewSubmission(submissionId, { status })
+      await taskSubmissionsApi.reviewSubmission(reviewModal.submissionId, {
+        status: reviewModal.status,
+        reviewNote: reviewNote.trim() || undefined,
+      })
+      setReviewModal({ isOpen: false, submissionId: null, status: null })
+      setReviewNote('')
       await loadSubmissions()
     } catch (err) {
       console.error('Review error:', err)
+      setReviewError(err?.response?.data?.message || err?.message || 'Failed to submit review.')
     } finally {
       setActionLoadingId(null)
     }
@@ -172,6 +196,43 @@ export function TaskSubmissionList({ taskId, isManagement = false, isViewer = fa
               </div>
             )}
 
+            {/* Review Feedback / Decision Details */}
+            {sub.reviewedAt && (
+              <div
+                className={`p-3 rounded-xl border text-xs ${
+                  isApproved
+                    ? 'bg-emerald-50/70 border-emerald-200/80 text-emerald-900'
+                    : isRevisionRequired
+                    ? 'bg-amber-50/70 border-amber-200/80 text-amber-900'
+                    : 'bg-slate-50 border-slate-200 text-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 flex-wrap font-semibold text-[11px] mb-1">
+                  <span className="flex items-center gap-1.5">
+                    {isApproved ? (
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                    ) : (
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                    )}
+                    <span>
+                      {isApproved ? 'Approved' : 'Revision Requested'} by{' '}
+                      {sub.reviewer?.firstName} {sub.reviewer?.lastName}
+                    </span>
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    {formatDateTime(sub.reviewedAt)}
+                  </span>
+                </div>
+                {sub.reviewNote ? (
+                  <p className="text-xs mt-1 leading-relaxed whitespace-pre-wrap">
+                    {sub.reviewNote}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-slate-400 italic">No additional review notes provided.</p>
+                )}
+              </div>
+            )}
+
             {/* Management Review Actions */}
             {isManagement && !isViewer && (
               <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
@@ -179,9 +240,9 @@ export function TaskSubmissionList({ taskId, isManagement = false, isViewer = fa
                   variant="outline"
                   size="xs"
                   disabled={actionLoadingId === sub.id}
-                  onClick={() => handleReview(sub.id, 'REVISION_REQUIRED')}
+                  onClick={() => openReviewModal(sub.id, 'REVISION_REQUIRED')}
                   leftIcon={AlertCircle}
-                  className="text-xs text-amber-700 hover:bg-amber-50"
+                  className="text-xs text-amber-700 hover:bg-amber-50 cursor-pointer"
                 >
                   Request Revision
                 </Button>
@@ -189,9 +250,9 @@ export function TaskSubmissionList({ taskId, isManagement = false, isViewer = fa
                   variant="primary"
                   size="xs"
                   disabled={actionLoadingId === sub.id}
-                  onClick={() => handleReview(sub.id, 'APPROVED')}
+                  onClick={() => openReviewModal(sub.id, 'APPROVED')}
                   leftIcon={CheckCircle}
-                  className="text-xs"
+                  className="text-xs cursor-pointer"
                 >
                   Approve Deliverable
                 </Button>
@@ -200,6 +261,73 @@ export function TaskSubmissionList({ taskId, isManagement = false, isViewer = fa
           </div>
         )
       })}
+
+      {/* Review Submission Modal Dialog */}
+      <Modal
+        isOpen={reviewModal.isOpen}
+        onClose={() => {
+          if (!actionLoadingId) setReviewModal({ isOpen: false, submissionId: null, status: null })
+        }}
+        title={
+          reviewModal.status === 'APPROVED'
+            ? 'Approve Work Submission'
+            : 'Request Work Revision'
+        }
+        maxWidth="sm"
+      >
+        <form onSubmit={handleReviewSubmit} className="space-y-4">
+          {reviewError && (
+            <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700">
+              {reviewError}
+            </div>
+          )}
+
+          <p className="text-xs text-slate-600">
+            {reviewModal.status === 'APPROVED'
+              ? 'Approve this submission as meeting project requirements and deliverables.'
+              : 'Specify the changes or corrections needed by the assignee before this deliverable can be accepted.'}
+          </p>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Review Notes & Feedback {reviewModal.status === 'REVISION_REQUIRED' ? '(Recommended)' : '(Optional)'}
+            </label>
+            <textarea
+              rows={3}
+              value={reviewNote}
+              onChange={(e) => setReviewNote(e.target.value)}
+              placeholder={
+                reviewModal.status === 'APPROVED'
+                  ? 'Great work, deliverables meet requirements...'
+                  : 'Please revise section 3 and attach the updated CSV document...'
+              }
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            />
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              onClick={() => setReviewModal({ isOpen: false, submissionId: null, status: null })}
+              disabled={Boolean(actionLoadingId)}
+              className="text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant={reviewModal.status === 'APPROVED' ? 'primary' : 'warning'}
+              size="xs"
+              isLoading={Boolean(actionLoadingId)}
+              className="text-xs font-semibold"
+            >
+              {reviewModal.status === 'APPROVED' ? 'Confirm Approval' : 'Send Revision Request'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }

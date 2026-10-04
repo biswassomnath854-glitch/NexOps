@@ -60,7 +60,7 @@ export function WorkstreamMembersModal({
 
     try {
       await workstreamsApi.addMember(workstream.id, {
-        userId: Number(selectedUserId),
+        userId: selectedUserId,
         role: memberRole,
       })
       setSelectedUserId('')

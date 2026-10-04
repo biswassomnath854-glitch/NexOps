@@ -84,6 +84,14 @@ const createUser = async (userData, currentUser) => {
     finalUserData.organizationId = currentUser.organizationId;
   }
 
+  if (currentUser && currentUser.role !== "SUPER_ADMIN" && finalUserData.role === "SUPER_ADMIN") {
+    throw createServiceError(
+      "Only Super Administrators can create Super Administrator accounts.",
+      403,
+      "FORBIDDEN"
+    );
+  }
+
   const existingUser = await User.findOne({
     where: {
       email: finalUserData.email,
@@ -149,6 +157,22 @@ const createUser = async (userData, currentUser) => {
 
 const updateUser = async (userId, userData, currentUser) => {
   const user = await findUserById(userId, currentUser);
+
+  if (user.role === "CLIENT" && userData.role && userData.role !== "CLIENT") {
+    throw createServiceError(
+      "Client accounts cannot be converted to internal roles.",
+      400,
+      "CANNOT_CONVERT_CLIENT_ROLE"
+    );
+  }
+
+  if (currentUser && currentUser.role !== "SUPER_ADMIN" && userData.role === "SUPER_ADMIN") {
+    throw createServiceError(
+      "Only Super Administrators can assign the Super Administrator role.",
+      403,
+      "FORBIDDEN"
+    );
+  }
 
   if (userData.email && userData.email !== user.email) {
     const existingUser = await User.findOne({
